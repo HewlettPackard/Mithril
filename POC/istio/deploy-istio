@@ -1,0 +1,5 @@
+kubectl create ns istio-system
+sleep 2
+kubectl apply -f secrets.yaml
+istioctl install -f istio-config.yaml
+kubectl apply -f auth.yaml

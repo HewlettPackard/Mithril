@@ -1,0 +1,4 @@
+#!/bin/bash
+
+(cd istio ; sh deploy-istio)
+(cd bookinfo ; sh deploy-bookinfo)

@@ -1,0 +1,52 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+spec:
+  profile: default
+  hub: gcr.io/istio-release
+  components:
+    pilot:
+      k8s:
+        env:
+        # Disable istiod CA Sever functionality
+        - name: ENABLE_CA_SERVER
+          value: "false"
+        - name: PILOT_CERT_PROVIDER # probably unnecessary 
+          value: "custom"
+        - name: PILOT_ENABLE_XDS_IDENTITY_CHECK # TODO: verify and remove this if necessary
+          value: "false"
+        overlays:
+        - apiVersion: apps/v1
+          kind: Deployment
+          name: istiod
+          patches:
+          # istiod container patches          
+          # this is our custom build docker image
+          - path: spec.template.spec.containers.[name:discovery].image
+            value: "localhost:5000/pilot:my-build"
+          - path: spec.template.spec.containers.[name:discovery].args[8]
+            value: "--tlsCertFile=/run/istiod/certs/istiod-svid.pem"
+          - path: spec.template.spec.containers.[name:discovery].args[9]
+            value: "--tlsKeyFile=/run/istiod/certs/istiod-key.pem"
+          - path: spec.template.spec.containers.[name:discovery].args[10]
+            value: "--caCertFile=/run/istiod/certs/root-cert.pem"
+
+          - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
+            value:
+              name: istiod-certs
+              mountPath: "/run/istiod/certs"
+              readOnly: false   
+
+          # pod patches
+          - path: spec.template.spec.volumes[7]
+            value:
+              name: istiod-certs
+              secret:
+                secretName: istio
+              
+
+    ingressGateways:
+    - name: istio-ingressgateway
+      enabled: false # disabled for now
+   

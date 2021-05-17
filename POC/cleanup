@@ -1,0 +1,2 @@
+(cd istio ; sh delete-istio)
+(cd workloads ; sh delete-workloads)

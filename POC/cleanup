@@ -1,2 +1,2 @@
 (cd istio ; sh delete-istio)
-(cd workloads ; sh delete-workloads)
+(cd bookinfo ; sh cleanup.sh)

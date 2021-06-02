@@ -95,11 +95,32 @@ local-path-storage   local-path-provisioner-78776bfc44-zbwh8      1/1     Runnin
 
 ## Test example 
 
+### Inside the cluster:
+
 ```bash
 kubectl exec "$(kubectl get pod  -l app=ratings -o jsonpath='{.items[0].metadata.name}')" -c ratings  -- curl -sS productpage:9080/productpage
 ```
 
 The output is an HTML page that should not have any error sections. 
+
+### Outside the cluster:
+
+Forward host port 8000 to port 8080 (ingressgateway pod port) inside the cluster:
+
+```bash
+./forward-port
+
+Forwarding from 127.0.0.1:8000 -> 8080
+Forwarding from [::1]:8000 -> 8080
+```
+
+Make a request from the host:
+
+```bash
+curl localhost:8000/productpage
+```
+
+The output is an HTML page that should not have any error sections.
 
 
 # Clean up

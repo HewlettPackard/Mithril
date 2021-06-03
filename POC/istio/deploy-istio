@@ -1,3 +1,4 @@
+#!/bin/sh
 kubectl create ns istio-system
 sleep 2
 kubectl apply -f secrets.yaml

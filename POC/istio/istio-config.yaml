@@ -47,6 +47,25 @@ spec:
               
 
     ingressGateways:
-    - name: istio-ingressgateway
-      enabled: false # disabled for now
-   
+      - name: istio-ingressgateway
+        enabled: true
+        k8s:
+          env:
+            - name: ENABLE_CA_SERVER
+              value: "false"
+            - name: PILOT_CERT_PROVIDER
+              value: "custom"
+            - name: FILE_MOUNTED_CERTS
+              value: "false"
+            - name: PROV_CERT
+              value: /etc/istio/ingressgateway-certs
+          overlays:
+            - kind: Deployment
+              name: istio-ingressgateway
+              patches:
+                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[9]
+                  value:
+                    name: ingressgateway-certs
+                    # it looks for the root-cert.pem in this path
+                    mountPath: "/etc/certs"
+                    readOnly: true

@@ -6,3 +6,5 @@ istioctl kube-inject --injectConfigFile inject-config.yaml --valuesFile inject-v
 istioctl kube-inject --injectConfigFile inject-config.yaml --valuesFile inject-values.yaml --filename productpage.yaml | kubectl apply -f -
 istioctl kube-inject --injectConfigFile inject-config.yaml --valuesFile inject-values.yaml --filename ratings.yaml | kubectl apply -f -
 istioctl kube-inject --injectConfigFile inject-config.yaml --valuesFile inject-values.yaml --filename reviews.yaml | kubectl apply -f -
+
+kubectl apply -f gateway.yaml

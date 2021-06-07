@@ -1,4 +1,3 @@
-GOLANG_IMAGE = "hub.docker.hpecorp.net/sec-eng/golang:1.16.4-alpine-istio-deps"
 UBUNTU_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:latest"
 
 pipeline {
@@ -20,11 +19,14 @@ pipeline {
                   secrets = vaultGetSecrets()
                   def passwordMask = [
                     $class: 'MaskPasswordsBuildWrapper',
-                    varPasswordPairs: [[
-                    password: secrets.dockerHubToken
-                    ],[
-                    password: secrets.dockerHubUsername
-                    ]]
+                    varPasswordPairs: [
+                        [
+                            password: secrets.dockerHubToken
+                        ],
+                        [
+                            password: secrets.dockerHubUsername
+                        ]
+                    ]
                   ]
                     wrap(passwordMask) {
                   _ = docker.image(UBUNTU_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock -e DOCKER_HUB_HPE_TOKEN=\"${secrets.dockerHubToken}\" -e DOCKER_HUB_HPE_USER=\"${secrets.dockerHubUsername}\" -e BRANCH=\"${GIT_BRANCH}\" -e COMMIT=\"${GIT_COMMIT}\" ") {
@@ -44,7 +46,7 @@ pipeline {
                       docker images
                       docker ps
                     """
-                  }
+                    }
                   }
                 }
             }

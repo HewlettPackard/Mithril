@@ -28,13 +28,14 @@ pipeline {
                         ]
                     ]
                   ]
+                  def BUILD_TAG = makeTag()
                     wrap(passwordMask) {
-                  _ = docker.image(UBUNTU_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock -e DOCKER_HUB_HPE_TOKEN=\"${secrets.dockerHubToken}\" -e DOCKER_HUB_HPE_USER=\"${secrets.dockerHubUsername}\" -e BRANCH=\"${GIT_BRANCH}\" -e COMMIT=\"${GIT_COMMIT}\" ") {
+                  _ = docker.image(UBUNTU_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock -e DOCKER_HUB_HPE_TOKEN=\"${secrets.dockerHubToken}\" -e DOCKER_HUB_HPE_USER=\"${secrets.dockerHubUsername}\" -e TAG=\"${BUILD_TAG}\" ") {
                     sh """
                       echo \"${secrets.dockerHubToken}\" | docker login hub.docker.hpecorp.net --username \"${secrets.dockerHubToken}\" --password-stdin
 
                       export PATH=$PATH:/usr/local/go/bin:/root/go/bin
-                      export TAG=\"${GIT_BRANCH}\""_"`echo \"${GIT_COMMIT}\" | cut -c 1-7`
+                      export TAG=\"${BUILD_TAG}\"
                       export HUB=hub.docker.hpecorp.net/sec-eng
                       export BUILD_WITH_CONTAINER=0
                       export GOOS=linux
@@ -52,4 +53,8 @@ pipeline {
             }
         }
     }
+}
+
+def makeTag() {
+    return env.GIT_BRANCH + "_" + env.GIT_COMMIT.substring(0,7)
 }

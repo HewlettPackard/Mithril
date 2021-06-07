@@ -1,4 +1,4 @@
-UBUNTU_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:latest"
+UBUNTU_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:istio-deps"
 
 pipeline {
 

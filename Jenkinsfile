@@ -15,9 +15,9 @@ pipeline {
     stages {
         stage('build-istio') {
             steps {
-                // Istio fork from the master branch
+                // Istio clone from the master branch
                 sh '''
-                    git clone https://github.com/istio/istio.git
+                    git clone --single-branch https://github.com/istio/istio.git
                     ls
                 '''
                 // Fetch secrets from Vault and use the mask token plugin

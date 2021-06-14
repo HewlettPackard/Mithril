@@ -19,6 +19,7 @@ pipeline {
                 sh '''
                     git clone --single-branch --branch release-1.10 https://github.com/istio/istio.git
                     ls
+                    echo $WORKSPACE
                 '''
                 // Fetch secrets from Vault and use the mask token plugin
                 script {
@@ -51,7 +52,8 @@ pipeline {
                       pwd
                       ls
                       cd istio
-                      git apply ${PWD}/POC/patches/poc.1.10.patch
+                      git apply ${WORKSPACE}/POC/patches/poc.1.10.patch
+                      exit
 
                       make docker
                       make push

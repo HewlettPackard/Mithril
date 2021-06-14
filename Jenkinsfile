@@ -48,6 +48,8 @@ pipeline {
                       export HUB=hub.docker.hpecorp.net/sec-eng
                       export BUILD_WITH_CONTAINER=0
                       export GOOS=linux
+                      pwd
+                      ls
                       cd istio
                       git apply /home/jenkins/workspace/sec-eng_istio-spire_master/patches/poc.1.10.patch
 

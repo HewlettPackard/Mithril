@@ -51,7 +51,7 @@ pipeline {
                       pwd
                       ls
                       cd istio
-                      git apply /home/jenkins/workspace/pire_f21-build-POC-patches-v1.10/POC/patches/poc.1.10.patch
+                      git apply ${PWD}/POC/patches/poc.1.10.patch
 
                       make docker
                       make push

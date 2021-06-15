@@ -42,7 +42,7 @@ HPE's Jenkins has a convenience helper function for reading Vault secrets.
 pipeline {
     # ...
     script {
-        secrets = vaultGetSecrets()
+        def secrets = vaultGetSecrets()
         print secrets.mySuperSecret
         print secrets.mySecondSecret
     }

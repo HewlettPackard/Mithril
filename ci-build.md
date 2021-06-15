@@ -2,6 +2,8 @@
 
 ## How to set up and use Vault secrets in a Jenkins pipeline
 
+HPE's Jenkins uses [HashiCorp Vault](https://www.vaultproject.io/downloads) as a secrets store, where team members can store secrets and have a Jenkins pipeline retrieving and using them.
+
 ### Setting up your Vault secrets
 
 - Install [HashiCorp Vault](https://www.vaultproject.io/downloads) in your 

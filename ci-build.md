@@ -36,7 +36,7 @@ vault write secret/hpe4it-jenkins-ci/repo/sec-eng/istio-spire \
 
 ### Accessing the secrets from the Jenkins pipeline
 
-HPE Jenkins has a convenience helper function for reading Vault secrets.
+HPE's Jenkins has a convenience helper function for reading Vault secrets.
 
 ```groovy
 pipeline {

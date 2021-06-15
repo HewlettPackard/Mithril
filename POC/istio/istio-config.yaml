@@ -4,7 +4,20 @@ metadata:
   namespace: istio-system
 spec:
   profile: default
-  hub: gcr.io/istio-release
+  values:
+    global:
+      hub: localhost:5000
+      tag: my-build
+      pilotCertProvider: custom
+      # mTLS between workloads is done using certs mounted in /etc/certs
+      mountMtlsCerts: true
+
+  meshConfig:
+    defaultConfig:
+      proxyMetadata:
+        # define the ROOT CA that will be used by all istio-agents to connect with istiod using TLS and a JWT token.
+        XDS_ROOT_CA: /etc/certs/root-cert.pem
+
   components:
     pilot:
       k8s:
@@ -12,19 +25,15 @@ spec:
         # Disable istiod CA Sever functionality
         - name: ENABLE_CA_SERVER
           value: "false"
-        - name: PILOT_CERT_PROVIDER # probably unnecessary 
-          value: "custom"
-        - name: PILOT_ENABLE_XDS_IDENTITY_CHECK # TODO: verify and remove this if necessary
+        # TODO: investigate why PILOT_ENABLE_XDS_IDENTITY_CHECK needs to be disabled, otherwise the xds service returns:
+        # authorization failed: no identities ([spiffe://cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account]) matched istio-system/istio-ingressgateway-service-account
+        - name: PILOT_ENABLE_XDS_IDENTITY_CHECK
           value: "false"
         overlays:
         - apiVersion: apps/v1
           kind: Deployment
           name: istiod
           patches:
-          # istiod container patches          
-          # this is our custom build docker image
-          - path: spec.template.spec.containers.[name:discovery].image
-            value: "localhost:5000/pilot:my-build"
           - path: spec.template.spec.containers.[name:discovery].args[8]
             value: "--tlsCertFile=/run/istiod/certs/istiod-svid.pem"
           - path: spec.template.spec.containers.[name:discovery].args[9]
@@ -49,23 +58,3 @@ spec:
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
-        k8s:
-          env:
-            - name: ENABLE_CA_SERVER
-              value: "false"
-            - name: PILOT_CERT_PROVIDER
-              value: "custom"
-            - name: FILE_MOUNTED_CERTS
-              value: "false"
-            - name: PROV_CERT
-              value: /etc/istio/ingressgateway-certs
-          overlays:
-            - kind: Deployment
-              name: istio-ingressgateway
-              patches:
-                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[9]
-                  value:
-                    name: ingressgateway-certs
-                    # it looks for the root-cert.pem in this path
-                    mountPath: "/etc/certs"
-                    readOnly: true

@@ -55,3 +55,7 @@ alias ipl='kubectl -n istio-system logs $(kubectl -n istio-system get pods -list
 
 # Debug services connections
 kubectl run --generator=run-pod/v1 -i --tty busybox-curl --image=radial/busyboxplus:curl --restart=Never -- sh
+
+
+# istiod dashboard
+istioctl dashboard controlz deployment/istiod.istio-system

@@ -8,9 +8,21 @@ are deployed in the `default` namespace.
 
 ## Requirements
 
-- kubectl
-- istioctl
-- [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
+### Install kubectl client
+
+[Install the kubernetes client for your operating system](https://kubernetes.io/docs/tasks/tools/#kubectl)
+
+### Install istioctl:
+
+```
+curl -L https://istio.io/downloadIstio | sh -
+```
+
+Should work with istio `1.9.1` and `1.10.1`.
+
+## Install Kind 
+
+Follow [kind install instructions](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
 
 ## Create the cluster and the local docker registry
 
@@ -21,12 +33,13 @@ are deployed in the `default` namespace.
 ## Build istio images
 
 1. Clone https://github.com/istio/istio
+2. `git checkout release-1.10`   
 2. export TAG=your-build
 3. export HUB=localhost:5000
 4. export BUILD_WITH_CONTAINER=0
 5. make push
 
-This will create the docker images with the tag "my-build" (used in 'istio-config.yaml'), and push them to the local docker registry.
+This will create the docker images with the tag `my-build` (used in 'istio-config.yaml'), and push them to the local docker registry.
 
 (More info about building istio: https://github.com/istio/istio/wiki/Preparing-for-Development)
 
@@ -40,14 +53,18 @@ The output looks like:
 
 ```
 namespace/istio-system created
-secret/istio configured
-✔ Istio core installed
-✔ Istiod installed
-✔ Installation complete                                                                                                                                                        peerauthentication.security.istio.io/default created
-secret/istio.details configured
-secret/istio.productpage configured
-secret/istio.ratings configured
-secret/istio.reviews configured
+secret/istio created
+secret/istio.istio-ingressgateway-service-account created
+configmap/istio-ca-root-cert created
+✔ Istio core installed                                                                                                                                                                                                        
+✔ Istiod installed                                                                                                                                                                                                            
+✔ Ingress gateways installed                                                                                                                                                                                                  
+✔ Installation complete                                                                                                                                                                                                       Thank you for installing Istio 1.10.  Please take a few minutes to tell us about your install/upgrade experience!  https://forms.gle/KjkrDnMPByq7akrYA
+peerauthentication.security.istio.io/default created
+secret/istio.details created
+secret/istio.productpage created
+secret/istio.ratings created
+secret/istio.reviews created
 service/details created
 serviceaccount/details created
 deployment.apps/details-v1 created
@@ -62,6 +79,9 @@ serviceaccount/reviews created
 deployment.apps/reviews-v1 created
 deployment.apps/reviews-v2 created
 deployment.apps/reviews-v3 created
+gateway.networking.istio.io/bookinfo-gateway created
+virtualservice.networking.istio.io/bookinfo-service created
+destinationrule.networking.istio.io/enable-mtls created
 ```
 
 Check that all pods are in state `Running`:
@@ -74,22 +94,23 @@ Expected output:
 
 ```
 NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
-default              details-v1-fcc5fd966-gk8c2                   2/2     Running   0          4m8s
-default              productpage-v1-55cfb7d557-8rj79              2/2     Running   0          4m7s
-default              ratings-v1-848b4fcb74-w4ftq                  2/2     Running   0          4m6s
-default              reviews-v1-5978cfd6b-7b2z8                   2/2     Running   0          4m4s
-default              reviews-v2-6c4549775c-vlpnl                  2/2     Running   0          4m5s
-default              reviews-v3-7486f66464-rv9rx                  2/2     Running   0          4m5s
-istio-system         istiod-dff875789-fxjt2                       1/1     Running   0          4m29s
-kube-system          coredns-f9fd979d6-jd2hr                      1/1     Running   0          8m29s
-kube-system          coredns-f9fd979d6-kd9r7                      1/1     Running   0          8m29s
-kube-system          etcd-kind-control-plane                      1/1     Running   0          8m29s
-kube-system          kindnet-npj22                                1/1     Running   1          8m30s
-kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          8m29s
-kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          8m29s
-kube-system          kube-proxy-fg89x                             1/1     Running   0          8m30s
-kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          8m29s
-local-path-storage   local-path-provisioner-78776bfc44-zbwh8      1/1     Running   0          8m29s
+default              details-v1-6c79dd8447-d6qwt                  2/2     Running   0          5m36s
+default              productpage-v1-5d767c49cd-rd7f8              2/2     Running   0          5m35s
+default              ratings-v1-7fd67f6bc9-ql2qf                  2/2     Running   0          5m35s
+default              reviews-v1-65fd695cf6-9gxkm                  2/2     Running   0          5m34s
+default              reviews-v2-59958f8d4f-tf2hr                  2/2     Running   0          5m34s
+default              reviews-v3-549bff66b-d6nz4                   2/2     Running   0          5m34s
+istio-system         istio-ingressgateway-798dc44d6f-9xmz4        1/1     Running   0          6m12s
+istio-system         istiod-688ff97bb4-z7gkz                      1/1     Running   0          6m20s
+kube-system          coredns-f9fd979d6-8cdpx                      1/1     Running   0          7m6s
+kube-system          coredns-f9fd979d6-tgp9d                      1/1     Running   0          7m6s
+kube-system          etcd-kind-control-plane                      1/1     Running   0          7m7s
+kube-system          kindnet-xh9rw                                1/1     Running   1          7m7s
+kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          7m7s
+kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          7m7s
+kube-system          kube-proxy-c7qrn                             1/1     Running   0          7m7s
+kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          7m7s
+local-path-storage   local-path-provisioner-78776bfc44-kk9nn      1/1     Running   0          7m6s
 ```
 
 
@@ -120,6 +141,8 @@ Make a request from the host:
 curl localhost:8000/productpage
 ```
 
+Or open in the browser `localhost:8000/productpage`.
+
 The output is an HTML page that should not have any error sections.
 
 
@@ -129,9 +152,3 @@ The output is an HTML page that should not have any error sections.
 ./cleanup
 ```
 
-# TODOs:
-
-- Add ingress gateway (requires some configuration on the `kind` cluster and new secrets configuration)
-- Check whether the workloads can be deployed on separate namespaces (requires secrets update regenerating all the SVIDs 
-  to accommodate so they have SPIFFE IDs that reflect the new namespaces)
-- Add SPIRE to the deploy(?)  

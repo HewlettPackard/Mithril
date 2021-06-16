@@ -2,9 +2,6 @@
 
 kubectl apply -f secrets.yaml
 
-istioctl kube-inject --filename details.yaml | kubectl apply -f -
-istioctl kube-inject --filename productpage.yaml | kubectl apply -f -
-istioctl kube-inject --filename ratings.yaml | kubectl apply -f -
-istioctl kube-inject --filename reviews.yaml | kubectl apply -f -
+istioctl kube-inject --filename bookinfo.yaml | kubectl apply -f -
 
 kubectl apply -f gateway.yaml

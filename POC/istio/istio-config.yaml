@@ -25,10 +25,9 @@ spec:
         # Disable istiod CA Sever functionality
         - name: ENABLE_CA_SERVER
           value: "false"
-        # TODO: investigate why PILOT_ENABLE_XDS_IDENTITY_CHECK needs to be disabled, otherwise the xds service returns:
-        # authorization failed: no identities ([spiffe://cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account]) matched istio-system/istio-ingressgateway-service-account
+        # Check that istio-agent's namespace and service account match the ones in the JWT token presented in the connection
         - name: PILOT_ENABLE_XDS_IDENTITY_CHECK
-          value: "false"
+          value: "true"
         overlays:
         - apiVersion: apps/v1
           kind: Deployment

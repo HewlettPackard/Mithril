@@ -15,7 +15,7 @@ pipeline {
     stages {
         stage('build-istio') {
             steps {
-                // Istio clone from the master branch
+                // Istio clone from the release-1.10 branch
                 sh '''
                     git clone --single-branch --branch release-1.10 https://github.com/istio/istio.git
                     ls

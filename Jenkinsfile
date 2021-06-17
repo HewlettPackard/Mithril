@@ -48,8 +48,6 @@ pipeline {
                       export HUB=hub.docker.hpecorp.net/sec-eng
                       export BUILD_WITH_CONTAINER=0
                       export GOOS=linux
-                      pwd
-                      ls
                       cd istio
                       git apply ${WORKSPACE}/POC/patches/poc.1.10.patch
 

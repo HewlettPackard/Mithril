@@ -6,11 +6,23 @@ Currently, it deploys to local `kind ` cluster the istio `bookinfo` example conf
 generated from SVIDs issued by SPIRE. The four workloads from the example (details, productpage, ratings, and reviews) 
 are deployed in the `default` namespace.
 
+This POC requires at least 20GB of disk space and 2 CPUs, keep that in mind when setting up a VM. 
+
+## Minimal configuration
+
+- 2 CPUs
+- 20 GB (for POC *only*)
+
 ## Requirements
 
+- docker
 - kubectl
 - istioctl
 - [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
+- rpmbuild
+- fpm
+- make
+- go 1.16
 
 ## Create the cluster and the local docker registry
 
@@ -21,10 +33,12 @@ are deployed in the `default` namespace.
 ## Build istio images
 
 1. Clone https://github.com/istio/istio
-2. export TAG=your-build
-3. export HUB=localhost:5000
-4. export BUILD_WITH_CONTAINER=0
-5. make push
+  Note: You will need to clone the main istio repo to $GOPATH/src/istio.io/istio for the build commands to work correctly.
+2. Switch to release-1.10 branch
+3. export TAG=your-build
+4. export HUB=localhost:5000
+5. export BUILD_WITH_CONTAINER=0
+6. make push
 
 This will create the docker images with the tag "my-build" (used in 'istio-config.yaml'), and push them to the local docker registry.
 

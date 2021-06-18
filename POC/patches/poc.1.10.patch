@@ -1,0 +1,70 @@
+diff --git a/pilot/pkg/networking/core/v1alpha3/cluster_builder.go b/pilot/pkg/networking/core/v1alpha3/cluster_builder.go
+index c1fa46e26e..339dbe067f 100644
+--- a/pilot/pkg/networking/core/v1alpha3/cluster_builder.go
++++ b/pilot/pkg/networking/core/v1alpha3/cluster_builder.go
+@@ -16,6 +16,7 @@ package v1alpha3
+ 
+ import (
+ 	"fmt"
++	"net/url"
+ 
+ 	cluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+ 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+@@ -752,9 +753,20 @@ func (cb *ClusterBuilder) buildUpstreamClusterTLSContext(opts *buildClusterOpts,
+ 		tlsContext.CommonTlsContext.TlsCertificateSdsSecretConfigs = append(tlsContext.CommonTlsContext.TlsCertificateSdsSecretConfigs,
+ 			authn_model.ConstructSdsSecretConfig(model.GetOrDefault(metadataSDS.GetResourceName(), authn_model.SDSDefaultResourceName), proxy))
+ 
++		var sans []string
++		for _, san := range tls.SubjectAltNames {
++			u, err := url.Parse(san)
++			if err != nil {
++				continue
++			}
++			sans = append(sans, u.Scheme+"://"+u.Host)
++		}
++
+ 		tlsContext.CommonTlsContext.ValidationContextType = &auth.CommonTlsContext_CombinedValidationContext{
+ 			CombinedValidationContext: &auth.CommonTlsContext_CombinedCertificateValidationContext{
+-				DefaultValidationContext: &auth.CertificateValidationContext{MatchSubjectAltNames: util.StringToExactMatch(tls.SubjectAltNames)},
++				//TODO: do the same for the other cases
++				DefaultValidationContext: &auth.CertificateValidationContext{MatchSubjectAltNames: util.StringToPrefixMatch(sans)},
++				// DefaultValidationContext: &auth.CertificateValidationContext{MatchSubjectAltNames: util.StringToExactMatch(tls.SubjectAltNames)},
+ 				ValidationContextSdsSecretConfig: authn_model.ConstructSdsSecretConfig(model.GetOrDefault(metadataSDS.GetRootResourceName(),
+ 					authn_model.SDSRootResourceName), proxy),
+ 			},
+diff --git a/pkg/istio-agent/agent.go b/pkg/istio-agent/agent.go
+index 6dc65603f3..35ffacbed3 100644
+--- a/pkg/istio-agent/agent.go
++++ b/pkg/istio-agent/agent.go
+@@ -57,6 +57,7 @@ const (
+ 	// Location of K8S CA root.
+ 	k8sCAPath = "./var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+ 
++	//TODO we might need to change this. Or the config map?
+ 	// CitadelCACertPath is the directory for Citadel CA certificate.
+ 	// This is mounted from config map 'istio-ca-root-cert'. Part of startup,
+ 	// this may be replaced with ./etc/certs, if a root-cert.pem is found, to
+@@ -254,6 +255,7 @@ func (a *Agent) FindRootCAForXDS() string {
+ 	} else {
+ 		// PILOT_CERT_PROVIDER - default is istiod
+ 		// This is the default - a mounted config map on K8S
++		// TODO: look into this
+ 		return path.Join(CitadelCACertPath, constants.CACertNamespaceConfigMapDataName)
+ 	}
+ }
+@@ -281,6 +283,7 @@ func (a *Agent) FindRootCAForCA() string {
+ 	}
+ }
+ 
++// TODO: look into this
+ // newSecretManager creates the SecretManager for workload secrets
+ func (a *Agent) newSecretManager() (*cache.SecretManagerClient, error) {
+ 	// If proxy is using file mounted certs, we do not have to connect to CA.
+@@ -313,6 +316,7 @@ func (a *Agent) newSecretManager() (*cache.SecretManagerClient, error) {
+ 		log.Warn("Debug mode or IP-secure network")
+ 	}
+ 	if tls {
++		//TODO: might be relevant
+ 		caCertFile := a.FindRootCAForCA()
+ 		if caCertFile == "" {
+ 			log.Infof("Using CA %s cert with system certs", a.secOpts.CAEndpoint)

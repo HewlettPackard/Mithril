@@ -33,13 +33,6 @@ spec:
           kind: Deployment
           name: istiod
           patches:
-<<<<<<< HEAD
-          # istiod container patches          
-          # this is our custom build docker image
-          - path: spec.template.spec.containers.[name:discovery].image
-            value: "localhost:5000/pilot:your-build"
-=======
->>>>>>> upstream/master
           - path: spec.template.spec.containers.[name:discovery].args[8]
             value: "--tlsCertFile=/run/istiod/certs/istiod-svid.pem"
           - path: spec.template.spec.containers.[name:discovery].args[9]

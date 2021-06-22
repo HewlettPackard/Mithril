@@ -17,10 +17,36 @@ kubectl exec -n spire spire-server-0 -- \
 
 sleep 1
 
-echo "${bb}Creating registration entry for the workload...${nn}"
+echo "${bb}Creating registration entry for the bookinfo services...${nn}"
+
+# Details
 kubectl exec -n spire spire-server-0 -- \
     /opt/spire/bin/spire-server entry create \
-    -spiffeID spiffe://example.org/ns/default/sa/default \
     -parentID spiffe://example.org/ns/spire/sa/spire-agent \
+    -spiffeID spiffe://example.org/ns/default/sa/default \
     -selector k8s:ns:default \
-    -selector k8s:sa:default
+    -selector k8s:sa:details
+
+# Product page
+kubectl exec -n spire spire-server-0 -- \
+    /opt/spire/bin/spire-server entry create \
+    -parentID spiffe://example.org/ns/spire/sa/spire-agent \
+    -spiffeID spiffe://example.org/ns/default/sa/default \
+    -selector k8s:ns:default \
+    -selector k8s:sa:productpage
+
+# Ratings
+kubectl exec -n spire spire-server-0 -- \
+    /opt/spire/bin/spire-server entry create \
+    -parentID spiffe://example.org/ns/spire/sa/spire-agent \
+    -spiffeID spiffe://example.org/ns/default/sa/default \
+    -selector k8s:ns:default \
+    -selector k8s:sa:ratings
+
+# Reviews
+kubectl exec -n spire spire-server-0 -- \
+    /opt/spire/bin/spire-server entry create \
+    -parentID spiffe://example.org/ns/spire/sa/spire-agent \
+    -spiffeID spiffe://example.org/ns/default/sa/default \
+    -selector k8s:ns:default \
+    -selector k8s:sa:reviews

@@ -51,10 +51,19 @@ spec:
             - containerPort: 9080
           securityContext:
             runAsUser: 1000
+        - name: istio-proxy
+          volumeMounts:
+            - name: spire-agent-socket
+              mountPath: /run/spire/sockets
+              readOnly: true
       volumes:
         - name: istio-certs
           secret:
             secretName: bookinfo.certs
+        - name: spire-agent-socket
+          hostPath:
+            path: /run/spire/sockets
+            type: Directory
 ---
 ##################################################################################################
 # Ratings service
@@ -108,10 +117,19 @@ spec:
             - containerPort: 9080
           securityContext:
             runAsUser: 1000
+        - name: istio-proxy
+          volumeMounts:
+            - name: spire-agent-socket
+              mountPath: /run/spire/sockets
+              readOnly: true
       volumes:
         - name: istio-certs
           secret:
             secretName: bookinfo.certs
+        - name: spire-agent-socket
+          hostPath:
+            path: /run/spire/sockets
+            type: Directory
 ---
 ##################################################################################################
 # Reviews service
@@ -173,6 +191,11 @@ spec:
               mountPath: /opt/ibm/wlp/output
           securityContext:
             runAsUser: 1000
+        - name: istio-proxy
+          volumeMounts:
+            - name: spire-agent-socket
+              mountPath: /run/spire/sockets
+              readOnly: true
       volumes:
         - name: wlp-output
           emptyDir: {}
@@ -181,6 +204,10 @@ spec:
         - name: istio-certs
           secret:
             secretName: bookinfo.certs
+        - name: spire-agent-socket
+          hostPath:
+            path: /run/spire/sockets
+            type: Directory
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -218,6 +245,11 @@ spec:
               mountPath: /opt/ibm/wlp/output
           securityContext:
             runAsUser: 1000
+        - name: istio-proxy
+          volumeMounts:
+            - name: spire-agent-socket
+              mountPath: /run/spire/sockets
+              readOnly: true
       volumes:
         - name: wlp-output
           emptyDir: {}
@@ -226,6 +258,10 @@ spec:
         - name: istio-certs
           secret:
             secretName: bookinfo.certs
+        - name: spire-agent-socket
+          hostPath:
+            path: /run/spire/sockets
+            type: Directory
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -263,6 +299,11 @@ spec:
               mountPath: /opt/ibm/wlp/output
           securityContext:
             runAsUser: 1000
+        - name: istio-proxy
+          volumeMounts:
+            - name: spire-agent-socket
+              mountPath: /run/spire/sockets
+              readOnly: true
       volumes:
         - name: wlp-output
           emptyDir: {}
@@ -271,6 +312,10 @@ spec:
         - name: istio-certs
           secret:
             secretName: bookinfo.certs
+        - name: spire-agent-socket
+          hostPath:
+            path: /run/spire/sockets
+            type: Directory
 ---
 ##################################################################################################
 # Productpage services
@@ -327,10 +372,19 @@ spec:
               mountPath: /tmp
           securityContext:
             runAsUser: 1000
+        - name: istio-proxy
+          volumeMounts:
+            - name: spire-agent-socket
+              mountPath: /run/spire/sockets
+              readOnly: true
       volumes:
         - name: tmp
           emptyDir: {}
         - name: istio-certs
           secret:
             secretName: bookinfo.certs
+        - name: spire-agent-socket
+          hostPath:
+            path: /run/spire/sockets
+            type: Directory
 ---

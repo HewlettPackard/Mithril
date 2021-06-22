@@ -191,8 +191,8 @@ The output is an HTML page that should not have any error sections.
 
 
 
-### Testing Spire Installation
-
+### Testing Spire Installation 
+#### TODO: remove when spire-agent is successfully connecting to istio-proxy
 ```bash
 $ kubectl apply -f spire/client-deployment.yaml
 ```

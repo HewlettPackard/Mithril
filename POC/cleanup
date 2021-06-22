@@ -1,2 +1,2 @@
 (cd istio ; sh delete-istio)
-(cd bookinfo ; sh cleanup.sh)
+(cd bookinfo ; ./cleanup.sh)

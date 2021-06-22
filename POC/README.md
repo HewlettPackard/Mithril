@@ -10,7 +10,8 @@ This POC requires at least 20GB of disk space and 2 CPUs, keep that in mind when
 
 ## Minimal configuration
 
-- 2 CPUs
+- 4 CPUs
+- 8 GB RAM
 - 20 GB (for POC *only*)
 
 ## Requirements

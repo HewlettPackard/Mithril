@@ -23,7 +23,7 @@ echo "${bb}Creating registration entry for the bookinfo services...${nn}"
 kubectl exec -n spire spire-server-0 -- \
     /opt/spire/bin/spire-server entry create \
     -parentID spiffe://example.org/ns/spire/sa/spire-agent \
-    -spiffeID spiffe://example.org/ns/default/sa/default \
+    -spiffeID spiffe://example.org/bookinfo/details \
     -selector k8s:ns:default \
     -selector k8s:sa:details
 
@@ -31,7 +31,7 @@ kubectl exec -n spire spire-server-0 -- \
 kubectl exec -n spire spire-server-0 -- \
     /opt/spire/bin/spire-server entry create \
     -parentID spiffe://example.org/ns/spire/sa/spire-agent \
-    -spiffeID spiffe://example.org/ns/default/sa/default \
+    -spiffeID spiffe://example.org/bookinfo/productpage \
     -selector k8s:ns:default \
     -selector k8s:sa:productpage
 
@@ -39,7 +39,7 @@ kubectl exec -n spire spire-server-0 -- \
 kubectl exec -n spire spire-server-0 -- \
     /opt/spire/bin/spire-server entry create \
     -parentID spiffe://example.org/ns/spire/sa/spire-agent \
-    -spiffeID spiffe://example.org/ns/default/sa/default \
+    -spiffeID spiffe://example.org/bookinfo/ratings \
     -selector k8s:ns:default \
     -selector k8s:sa:ratings
 
@@ -47,6 +47,6 @@ kubectl exec -n spire spire-server-0 -- \
 kubectl exec -n spire spire-server-0 -- \
     /opt/spire/bin/spire-server entry create \
     -parentID spiffe://example.org/ns/spire/sa/spire-agent \
-    -spiffeID spiffe://example.org/ns/default/sa/default \
+    -spiffeID spiffe://example.org/bookinfo/reviews \
     -selector k8s:ns:default \
     -selector k8s:sa:reviews

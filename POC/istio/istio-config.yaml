@@ -11,6 +11,7 @@ spec:
       pilotCertProvider: custom
       # mTLS between workloads is done using certs mounted in /etc/certs
       mountMtlsCerts: true
+      imagePullPolicy: "Always"
 
   meshConfig:
     defaultConfig:

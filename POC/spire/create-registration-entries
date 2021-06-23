@@ -1,0 +1,64 @@
+#!/bin/bash
+set -e
+
+bb=$(tput bold)
+nn=$(tput sgr0)
+
+[[ -z "${TRUST_DOMAIN}" ]] && trust_domain='example.org' || trust_domain="${TRUST_DOMAIN}"
+
+[[ -z "${CLUSTER_NAME}" ]] && cluster_name='demo-cluster' || cluster_name="${CLUSTER_NAME}"
+
+echo "${bb}Creating registration entry for the node...${nn}"
+kubectl exec -n spire spire-server-0 -- \
+    /opt/spire/bin/spire-server entry create \
+    -node  \
+    -spiffeID spiffe://$trust_domain/ns/spire/sa/spire-agent \
+    -selector k8s_sat:cluster:$cluster_name \
+    -selector k8s_sat:agent_ns:spire \
+    -selector k8s_sat:agent_sa:spire-agent
+
+sleep 1
+
+echo "${bb}Creating registration entry for ingress...${nn}"
+
+# Ingress
+kubectl exec -n spire spire-server-0 -- \
+    /opt/spire/bin/spire-server entry create \
+    -parentID spiffe://$trust_domain/ns/spire/sa/spire-agent \
+    -spiffeID spiffe://$trust_domain/istio/ingressgateway \
+    -selector k8s:ns:istio-system \
+    -selector k8s:pod-label:app=istio-ingressgateway
+
+echo "${bb}Creating registration entry for the bookinfo services...${nn}"
+
+# Details
+kubectl exec -n spire spire-server-0 -- \
+    /opt/spire/bin/spire-server entry create \
+    -parentID spiffe://$trust_domain/ns/spire/sa/spire-agent \
+    -spiffeID spiffe://$trust_domain/bookinfo/details \
+    -selector k8s:ns:default \
+    -selector k8s:sa:details
+
+# Product page
+kubectl exec -n spire spire-server-0 -- \
+    /opt/spire/bin/spire-server entry create \
+    -parentID spiffe://$trust_domain/ns/spire/sa/spire-agent \
+    -spiffeID spiffe://$trust_domain/bookinfo/productpage \
+    -selector k8s:ns:default \
+    -selector k8s:sa:productpage
+
+# Ratings
+kubectl exec -n spire spire-server-0 -- \
+    /opt/spire/bin/spire-server entry create \
+    -parentID spiffe://$trust_domain/ns/spire/sa/spire-agent \
+    -spiffeID spiffe://$trust_domain/bookinfo/ratings \
+    -selector k8s:ns:default \
+    -selector k8s:sa:ratings
+
+# Reviews
+kubectl exec -n spire spire-server-0 -- \
+    /opt/spire/bin/spire-server entry create \
+    -parentID spiffe://$trust_domain/ns/spire/sa/spire-agent \
+    -spiffeID spiffe://$trust_domain/bookinfo/reviews \
+    -selector k8s:ns:default \
+    -selector k8s:sa:reviews

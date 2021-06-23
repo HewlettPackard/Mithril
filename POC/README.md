@@ -15,7 +15,7 @@ are deployed in the `default` namespace.
 ### Install istioctl:
 
 ```
-$ curl -L https://istio.io/downloadIstio | sh -
+curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.10.1 sh -
 ```
 
 Should work with istio `1.9.1` and `1.10.1`.
@@ -27,7 +27,7 @@ Follow [kind install instructions](https://kind.sigs.k8s.io/docs/user/quick-star
 ## Create the cluster and the local docker registry
 
 ```bash
-$ ./create-kind-cluster
+./create-kind-cluster
 ```
 
 ## Build istio images
@@ -45,8 +45,10 @@ This will create the docker images with the tag `my-build` (used in 'istio-confi
 
 ## Running the POC
 
+Before running the deploy script, specify your trust domain and cluster name on the spire server config at `spire/server-configmap.yaml`
+
 ```bash
-$ ./deploy-all
+./deploy-all
 ```
 
 The output should look like: 
@@ -99,10 +101,10 @@ daemonset.apps/spire-agent created
 
 ```
 
-Check that all pods are in state `Running`:
+Wait for all pods are to reach `Running` state:
 
 ```bash
-$ kubectl get pods -A
+kubectl get pods -A
 ```
 
 Expected output: 
@@ -130,15 +132,16 @@ spire                spire-agent-nnkpb                            1/1     Runnin
 spire                spire-server-0                               1/1     Running   0          2m32s
 ```
 
-Create SPIRE registration entries for the node and the workload
+Then, create SPIRE registration entries
 
 ```bash
-$ ./spire/create-registration-entries.sh
+CLUSTER_NAME=your-cluster TRUST_DOMAIN=your-domain \
+./spire/create-registration-entries.sh
 ```
 
 ```
 Creating registration entry for the node...
-Entry ID         : bf37cf2a-7a76-489a-8139-ba6def1b566d
+Entry ID         : ed8db9a1-ba4b-4d62-8c75-9fcc4b14f004
 SPIFFE ID        : spiffe://example.org/ns/spire/sa/spire-agent
 Parent ID        : spiffe://example.org/spire/server
 Revision         : 0
@@ -147,14 +150,47 @@ Selector         : k8s_sat:agent_ns:spire
 Selector         : k8s_sat:agent_sa:spire-agent
 Selector         : k8s_sat:cluster:demo-cluster
 
-Creating registration entry for the workload...
-Entry ID         : a2dfb64a-8cf7-4751-86e3-080944a37e31
-SPIFFE ID        : spiffe://example.org/ns/default/sa/default
+Creating registration entry for ingress...
+Entry ID         : 75afec49-118a-49e8-859b-5b6a0191440e
+SPIFFE ID        : spiffe://example.org/istio/ingressgateway
+Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
+Revision         : 0
+TTL              : default
+Selector         : k8s:ns:istio-system
+Selector         : k8s:pod-label:app=istio-ingressgateway
+
+Creating registration entry for the bookinfo services...
+Entry ID         : 5b3a2d3e-8838-48cc-aac8-7073aeece819
+SPIFFE ID        : spiffe://example.org/bookinfo/details
 Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
 Revision         : 0
 TTL              : default
 Selector         : k8s:ns:default
-Selector         : k8s:sa:default
+Selector         : k8s:sa:details
+
+Entry ID         : 0b852e64-e7d3-4c8e-889c-94962bca02ef
+SPIFFE ID        : spiffe://example.org/bookinfo/productpage
+Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
+Revision         : 0
+TTL              : default
+Selector         : k8s:ns:default
+Selector         : k8s:sa:productpage
+
+Entry ID         : 486343c1-c7b6-4baf-8552-d4651868d3d3
+SPIFFE ID        : spiffe://example.org/bookinfo/ratings
+Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
+Revision         : 0
+TTL              : default
+Selector         : k8s:ns:default
+Selector         : k8s:sa:ratings
+
+Entry ID         : 0321df08-c2be-4300-a26d-9c37c30a53a7
+SPIFFE ID        : spiffe://example.org/bookinfo/reviews
+Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
+Revision         : 0
+TTL              : default
+Selector         : k8s:ns:default
+Selector         : k8s:sa:reviews
 ```
 
 
@@ -188,27 +224,6 @@ curl localhost:8000/productpage
 Or open in the browser `localhost:8000/productpage`.
 
 The output is an HTML page that should not have any error sections.
-
-
-
-### Testing Spire Installation 
-#### TODO: remove when spire-agent is successfully connecting to istio-proxy
-```bash
-$ kubectl apply -f spire/client-deployment.yaml
-```
-
-Starting a shell connection
-
-```bash
-$ kubectl exec -it $(kubectl get pods -o=jsonpath='{.items[0].metadata.name}' \
-   -l app=client)  -- /bin/sh
-```
-
-Verify that the container can access the socket
-
-```bash
-$ /opt/spire/bin/spire-agent api fetch -socketPath /run/spire/sockets/agent.sock
-```
 
 # Clean up
 

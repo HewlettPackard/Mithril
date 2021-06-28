@@ -13,6 +13,14 @@ pipeline {
   triggers { cron( BRANCH_NAME == "master" ?  "00 00 * * *" : "") }
 
   stages {
+
+    stage('Notify Slack') {
+      steps {
+        script { 
+          slackSend (token: secrets.slackToken, channel: 'project-mithril-jenkins', message: 'hello')
+        }
+      }
+    }
     stage('build-istio') {
       steps {
         // Istio clone from the release-1.10 branch
@@ -44,32 +52,25 @@ pipeline {
                 export BUILD_WITH_CONTAINER=0
                 export GOOS=linux
 
-                cd istio
-                git apply ${WORKSPACE}/POC/patches/poc.1.10.patch
+                // cd istio
+                // git apply ${WORKSPACE}/POC/patches/poc.1.10.patch
 
-                echo \"${secrets.dockerHubToken}\" | docker login hub.docker.hpecorp.net --username \"${secrets.dockerHubToken}\" --password-stdin
+                // echo \"${secrets.dockerHubToken}\" | docker login hub.docker.hpecorp.net --username \"${secrets.dockerHubToken}\" --password-stdin
                 
-                export HUB=hub.docker.hpecorp.net/sec-eng
+                // export HUB=hub.docker.hpecorp.net/sec-eng
 
-                make push
+                // make push
                 
-                aws configure set aws_access_key_id \"${secrets.awsAccessKeyID}\"
-                aws configure set aws_secret_access_key \"${secrets.awsSecretAccessKeyID}\"
-                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin \"${secrets.awsAccountID}\".dkr.ecr.us-east-1.amazonaws.com
+                // aws configure set aws_access_key_id \"${secrets.awsAccessKeyID}\"
+                // aws configure set aws_secret_access_key \"${secrets.awsSecretAccessKeyID}\"
+                // aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin \"${secrets.awsAccountID}\".dkr.ecr.us-east-1.amazonaws.com
 
-                export HUB=\"${secrets.awsAccountID}\".dkr.ecr.us-east-1.amazonaws.com/mithril
+                // export HUB=\"${secrets.awsAccountID}\".dkr.ecr.us-east-1.amazonaws.com/mithril
 
-                make push
+                // make push
               """
             }
           }
-        }
-      }
-    }
-    stage('Notify Slack') {
-      steps {
-        script { 
-          slackSend (token: secrets.dockerHubToken, channel: 'project-mithril-jenkins', message: 'hello')
         }
       }
     }

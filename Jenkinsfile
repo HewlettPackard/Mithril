@@ -26,7 +26,7 @@ pipeline {
           def passwordMask = [
             $class: 'MaskPasswordsBuildWrapper',
             varPasswordPairs: [
-              [ password: secrets.dockerHubToken ],
+              [ password: secrets.dockerHubToken],
               [ password: secrets.dockerHubUsername],
               [ password: secrets.awsAccessKeyID],
               [ password: secrets.awsSecretAccessKeyID],
@@ -65,6 +65,19 @@ pipeline {
           }
         }
       }
+    }
+    stage('Notify Slack') {
+      steps {
+        script { 
+          slackSend (token: secrets.dockerHubToken, channel: 'project-mithril-jenkins', message: 'hello')
+        }
+      }
+    }
+  }
+
+  post {
+    failure {
+      slackSend (token: secrets.dockerHubToken, channel: 'project-mithril-jenkins', message: 'Build failed')
     }
   }
 }

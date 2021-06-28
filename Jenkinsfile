@@ -17,8 +17,7 @@ pipeline {
     stage('Notify Slack') {
       steps {
         script { 
-          secrets = vaultGetSecrets()
-          slackSend (token: secrets.slackToken, channel: 'project-mithril-jenkins', message: 'hello')
+          slackSend (channel: 'nathalia-satie.gomazako', message: 'hello')
         }
       }
     }
@@ -81,8 +80,7 @@ pipeline {
     failure {
       steps {
         script { 
-          secrets = vaultGetSecrets()
-          slackSend (token: secrets.slackToken, channel: 'project-mithril-jenkins', message: 'hello')
+          slackSend (channel: 'nathalia-satie.gomazako', message: 'hello')
         }
       }
     }

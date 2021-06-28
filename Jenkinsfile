@@ -21,6 +21,7 @@ pipeline {
         }
       }
     }
+
     stage('build-istio') {
       steps {
         // Istio clone from the release-1.10 branch
@@ -78,11 +79,7 @@ pipeline {
 
   post {
     failure {
-      steps {
-        script { 
-          slackSend (channel: 'nathalia-satie.gomazako', message: 'hello')
-        }
-      }
+      slackSend (channel: '@U021L6LHSHM', message: 'hello')
     }
   }
 }

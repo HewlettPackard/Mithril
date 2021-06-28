@@ -17,6 +17,7 @@ pipeline {
     stage('Notify Slack') {
       steps {
         script { 
+          secrets = vaultGetSecrets()
           slackSend (token: secrets.slackToken, channel: 'project-mithril-jenkins', message: 'hello')
         }
       }
@@ -78,7 +79,12 @@ pipeline {
 
   post {
     failure {
-      slackSend (token: secrets.dockerHubToken, channel: 'project-mithril-jenkins', message: 'Build failed')
+      steps {
+        script { 
+          secrets = vaultGetSecrets()
+          slackSend (token: secrets.slackToken, channel: 'project-mithril-jenkins', message: 'hello')
+        }
+      }
     }
   }
 }

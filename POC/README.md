@@ -28,7 +28,7 @@ This POC requires at least 20GB of disk space and 2 CPUs, keep that in mind when
 ### Install istioctl:
 
 ```
-curl -L https://istio.io/downloadIstio | sh -
+curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.10.1 sh -
 ```
 
 Should work with istio `1.9.1` and `1.10.1`.
@@ -60,11 +60,13 @@ This will create the docker images with the tag `my-build` (used in 'istio-confi
 
 ## Running the POC
 
+Before running the deploy script, specify your trust domain and cluster name on the spire server config at `spire/server-configmap.yaml`
+
 ```bash
 ./deploy-all
 ```
 
-The output looks like: 
+The output should look like: 
 
 ```
 namespace/istio-system created
@@ -80,12 +82,10 @@ secret/istio.details created
 secret/istio.productpage created
 secret/istio.ratings created
 secret/istio.reviews created
+configmap/istio-ca-root-cert created
 service/details created
 serviceaccount/details created
 deployment.apps/details-v1 created
-service/productpage created
-serviceaccount/productpage created
-deployment.apps/productpage-v1 created
 service/ratings created
 serviceaccount/ratings created
 deployment.apps/ratings-v1 created
@@ -94,12 +94,29 @@ serviceaccount/reviews created
 deployment.apps/reviews-v1 created
 deployment.apps/reviews-v2 created
 deployment.apps/reviews-v3 created
+service/productpage created
+serviceaccount/productpage created
+deployment.apps/productpage-v1 created
 gateway.networking.istio.io/bookinfo-gateway created
 virtualservice.networking.istio.io/bookinfo-service created
 destinationrule.networking.istio.io/enable-mtls created
+namespace/spire created
+serviceaccount/spire-server created
+configmap/spire-bundle created
+clusterrole.rbac.authorization.k8s.io/spire-server-trust-role created
+clusterrolebinding.rbac.authorization.k8s.io/spire-server-trust-role-binding created
+configmap/spire-server created
+statefulset.apps/spire-server created
+service/spire-server created
+serviceaccount/spire-agent created
+clusterrole.rbac.authorization.k8s.io/spire-agent-cluster-role created
+clusterrolebinding.rbac.authorization.k8s.io/spire-agent-cluster-role-binding created
+configmap/spire-agent created
+daemonset.apps/spire-agent created
+
 ```
 
-Check that all pods are in state `Running`:
+Wait for all pods are to reach `Running` state:
 
 ```bash
 kubectl get pods -A
@@ -109,23 +126,86 @@ Expected output:
 
 ```
 NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
-default              details-v1-6c79dd8447-d6qwt                  2/2     Running   0          5m36s
-default              productpage-v1-5d767c49cd-rd7f8              2/2     Running   0          5m35s
-default              ratings-v1-7fd67f6bc9-ql2qf                  2/2     Running   0          5m35s
-default              reviews-v1-65fd695cf6-9gxkm                  2/2     Running   0          5m34s
-default              reviews-v2-59958f8d4f-tf2hr                  2/2     Running   0          5m34s
-default              reviews-v3-549bff66b-d6nz4                   2/2     Running   0          5m34s
-istio-system         istio-ingressgateway-798dc44d6f-9xmz4        1/1     Running   0          6m12s
-istio-system         istiod-688ff97bb4-z7gkz                      1/1     Running   0          6m20s
-kube-system          coredns-f9fd979d6-8cdpx                      1/1     Running   0          7m6s
-kube-system          coredns-f9fd979d6-tgp9d                      1/1     Running   0          7m6s
-kube-system          etcd-kind-control-plane                      1/1     Running   0          7m7s
-kube-system          kindnet-xh9rw                                1/1     Running   1          7m7s
-kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          7m7s
-kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          7m7s
-kube-system          kube-proxy-c7qrn                             1/1     Running   0          7m7s
-kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          7m7s
-local-path-storage   local-path-provisioner-78776bfc44-kk9nn      1/1     Running   0          7m6s
+default              details-v1-87b44dc44-ztq9k                   2/2     Running   0          2m37s
+default              productpage-v1-675dbf6dc7-rtccq              2/2     Running   0          2m35s
+default              ratings-v1-65ffcb969b-958cg                  2/2     Running   0          2m36s
+default              reviews-v1-67458875c9-tvt66                  2/2     Running   0          2m36s
+default              reviews-v2-fcbd767db-29tpf                   2/2     Running   0          2m36s
+default              reviews-v3-6c84468bbf-jq4th                  2/2     Running   0          2m35s
+istio-system         istio-ingressgateway-7df65c94db-bk7r8        1/1     Running   0          2m42s
+istio-system         istiod-8596965f55-6fr2t                      1/1     Running   0          2m46s
+kube-system          coredns-558bd4d5db-cf5rv                     1/1     Running   0          4m15s
+kube-system          coredns-558bd4d5db-pbxqv                     1/1     Running   0          4m15s
+kube-system          etcd-kind-control-plane                      1/1     Running   0          4m16s
+kube-system          kindnet-l49vn                                1/1     Running   0          4m16s
+kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          4m16s
+kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          4m16s
+kube-system          kube-proxy-ffb2c                             1/1     Running   0          4m16s
+kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          4m29s
+local-path-storage   local-path-provisioner-547f784dff-slwfd      1/1     Running   0          4m15s
+spire                spire-agent-nnkpb                            1/1     Running   0          2m29s
+spire                spire-server-0                               1/1     Running   0          2m32s
+```
+
+Then, create SPIRE registration entries
+
+```bash
+CLUSTER_NAME=your-cluster TRUST_DOMAIN=your-domain \
+./spire/create-registration-entries.sh
+```
+
+```
+Creating registration entry for the node...
+Entry ID         : ed8db9a1-ba4b-4d62-8c75-9fcc4b14f004
+SPIFFE ID        : spiffe://example.org/ns/spire/sa/spire-agent
+Parent ID        : spiffe://example.org/spire/server
+Revision         : 0
+TTL              : default
+Selector         : k8s_sat:agent_ns:spire
+Selector         : k8s_sat:agent_sa:spire-agent
+Selector         : k8s_sat:cluster:demo-cluster
+
+Creating registration entry for ingress...
+Entry ID         : 75afec49-118a-49e8-859b-5b6a0191440e
+SPIFFE ID        : spiffe://example.org/istio/ingressgateway
+Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
+Revision         : 0
+TTL              : default
+Selector         : k8s:ns:istio-system
+Selector         : k8s:pod-label:app=istio-ingressgateway
+
+Creating registration entry for the bookinfo services...
+Entry ID         : 5b3a2d3e-8838-48cc-aac8-7073aeece819
+SPIFFE ID        : spiffe://example.org/bookinfo/details
+Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
+Revision         : 0
+TTL              : default
+Selector         : k8s:ns:default
+Selector         : k8s:sa:details
+
+Entry ID         : 0b852e64-e7d3-4c8e-889c-94962bca02ef
+SPIFFE ID        : spiffe://example.org/bookinfo/productpage
+Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
+Revision         : 0
+TTL              : default
+Selector         : k8s:ns:default
+Selector         : k8s:sa:productpage
+
+Entry ID         : 486343c1-c7b6-4baf-8552-d4651868d3d3
+SPIFFE ID        : spiffe://example.org/bookinfo/ratings
+Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
+Revision         : 0
+TTL              : default
+Selector         : k8s:ns:default
+Selector         : k8s:sa:ratings
+
+Entry ID         : 0321df08-c2be-4300-a26d-9c37c30a53a7
+SPIFFE ID        : spiffe://example.org/bookinfo/reviews
+Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
+Revision         : 0
+TTL              : default
+Selector         : k8s:ns:default
+Selector         : k8s:sa:reviews
 ```
 
 
@@ -159,7 +239,6 @@ curl localhost:8000/productpage
 Or open in the browser `localhost:8000/productpage`.
 
 The output is an HTML page that should not have any error sections.
-
 
 # Clean up
 

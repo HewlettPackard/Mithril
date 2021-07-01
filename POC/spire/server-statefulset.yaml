@@ -52,7 +52,7 @@ spec:
               mountPath: /tmp/spire-server/private
               readOnly: false
         - name: k8s-workload-registrar
-          image: gcr.io/spiffe-io/k8s-workload-registrar:0.12.0
+          image: gcr.io/spiffe-io/k8s-workload-registrar:0.12.3
           args:
             - -config
             - /run/spire/config/k8s-workload-registrar.conf

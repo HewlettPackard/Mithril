@@ -17,7 +17,7 @@ pipeline {
     stage('Notify Slack') {
       steps {
         script { 
-          slackSend (channel: 'nathalia-satie.gomazako', message: 'hello')
+          slackSend (channel: '@U021L6LHSHM', message: 'hello')
         }
       }
     }

@@ -11,4 +11,3 @@ data:
     mode = "crd"
     pod_annotation = "spiffe.io/spiffe-id"
     metrics_bind_addr = "0"
-

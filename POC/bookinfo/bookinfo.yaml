@@ -42,7 +42,7 @@ spec:
         app: details
         version: v1
       annotations:
-        spiffe.io/spiffe-id: "details-v1"
+        spiffe.io/spiffe-id: "bookinfo/details-v1"
     spec:
       serviceAccountName: details
       containers:
@@ -110,7 +110,7 @@ spec:
         app: ratings
         version: v1
       annotations:
-        spiffe.io/spiffe-id: "ratings-v1"
+        spiffe.io/spiffe-id: "bookinfo/ratings-v1"
     spec:
       serviceAccountName: ratings
       containers:
@@ -178,7 +178,7 @@ spec:
         app: reviews
         version: v1
       annotations:
-        spiffe.io/spiffe-id: "reviews-v1"
+        spiffe.io/spiffe-id: "bookinfo/reviews-v1"
     spec:
       serviceAccountName: reviews
       containers:
@@ -234,7 +234,7 @@ spec:
         app: reviews
         version: v2
       annotations:
-        spiffe.io/spiffe-id: "reviews-v2"
+        spiffe.io/spiffe-id: "bookinfo/reviews-v2"
     spec:
       serviceAccountName: reviews
       containers:
@@ -290,7 +290,7 @@ spec:
         app: reviews
         version: v3
       annotations:
-        spiffe.io/spiffe-id: "reviews-v3"
+        spiffe.io/spiffe-id: "bookinfo/reviews-v3"
     spec:
       serviceAccountName: reviews
       containers:
@@ -370,7 +370,7 @@ spec:
         app: productpage
         version: v1
       annotations:
-        spiffe.io/spiffe-id: "productpage"
+        spiffe.io/spiffe-id: "bookinfo/productpage"
     spec:
       serviceAccountName: productpage
       containers:

@@ -1,5 +1,6 @@
 // Ubuntu image with the necessary dependencies for building Istio and AWS CLI
 UBUNTU_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:istio-aws-deps"
+CHANNEL_NAME = "@U021L6LHSHM"
 
 // Start of the pipeline
 pipeline {
@@ -18,8 +19,8 @@ pipeline {
       steps {
         script { 
           slackSend (
-            channel: '@U021L6LHSHM',
-            message: "Hello, ${env.JOB_NAME} pipeline has started.")
+            channel: CHANNEL_NAME,
+            message: "Hello, ${env.JOB_NAME} pipeline #${env.BUILD_NUMBER} has started.")
         }
       }
     }
@@ -80,11 +81,18 @@ pipeline {
   }
 
   post {
+    success {
+      slackSend (
+        channel: CHANNEL_NAME,  
+        color: 'good', 
+        message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
+      )
+    }
     failure {
       slackSend (
-        channel: '@U021L6LHSHM',  
+        channel: CHANNEL_NAME,  
         color: 'bad', 
-        message: "Ooops! ${env.JOB_NAME} has failed. Check it here: ${env.BUILD_URL}"
+        message: "Ooops! ${env.JOB_NAME}#${env.BUILD_NUMBER} has failed. Check it here: ${env.BUILD_URL}"
       )
     }
   }

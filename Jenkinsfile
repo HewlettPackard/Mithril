@@ -17,7 +17,9 @@ pipeline {
     stage('Notify Slack') {
       steps {
         script { 
-          slackSend (channel: '@U021L6LHSHM', message: 'hello')
+          slackSend (
+            channel: '@U021L6LHSHM',
+            message: "Hello, ${env.JOB_NAME} pipeline has started.")
         }
       }
     }
@@ -79,7 +81,11 @@ pipeline {
 
   post {
     failure {
-      slackSend (channel: '@U021L6LHSHM', message: 'hello')
+      slackSend (
+        channel: '@U021L6LHSHM',  
+        color: 'bad', 
+        message: "Ooops! ${env.JOB_NAME} has failed. Check it here: ${env.BUILD_URL}"
+      )
     }
   }
 }

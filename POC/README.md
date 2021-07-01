@@ -246,3 +246,6 @@ The output is an HTML page that should not have any error sections.
 ./cleanup
 ```
 
+## Running Istio Agent
+
+Follow [Running Istio Agent Wiki](https://github.hpe.com/sec-eng/istio-spire/wiki/Running-Istio-Agent-locally-or-in-container)

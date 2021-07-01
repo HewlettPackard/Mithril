@@ -1,6 +1,6 @@
 // Ubuntu image with the necessary dependencies for building Istio and AWS CLI
 UBUNTU_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:istio-aws-deps"
-CHANNEL_NAME = "@U021L6LHSHM"
+CHANNEL_NAME = "#notify-project-mithril"
 
 // Start of the pipeline
 pipeline {
@@ -20,7 +20,7 @@ pipeline {
         script { 
           slackSend (
             channel: CHANNEL_NAME,
-            message: "Hello, ${env.JOB_NAME} pipeline #${env.BUILD_NUMBER} has started.")
+            message: "Hello. The pipeline ${currentBuild.fullDisplayName} started.")
         }
       }
     }
@@ -56,22 +56,22 @@ pipeline {
                 export BUILD_WITH_CONTAINER=0
                 export GOOS=linux
 
-                // cd istio
-                // git apply ${WORKSPACE}/POC/patches/poc.1.10.patch
+                cd istio
+                git apply ${WORKSPACE}/POC/patches/poc.1.10.patch
 
-                // echo \"${secrets.dockerHubToken}\" | docker login hub.docker.hpecorp.net --username \"${secrets.dockerHubToken}\" --password-stdin
+                echo \"${secrets.dockerHubToken}\" | docker login hub.docker.hpecorp.net --username \"${secrets.dockerHubToken}\" --password-stdin
                 
-                // export HUB=hub.docker.hpecorp.net/sec-eng
+                export HUB=hub.docker.hpecorp.net/sec-eng
 
-                // make push
+                make push
                 
-                // aws configure set aws_access_key_id \"${secrets.awsAccessKeyID}\"
-                // aws configure set aws_secret_access_key \"${secrets.awsSecretAccessKeyID}\"
-                // aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin \"${secrets.awsAccountID}\".dkr.ecr.us-east-1.amazonaws.com
+                aws configure set aws_access_key_id \"${secrets.awsAccessKeyID}\"
+                aws configure set aws_secret_access_key \"${secrets.awsSecretAccessKeyID}\"
+                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin \"${secrets.awsAccountID}\".dkr.ecr.us-east-1.amazonaws.com
 
-                // export HUB=\"${secrets.awsAccountID}\".dkr.ecr.us-east-1.amazonaws.com/mithril
+                export HUB=\"${secrets.awsAccountID}\".dkr.ecr.us-east-1.amazonaws.com/mithril
 
-                // make push
+                make push
               """
             }
           }
@@ -92,7 +92,7 @@ pipeline {
       slackSend (
         channel: CHANNEL_NAME,  
         color: 'bad', 
-        message: "Ooops! ${env.JOB_NAME}#${env.BUILD_NUMBER} has failed. Check it here: ${env.BUILD_URL}"
+        message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
       )
     }
   }

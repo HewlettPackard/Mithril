@@ -6,8 +6,8 @@ spec:
   profile: default
   values:
     global:
-      hub: localhost:5000
-      tag: my-build
+      # hub: 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
+      # tag: master_56d6c3d
       pilotCertProvider: custom
       # mTLS between workloads is done using certs mounted in /etc/certs
       mountMtlsCerts: true
@@ -23,37 +23,36 @@ spec:
     pilot:
       k8s:
         env:
-        # Disable istiod CA Sever functionality
-        - name: ENABLE_CA_SERVER
-          value: "false"
-        # Check that istio-agent's namespace and service account match the ones in the JWT token presented in the connection
-        - name: PILOT_ENABLE_XDS_IDENTITY_CHECK
-          value: "true"
+          # Disable istiod CA Sever functionality
+          - name: ENABLE_CA_SERVER
+            value: "false"
+          # Check that istio-agent's namespace and service account match the ones in the JWT token presented in the connection
+          - name: PILOT_ENABLE_XDS_IDENTITY_CHECK
+            value: "true"
         overlays:
-        - apiVersion: apps/v1
-          kind: Deployment
-          name: istiod
-          patches:
-          - path: spec.template.spec.containers.[name:discovery].args[8]
-            value: "--tlsCertFile=/run/istiod/certs/istiod-svid.pem"
-          - path: spec.template.spec.containers.[name:discovery].args[9]
-            value: "--tlsKeyFile=/run/istiod/certs/istiod-key.pem"
-          - path: spec.template.spec.containers.[name:discovery].args[10]
-            value: "--caCertFile=/run/istiod/certs/root-cert.pem"
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: istiod
+            patches:
+              - path: spec.template.spec.containers.[name:discovery].args[8]
+                value: "--tlsCertFile=/run/istiod/certs/istiod-svid.pem"
+              - path: spec.template.spec.containers.[name:discovery].args[9]
+                value: "--tlsKeyFile=/run/istiod/certs/istiod-key.pem"
+              - path: spec.template.spec.containers.[name:discovery].args[10]
+                value: "--caCertFile=/run/istiod/certs/root-cert.pem"
 
-          - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
-            value:
-              name: istiod-certs
-              mountPath: "/run/istiod/certs"
-              readOnly: false   
+              - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
+                value:
+                  name: istiod-certs
+                  mountPath: "/run/istiod/certs"
+                  readOnly: false
 
-          # pod patches
-          - path: spec.template.spec.volumes[7]
-            value:
-              name: istiod-certs
-              secret:
-                secretName: istio
-              
+              # pod patches
+              - path: spec.template.spec.volumes[7]
+                value:
+                  name: istiod-certs
+                  secret:
+                    secretName: istio
 
     ingressGateways:
       - name: istio-ingressgateway

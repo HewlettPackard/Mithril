@@ -1,6 +1,11 @@
 // Ubuntu image with the necessary dependencies for building Istio and AWS CLI
 UBUNTU_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:istio-aws-deps"
 CHANNEL_NAME = "#notify-project-mithril"
+BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:istio-aws-deps"
+LATEST_BRANCH = "1.10"
+HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
+ECR_REGION = "us-east-1"
+ECR_REPOSITORY = "mithril"
 
 // Start of the pipeline
 pipeline {
@@ -15,87 +20,119 @@ pipeline {
 
   stages {
 
-    stage('Notify Slack') {
+    stage('make-poc-codebase') {
       steps {
-        script { 
-          slackSend (
-            channel: CHANNEL_NAME,
-            message: "Hello. The pipeline ${currentBuild.fullDisplayName} started.")
-        }
+        // Istio clone from the latest branch
+        sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
+
+        // // Apply Mithril patches
+        sh "cd istio && git apply ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch"
       }
     }
 
-    stage('build-istio') {
+    stage('build-and-push-images') {
+      environment {
+        TAG = makeTag() 
+        BUILD_WITH_CONTAINER = 0
+        GOOS = "linux"
+
+        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+      }
       steps {
-        // Istio clone from the release-1.10 branch
-        sh '''
-          git clone --single-branch --branch release-1.10 https://github.com/istio/istio.git
-          ls
-        '''
         // Fetch secrets from Vault and use the mask token plugin
         script {
-          secrets = vaultGetSecrets()
-          def passwordMask = [
+          def secrets = vaultGetSecrets()
+
+          def passwordMask = [ 
             $class: 'MaskPasswordsBuildWrapper',
-            varPasswordPairs: [
-              [ password: secrets.dockerHubToken],
-              [ password: secrets.dockerHubUsername],
-              [ password: secrets.awsAccessKeyID],
-              [ password: secrets.awsSecretAccessKeyID],
-              [ password: secrets.awsAccountID]
-            ]
+            varPasswordPairs: [ [ password: secrets.dockerHubToken ] ]
           ]
-          // Create the build tag
-          def BUILD_TAG = makeTag()
+
           // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
           // and build tag, building Istio and pushing images to the Dockerhub of HPE
           wrap(passwordMask) {
-            _ = docker.image(UBUNTU_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock -e DOCKER_HUB_HPE_TOKEN=\"${secrets.dockerHubToken}\" -e DOCKER_HUB_HPE_USER=\"${secrets.dockerHubUsername}\" -e TAG=\"${BUILD_TAG}\" ") {
+            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+              // Build and push to HPE registry
               sh """
-                export TAG=\"${BUILD_TAG}\"
-                export BUILD_WITH_CONTAINER=0
-                export GOOS=linux
+                export HUB=${HPE_REGISTRY}
 
-                cd istio
-                git apply ${WORKSPACE}/POC/patches/poc.1.10.patch
+                echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
 
-                echo \"${secrets.dockerHubToken}\" | docker login hub.docker.hpecorp.net --username \"${secrets.dockerHubToken}\" --password-stdin
-                
-                export HUB=hub.docker.hpecorp.net/sec-eng
+                cd istio && make push
+              """
 
-                make push
-                
-                aws configure set aws_access_key_id \"${secrets.awsAccessKeyID}\"
-                aws configure set aws_secret_access_key \"${secrets.awsSecretAccessKeyID}\"
-                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin \"${secrets.awsAccountID}\".dkr.ecr.us-east-1.amazonaws.com
+              // Build and push to ECR registry
+              def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+              def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY;
 
-                export HUB=\"${secrets.awsAccountID}\".dkr.ecr.us-east-1.amazonaws.com/mithril
+              sh """
+                export HUB=${ECR_HUB}
 
-                make push
+                aws ecr get-login-password --region ${ECR_REGION} | \
+                  docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
+                cd istio && make push
               """
             }
           }
         }
       }
     }
-  }
 
-  post {
-    success {
-      slackSend (
-        channel: CHANNEL_NAME,  
-        color: 'good', 
-        message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
-      )
-    }
-    failure {
-      slackSend (
-        channel: CHANNEL_NAME,  
-        color: 'bad', 
-        message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
-      )
+    stage("tag-latest-images") {
+      when {
+        branch "PR-18" // TODO: change to "master"
+      }
+      environment {
+        TAG = "latest"
+        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+      }
+      steps {
+        script {
+          def secrets = vaultGetSecrets()
+
+          def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
+          def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY
+
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            // Push latest tag images to ECR
+            sh """#!/bin/bash
+              set -x
+
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
+              
+              docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
+                pieces=(\$line)
+                docker tag "\${pieces[0]}" "\${pieces[1]}":${env.TAG}
+                docker push "\${pieces[1]}":${env.TAG}
+              done
+            """
+          }
+        }
+      }
     }
   }
+  
+  // TODO: uncomment
+  // post {
+  //   success {
+  //     slackSend (
+  //       channel: CHANNEL_NAME,  
+  //       color: 'good', 
+  //       message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
+  //     )
+  //   }
+  //   failure {
+  //     slackSend (
+  //       channel: CHANNEL_NAME,  
+  //       color: 'bad', 
+  //       message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
+  //     )
+  //   }
+  // }
 }
 
 // Method for creating the build tag

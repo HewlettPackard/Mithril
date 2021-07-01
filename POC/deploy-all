@@ -1,5 +1,5 @@
 #!/bin/bash
 
 (cd istio ; sh deploy-istio)
-(cd bookinfo ; sh deploy-bookinfo)
 (cd spire ; sh deploy-spire)
+(cd bookinfo ; sh deploy-bookinfo)

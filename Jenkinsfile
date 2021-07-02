@@ -1,5 +1,6 @@
 // Ubuntu image with the necessary dependencies for building Istio and AWS CLI
 UBUNTU_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:istio-aws-deps"
+CHANNEL_NAME = "#notify-project-mithril"
 
 // Start of the pipeline
 pipeline {
@@ -13,6 +14,17 @@ pipeline {
   triggers { cron( BRANCH_NAME == "master" ?  "00 00 * * *" : "") }
 
   stages {
+
+    stage('Notify Slack') {
+      steps {
+        script { 
+          slackSend (
+            channel: CHANNEL_NAME,
+            message: "Hello. The pipeline ${currentBuild.fullDisplayName} started.")
+        }
+      }
+    }
+
     stage('build-istio') {
       steps {
         // Istio clone from the release-1.10 branch
@@ -26,7 +38,7 @@ pipeline {
           def passwordMask = [
             $class: 'MaskPasswordsBuildWrapper',
             varPasswordPairs: [
-              [ password: secrets.dockerHubToken ],
+              [ password: secrets.dockerHubToken],
               [ password: secrets.dockerHubUsername],
               [ password: secrets.awsAccessKeyID],
               [ password: secrets.awsSecretAccessKeyID],
@@ -65,6 +77,23 @@ pipeline {
           }
         }
       }
+    }
+  }
+
+  post {
+    success {
+      slackSend (
+        channel: CHANNEL_NAME,  
+        color: 'good', 
+        message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
+      )
+    }
+    failure {
+      slackSend (
+        channel: CHANNEL_NAME,  
+        color: 'bad', 
+        message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
+      )
     }
   }
 }

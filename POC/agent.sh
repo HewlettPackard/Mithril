@@ -68,14 +68,31 @@ tracing: {}" > $PWD/proxy-config-docker.yaml
 
     TAG=$TAG HUB=$HUB BUILD_WITH_CONTAINER=0 DOCKER_TARGETS=docker.proxyv2 make push
 
-    docker run -it -v $PWD/var/run/secrets/tokens/istio-token:/var/run/secrets/tokens/istio-token -v /tmp/agent.sock:/tmp/agent.sock \
-        -v $PWD/var/run/secrets/istio/:/var/run/secrets/istio/ \
-        --network host \
-        -e PILOT_ENABLE_XDS_IDENTITY_CHECK=true \
-        -e ENABLE_CA_SERVER=false \
-        -e PILOT_CERT_PROVIDER=$PILOT_CERT_PROVIDER \
-        -e PROXY_CONFIG="$(< $PWD/proxy-config-docker.yaml envsubst)" \
-        $HUB/proxyv2:$TAG proxy sidecar
+    if [[ $PILOT_CERT_PROVIDER == "SPIRE" ]]
+    then
+        echo "PILOT_CERT_PROVIDER="$PILOT_CERT_PROVIDER
+        docker run -it -v $PWD/var/run/secrets/tokens/istio-token:/var/run/secrets/tokens/istio-token -v /tmp/agent.sock:/tmp/agent.sock \
+            -v $PWD/var/run/secrets/istio/:/var/run/secrets/istio/ \
+            -v $PWD/etc/certs/:/etc/certs/ \
+            --network host \
+            -e SPIFFE_ENDPOINT_SOCKET="unix:///tmp/agent.sock" \
+            -e TRUST_DOMAIN="example.org" \
+            -e PILOT_ENABLE_XDS_IDENTITY_CHECK=true \
+            -e ENABLE_CA_SERVER=false \
+            -e PILOT_CERT_PROVIDER=$PILOT_CERT_PROVIDER \
+            -e PROXY_CONFIG="$(< $PWD/proxy-config-docker.yaml envsubst)" \
+            $HUB/proxyv2:$TAG proxy sidecar
+    else
+        docker run -it -v $PWD/var/run/secrets/tokens/istio-token:/var/run/secrets/tokens/istio-token -v /tmp/agent.sock:/tmp/agent.sock \
+            -v $PWD/var/run/secrets/istio/:/var/run/secrets/istio/ \
+            -v $PWD/etc/certs/:/etc/certs/ \
+            --network host \
+            -e PILOT_ENABLE_XDS_IDENTITY_CHECK=true \
+            -e ENABLE_CA_SERVER=false \
+            -e PILOT_CERT_PROVIDER=$PILOT_CERT_PROVIDER \
+            -e PROXY_CONFIG="$(< $PWD/proxy-config-docker.yaml envsubst)" \
+            $HUB/proxyv2:$TAG proxy sidecar
+    fi
 else
     echo "Running istio agent locally!"
     if [[ $PILOT_CERT_PROVIDER != "" ]]
@@ -89,5 +106,10 @@ discoveryAddress: localhost:15012
 statusPort: 15020
 terminationDrainDuration: 0s
 tracing: {}" > $PWD/proxy-config.yaml
-    PILOT_ENABLE_XDS_IDENTITY_CHECK=true PILOT_CERT_PROVIDER=$PILOT_CERT_PROVIDER PROXY_CONFIG="$(< $PWD/proxy-config.yaml envsubst)" go run ./pilot/cmd/pilot-agent proxy sidecar
+    if [[ $PILOT_CERT_PROVIDER == "SPIRE" ]]
+    then
+        SPIFFE_ENDPOINT_SOCKET="unix:///tmp/agent.sock" TRUST_DOMAIN="example.org" PILOT_ENABLE_XDS_IDENTITY_CHECK=true PILOT_CERT_PROVIDER=$PILOT_CERT_PROVIDER PROXY_CONFIG="$(< $PWD/proxy-config.yaml envsubst)" go run ./pilot/cmd/pilot-agent proxy sidecar
+    else
+        PILOT_ENABLE_XDS_IDENTITY_CHECK=true PROXY_CONFIG="$(< $PWD/proxy-config.yaml envsubst)" go run ./pilot/cmd/pilot-agent proxy sidecar
+    fi
 fi

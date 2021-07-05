@@ -174,9 +174,9 @@ SPIFFE ID        : spiffe://example.org/ns/spire/sa/spire-agent
 Parent ID        : spiffe://example.org/spire/server
 Revision         : 0
 TTL              : default
-Selector         : k8s_sat:agent_ns:spire
-Selector         : k8s_sat:agent_sa:spire-agent
-Selector         : k8s_sat:cluster:demo-cluster
+Selector         : k8s_psat:agent_ns:spire
+Selector         : k8s_psat:agent_sa:spire-agent
+Selector         : k8s_psat:cluster:demo-cluster
 
 Creating registration entry for ingress...
 Entry ID         : 75afec49-118a-49e8-859b-5b6a0191440e

@@ -13,9 +13,9 @@ kubectl exec -n spire spire-server-0 -c spire-server -- \
     /opt/spire/bin/spire-server entry create -registrationUDSPath /tmp/spire-server/private/api.sock \
     -node  \
     -spiffeID spiffe://$trust_domain/ns/spire/sa/spire-agent \
-    -selector k8s_sat:cluster:$cluster_name \
-    -selector k8s_sat:agent_ns:spire \
-    -selector k8s_sat:agent_sa:spire-agent
+    -selector k8s_psat:cluster:$cluster_name \
+    -selector k8s_psat:agent_ns:spire \
+    -selector k8s_psat:agent_sa:spire-agent
 
 sleep 1
 

@@ -58,3 +58,12 @@ spec:
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
+        k8s:
+          overlays:
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: istio-ingressgateway
+            patches:
+            - path: spec.template.metadata.annotations
+              value:
+                spiffe.io/spiffe-id: 'istio-ingressgateway'

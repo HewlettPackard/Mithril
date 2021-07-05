@@ -49,7 +49,7 @@ spec:
               mountPath: /run/spire/data
               readOnly: false
             - name: spire-registration-socket
-              mountPath: /tmp/spire-server/private
+              mountPath: /run/spire/sockets
               readOnly: false
         - name: k8s-workload-registrar
           image: gcr.io/spiffe-io/k8s-workload-registrar:0.12.3
@@ -65,7 +65,7 @@ spec:
               name: k8s-workload-registrar-config
               readOnly: true
             - name: spire-registration-socket
-              mountPath: /tmp/spire-server/private
+              mountPath: /run/spire/sockets
               readOnly: true
       volumes:
         - name: spire-config

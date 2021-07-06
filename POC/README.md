@@ -58,7 +58,7 @@ This will create the docker images with the tag `my-build`, and push them to the
 
 (More info about building istio: https://github.com/istio/istio/wiki/Preparing-for-Development)
 
-## Running the POC
+## Running the POC locally
 
 Before running the deploy script, specify your trust domain and cluster name on the spire server config at `spire/server-configmap.yaml`
 
@@ -195,11 +195,13 @@ The output is an HTML page that should not have any error sections.
 ## Deploying the POC to Amazon EKS
 
 1. Install [eksctl](https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html) and [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
-2. Configure the connection to AWS by running
+
+2. Set up the connection to AWS by running
 ```bash
 aws configure
 ```
-3. Create an EKS cluster. Name the cluster at will, chooose a region and configure a AWS Key Pair or an SSH key (optional). This may take a while.
+
+3. Create an EKS cluster. Name the cluster at will, chooose a region, and configure a AWS Key Pair or an SSH key (optional). This may take a while.
 ```bash
 eksctl create cluster \
     --name poc-cluster \
@@ -209,14 +211,11 @@ eksctl create cluster \
     --ssh-public-key my-key-pair \
     --managed
 ```
-4. Add your new cluster to the kubeconfig file.
-```bash
-aws eks --region us-east-1 update-kubeconfig --name poc-cluster
-```
-5. Deploy the latest (master) tag using the images from the ECR.
+
+4. Deploy the latest (master) tag using the images from the ECR.
 ```bash
 export TAG=latest # use the latest image from master branch
-export HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com
+export HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
 ./deploy-all
 ```
 

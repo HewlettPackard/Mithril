@@ -23,7 +23,7 @@ pipeline {
         // Istio clone from the latest branch
         sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
 
-        // // Apply Mithril patches
+        // Apply Mithril patches
         sh "cd istio && git apply ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch"
       }
     }
@@ -78,9 +78,11 @@ pipeline {
       }
     }
 
+    // Tag the current build as "latest" whenever a new commit
+    // comes into master and pushes the tag to the ECR repository
     stage("tag-latest-images") {
       when {
-        branch "PR-18" // TODO: change to "master"
+        branch "master"
       }
       environment {
         TAG = "latest"
@@ -95,7 +97,6 @@ pipeline {
           def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY
 
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            // Push latest tag images to ECR
             sh """#!/bin/bash
               set -x
 
@@ -114,23 +115,22 @@ pipeline {
     }
   }
   
-  // TODO: uncomment
-  // post {
-  //   success {
-  //     slackSend (
-  //       channel: CHANNEL_NAME,  
-  //       color: 'good', 
-  //       message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
-  //     )
-  //   }
-  //   failure {
-  //     slackSend (
-  //       channel: CHANNEL_NAME,  
-  //       color: 'bad', 
-  //       message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
-  //     )
-  //   }
-  // }
+  post {
+    success {
+      slackSend (
+        channel: CHANNEL_NAME,  
+        color: 'good', 
+        message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
+      )
+    }
+    failure {
+      slackSend (
+        channel: CHANNEL_NAME,  
+        color: 'bad', 
+        message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
+      )
+    }
+  }
 }
 
 // Method for creating the build tag

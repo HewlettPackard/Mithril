@@ -18,6 +18,16 @@ pipeline {
 
   stages {
 
+    stage('Notify Slack') {
+      steps {
+        script {
+          slackSend (
+            channel: CHANNEL_NAME,
+            message: "Hello. The pipeline ${currentBuild.fullDisplayName} started.")
+        }
+      }
+    }
+
     stage('make-poc-codebase') {
       steps {
         // Istio clone from the latest branch

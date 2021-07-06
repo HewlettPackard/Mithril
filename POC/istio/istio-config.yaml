@@ -6,8 +6,6 @@ spec:
   profile: default
   values:
     global:
-      # hub: 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
-      # tag: master_56d6c3d
       pilotCertProvider: custom
       # mTLS between workloads is done using certs mounted in /etc/certs
       mountMtlsCerts: true

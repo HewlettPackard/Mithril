@@ -194,14 +194,14 @@ The output is an HTML page that should not have any error sections.
 
 ## Deploying the POC to Amazon EKS
 
-1. Install [eksctl](https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html) and [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+1. Install [eksctl](https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html) and [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html).
 
-2. Set up the connection to AWS by running
+2. Set up the credentials for AWS.
 ```bash
 aws configure
 ```
 
-3. Create an EKS cluster. Name the cluster at will, chooose a region, and configure a AWS Key Pair or an SSH key (optional). This may take a while.
+3. Create an EKS cluster. Name the cluster at will, choose a region, and configure an AWS Key Pair or an SSH key (optional). This may take a while.
 ```bash
 eksctl create cluster \
     --name poc-cluster \
@@ -218,7 +218,6 @@ export TAG=latest # use the latest image from master branch
 export HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
 ./deploy-all
 ```
-
 
 # Clean up
 

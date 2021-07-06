@@ -218,6 +218,10 @@ export TAG=latest # use the latest image from master branch
 export HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
 ./deploy-all
 ```
+When you are done, you can [clean up your istio deployment](#clean-up), and then delete the EKS cluster.
+```bash
+eksctl delete cluster --region us-east-1 --name poc-cluster
+```
 
 # Clean up
 

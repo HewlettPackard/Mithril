@@ -1,5 +1,3 @@
-// Ubuntu image with the necessary dependencies for building Istio and AWS CLI
-UBUNTU_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:istio-aws-deps"
 CHANNEL_NAME = "#notify-project-mithril"
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:istio-aws-deps"
 LATEST_BRANCH = "1.10"

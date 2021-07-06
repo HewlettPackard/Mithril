@@ -131,7 +131,6 @@ Expected output:
 
 ```
 NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
-NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
 default              details-v1-c658fff7-cvj8d                    2/2     Running   0          6m19s
 default              productpage-v1-5f85c6d9d8-mb6jm              2/2     Running   0          6m18s
 default              ratings-v1-66db75fdb9-jv4ln                  2/2     Running   0          6m19s
@@ -159,105 +158,6 @@ When using [K8S Workload Registrar](https://github.com/spiffe/spire/tree/main/su
 ```
 kubectl exec -i -t pod/spire-server-0 -n spire -c spire-server -- /bin/sh -c "bin/spire-server entry show -registrationUDSPath /run/spire/sockets/server.sock"
 ```
-
-```
-Found 9 entries
-Entry ID         : f898b508-c044-42bb-88d0-d609233f7a3c
-SPIFFE ID        : spiffe://example.org/bookinfo/details-v1
-Parent ID        : spiffe://example.org/k8s-workload-registrar/demo-cluster/node/kind-control-plane
-Revision         : 1
-TTL              : default
-Selector         : k8s:node-name:kind-control-plane
-Selector         : k8s:ns:default
-Selector         : k8s:pod-uid:4b94243d-57dd-4174-85b2-909b6ff38240
-DNS name         : details-v1-c658fff7-mcmmn
-DNS name         : details.default.svc
-
-Entry ID         : 848202ea-d779-4043-943e-dd64afe12502
-SPIFFE ID        : spiffe://example.org/bookinfo/productpage
-Parent ID        : spiffe://example.org/k8s-workload-registrar/demo-cluster/node/kind-control-plane
-Revision         : 1
-TTL              : default
-Selector         : k8s:node-name:kind-control-plane
-Selector         : k8s:ns:default
-Selector         : k8s:pod-uid:fdd4fabe-d27d-418a-bf3c-e97c7b364770
-DNS name         : productpage-v1-5f85c6d9d8-djgsh
-DNS name         : productpage.default.svc
-
-Entry ID         : 5763d4e1-c71f-4fc3-9762-3fe86adbb44b
-SPIFFE ID        : spiffe://example.org/bookinfo/ratings-v1
-Parent ID        : spiffe://example.org/k8s-workload-registrar/demo-cluster/node/kind-control-plane
-Revision         : 1
-TTL              : default
-Selector         : k8s:node-name:kind-control-plane
-Selector         : k8s:ns:default
-Selector         : k8s:pod-uid:d91ec379-641f-4930-9f5f-5ba2fc425d0b
-DNS name         : ratings-v1-66db75fdb9-l22xc
-DNS name         : ratings.default.svc
-
-Entry ID         : da35e53b-1e22-4201-b858-2197c4b7b45f
-SPIFFE ID        : spiffe://example.org/bookinfo/reviews-v1
-Parent ID        : spiffe://example.org/k8s-workload-registrar/demo-cluster/node/kind-control-plane
-Revision         : 1
-TTL              : default
-Selector         : k8s:node-name:kind-control-plane
-Selector         : k8s:ns:default
-Selector         : k8s:pod-uid:81d07b53-b3dc-4467-8fe0-9d7ace7df048
-DNS name         : reviews-v1-dbcbb4f7c-t4wf4
-DNS name         : reviews.default.svc
-
-Entry ID         : 9949212b-1dd3-4fdb-bf8b-33fbfca31221
-SPIFFE ID        : spiffe://example.org/bookinfo/reviews-v2
-Parent ID        : spiffe://example.org/k8s-workload-registrar/demo-cluster/node/kind-control-plane
-Revision         : 1
-TTL              : default
-Selector         : k8s:node-name:kind-control-plane
-Selector         : k8s:ns:default
-Selector         : k8s:pod-uid:793d548a-2fb6-47e4-aa23-fafb37218408
-DNS name         : reviews-v2-64854577cd-pwnsq
-DNS name         : reviews.default.svc
-
-Entry ID         : b4f0719b-2780-4665-8e67-75c18c082011
-SPIFFE ID        : spiffe://example.org/bookinfo/reviews-v3
-Parent ID        : spiffe://example.org/k8s-workload-registrar/demo-cluster/node/kind-control-plane
-Revision         : 1
-TTL              : default
-Selector         : k8s:node-name:kind-control-plane
-Selector         : k8s:ns:default
-Selector         : k8s:pod-uid:a2aa76c5-002a-46a3-aa59-ac8c2fe7ae7b
-DNS name         : reviews-v3-bd5fcc875-g5dgw
-DNS name         : reviews.default.svc
-
-Entry ID         : a29ad9ac-d84e-427e-9113-9573cd67bec7
-SPIFFE ID        : spiffe://example.org/istio-ingressgateway
-Parent ID        : spiffe://example.org/k8s-workload-registrar/demo-cluster/node/kind-control-plane
-Revision         : 1
-TTL              : default
-Selector         : k8s:node-name:kind-control-plane
-Selector         : k8s:ns:istio-system
-Selector         : k8s:pod-uid:a47b5a97-aaa9-474d-a8fb-81b76aed6236
-DNS name         : istio-ingressgateway-7d5b8c789f-5ktzw
-DNS name         : istio-ingressgateway.istio-system.svc
-
-Entry ID         : 30335190-fafd-482b-8881-fd78b6685564
-SPIFFE ID        : spiffe://example.org/k8s-workload-registrar/demo-cluster/node/kind-control-plane
-Parent ID        : spiffe://example.org/spire/server
-Revision         : 0
-TTL              : default
-Selector         : k8s_psat:agent_node_uid:0a9ff095-dfd0-47ae-b7a5-a4e4c9fee819
-Selector         : k8s_psat:cluster:demo-cluster
-
-Entry ID         : 5064799a-ca9c-4c54-bfb1-2242cdfb4d44
-SPIFFE ID        : spiffe://example.org/spire-agent
-Parent ID        : spiffe://example.org/k8s-workload-registrar/demo-cluster/node/kind-control-plane
-Revision         : 0
-TTL              : default
-Selector         : k8s:node-name:kind-control-plane
-Selector         : k8s:ns:spire
-Selector         : k8s:pod-uid:579332b8-a6c4-433e-bfc5-5d9647b75fc0
-DNS name         : spire-agent-qbwkv
-```
-
 
 ## Test example 
 

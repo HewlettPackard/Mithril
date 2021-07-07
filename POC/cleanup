@@ -1,5 +1,0 @@
-#!/bin/bash
-
-(cd bookinfo ; sh cleanup.sh)
-(cd istio ; sh delete-istio)
-(cd spire ; sh cleanup.sh)

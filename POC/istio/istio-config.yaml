@@ -70,18 +70,18 @@ spec:
               - path: spec.template.spec.containers.[name:discovery].args[10]
                 value: "--caCertFile=/run/istiod/certs/root-cert.pem"
 
-          - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
-            value:
-              name: istiod-certs
-              mountPath: "/run/istiod/certs"
-              readOnly: true
+              - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
+                value:
+                  name: istiod-certs
+                  mountPath: "/run/istiod/certs"
+                  readOnly: true
 
-          # pod patches
-          - path: spec.template.spec.volumes[7]
-            value:
-              name: istiod-certs
-              secret:
-                secretName: istiod-certs
+              # pod patches
+              - path: spec.template.spec.volumes[7]
+                value:
+                  name: istiod-certs
+                  secret:
+                    secretName: istiod-certs
 
     ingressGateways:
       - name: istio-ingressgateway

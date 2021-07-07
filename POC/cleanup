@@ -1,3 +1,5 @@
+#!/bin/bash
+
+(cd bookinfo ; sh cleanup.sh)
 (cd istio ; sh delete-istio)
-(cd bookinfo ; ./cleanup.sh)
-(cd spire ; ./cleanup.sh)
+(cd spire ; sh cleanup.sh)

@@ -1,5 +1,63 @@
+diff --git a/go.mod b/go.mod
+index ffb824ae9b..ad872852cd 100644
+--- a/go.mod
++++ b/go.mod
+@@ -71,6 +71,7 @@ require (
+ 	github.com/spf13/cobra v1.1.3
+ 	github.com/spf13/pflag v1.0.5
+ 	github.com/spf13/viper v1.7.1
++	github.com/spiffe/go-spiffe/v2 v2.0.0-beta.6
+ 	github.com/stretchr/testify v1.7.0
+ 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
+ 	github.com/yl2chen/cidranger v1.0.2
+diff --git a/go.sum b/go.sum
+index 9ad3790a6e..e4aca84fc1 100644
+--- a/go.sum
++++ b/go.sum
+@@ -933,6 +933,8 @@ github.com/spf13/pflag v1.0.1/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnIn
+ github.com/spf13/pflag v1.0.3/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
+ github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
+ github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
++github.com/spiffe/go-spiffe/v2 v2.0.0-beta.6 h1:3DOMziVxNur7Gq7JkfJg5sLZbbtfkBi13SlDfByV9YI=
++github.com/spiffe/go-spiffe/v2 v2.0.0-beta.6/go.mod h1:TEfgrEcyFhuSuvqohJt6IxENUNeHfndWCCV1EX7UaVk=
+ github.com/stoewer/go-strcase v1.2.0/go.mod h1:IBiWB2sKIp3wVVQ3Y035++gc+knqhUQag1KpM8ahLw8=
+ github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
+ github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
+@@ -981,6 +983,8 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
+ github.com/yvasiyarov/go-metrics v0.0.0-20140926110328-57bccd1ccd43/go.mod h1:aX5oPXxHm3bOH+xeAttToC8pqch2ScQN/JoXYupl6xs=
+ github.com/yvasiyarov/gorelic v0.0.0-20141212073537-a9bba5b9ab50/go.mod h1:NUSPSUX/bi6SeDMUh6brw0nXpxHnc96TguQh0+r/ssA=
+ github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f/go.mod h1:GlGEuHIJweS1mbCqG+7vt2nvWLzLLnRHbXz5JKd/Qbg=
++github.com/zeebo/errs v1.2.2 h1:5NFypMTuSdoySVTqlNs1dEoU21QVamMQJxW/Fii5O7g=
++github.com/zeebo/errs v1.2.2/go.mod h1:sgbWHsvVuTPHcqJJGQ1WhI5KbWlHYz+2+2C/LSEtCw4=
+ github.com/ziutek/mymysql v1.5.4/go.mod h1:LMSpPZ6DbqWFxNCHW77HeMg9I646SAhApZ/wKdgO/C0=
+ go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
+ go.etcd.io/bbolt v1.3.5/go.mod h1:G5EMThwa9y8QZGBClrRx5EY+Yw9kAhnjy3bSjsnlVTQ=
+@@ -1426,6 +1430,7 @@ google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013/go.mod h1:NbSheEEY
+ google.golang.org/genproto v0.0.0-20200618031413-b414f8b61790/go.mod h1:jDfRM7FcilCzHH/e9qn6dsT145K34l5v+OpcnNgKAAA=
+ google.golang.org/genproto v0.0.0-20200729003335-053ba62fc06f/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
+ google.golang.org/genproto v0.0.0-20200804131852-c06518451d9c/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
++google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
+ google.golang.org/genproto v0.0.0-20200825200019-8632dd797987/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
+ google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
+ google.golang.org/genproto v0.0.0-20201109203340-2640f1f9cdfb/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
+@@ -1471,6 +1476,7 @@ google.golang.org/grpc v1.34.1/go.mod h1:WotjhfgOW/POjDeRt8vscBtXq+2VjORFy659qA5
+ google.golang.org/grpc v1.35.0/go.mod h1:qjiiYl8FncCW8feJPdyg3v6XW24KsRHe+dy9BAGRRjU=
+ google.golang.org/grpc v1.36.0 h1:o1bcQ6imQMIOpdrO3SWf2z5RV72WbDwdXuK0MDlc8As=
+ google.golang.org/grpc v1.36.0/go.mod h1:qjiiYl8FncCW8feJPdyg3v6XW24KsRHe+dy9BAGRRjU=
++google.golang.org/grpc/examples v0.0.0-20201130180447-c456688b1860/go.mod h1:Ly7ZA/ARzg8fnPU9TyZIxoz33sEUuWX7txiqs8lPTgE=
+ google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
+ google.golang.org/protobuf v0.0.0-20200221191635-4d8936d0db64/go.mod h1:kwYJMbMJ01Woi6D6+Kah6886xMZcty6N08ah7+eCXa0=
+ google.golang.org/protobuf v0.0.0-20200228230310-ab0ca4ff8a60/go.mod h1:cfTl7dwQJ+fmap5saPgwCLgHXTUD7jkjRqWcaiX5VyM=
+@@ -1503,6 +1509,7 @@ gopkg.in/natefinch/lumberjack.v2 v2.0.0 h1:1Lc07Kr7qY4U2YPouBjpCLxpiyxIVoxqXgkXL
+ gopkg.in/natefinch/lumberjack.v2 v2.0.0/go.mod h1:l0ndWWf7gzL7RNwBG7wST/UCcT4T24xpD6X8LsfU/+k=
+ gopkg.in/resty.v1 v1.12.0/go.mod h1:mDo4pnntr5jdWRML875a/NmxYqAlA73dVijT2AXvQQo=
+ gopkg.in/square/go-jose.v2 v2.2.2/go.mod h1:M9dMgbHiYLoDGQrXy7OpJDJWiKiU//h+vD76mk0e1AI=
++gopkg.in/square/go-jose.v2 v2.4.1/go.mod h1:M9dMgbHiYLoDGQrXy7OpJDJWiKiU//h+vD76mk0e1AI=
+ gopkg.in/square/go-jose.v2 v2.5.1 h1:7odma5RETjNHWJnR32wx8t+Io4djHE1PqxCFx3iiZ2w=
+ gopkg.in/square/go-jose.v2 v2.5.1/go.mod h1:M9dMgbHiYLoDGQrXy7OpJDJWiKiU//h+vD76mk0e1AI=
+ gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 h1:uRGJdciOHaEIrze2W8Q3AKkepLTh2hOroT7a+7czfdQ=
 diff --git a/pilot/pkg/networking/core/v1alpha3/cluster_builder.go b/pilot/pkg/networking/core/v1alpha3/cluster_builder.go
-index c1fa46e26e..339dbe067f 100644
+index fe074041f2..b72ea2adc1 100644
 --- a/pilot/pkg/networking/core/v1alpha3/cluster_builder.go
 +++ b/pilot/pkg/networking/core/v1alpha3/cluster_builder.go
 @@ -16,6 +16,7 @@ package v1alpha3
@@ -33,38 +91,266 @@ index c1fa46e26e..339dbe067f 100644
  					authn_model.SDSRootResourceName), proxy),
  			},
 diff --git a/pkg/istio-agent/agent.go b/pkg/istio-agent/agent.go
-index 6dc65603f3..35ffacbed3 100644
+index 6dc65603f3..04092f0096 100644
 --- a/pkg/istio-agent/agent.go
 +++ b/pkg/istio-agent/agent.go
-@@ -57,6 +57,7 @@ const (
- 	// Location of K8S CA root.
- 	k8sCAPath = "./var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+@@ -83,7 +83,7 @@ type Agent struct {
+ 	secOpts *security.Options
  
-+	//TODO we might need to change this. Or the config map?
- 	// CitadelCACertPath is the directory for Citadel CA certificate.
- 	// This is mounted from config map 'istio-ca-root-cert'. Part of startup,
- 	// this may be replaced with ./etc/certs, if a root-cert.pem is found, to
-@@ -254,6 +255,7 @@ func (a *Agent) FindRootCAForXDS() string {
- 	} else {
- 		// PILOT_CERT_PROVIDER - default is istiod
- 		// This is the default - a mounted config map on K8S
-+		// TODO: look into this
- 		return path.Join(CitadelCACertPath, constants.CACertNamespaceConfigMapDataName)
+ 	sdsServer   *sds.Server
+-	secretCache *cache.SecretManagerClient
++	secretCache security.SecretProvider
+ 
+ 	// Used when proxying envoy xds via istio-agent is enabled.
+ 	xdsProxy *XdsProxy
+@@ -160,7 +160,6 @@ func (a *Agent) Start() error {
+ 	if err != nil {
+ 		return fmt.Errorf("failed to start workload secret manager %v", err)
  	}
- }
-@@ -281,6 +283,7 @@ func (a *Agent) FindRootCAForCA() string {
- 	}
+-
+ 	a.sdsServer, err = sds.NewServer(a.secOpts, a.secretCache)
+ 	if err != nil {
+ 		return fmt.Errorf("failed to start local sds server %v", err)
+@@ -282,7 +281,12 @@ func (a *Agent) FindRootCAForCA() string {
  }
  
-+// TODO: look into this
  // newSecretManager creates the SecretManager for workload secrets
- func (a *Agent) newSecretManager() (*cache.SecretManagerClient, error) {
+-func (a *Agent) newSecretManager() (*cache.SecretManagerClient, error) {
++func (a *Agent) newSecretManager() (security.SecretProvider, error) {
++	if a.secOpts.PilotCertProvider == "SPIRE" {
++		log.Info("Using SPIRE identity plane")
++		return cache.NewSpireSecretManager(a.secOpts)
++	}
++
  	// If proxy is using file mounted certs, we do not have to connect to CA.
-@@ -313,6 +316,7 @@ func (a *Agent) newSecretManager() (*cache.SecretManagerClient, error) {
- 		log.Warn("Debug mode or IP-secure network")
- 	}
- 	if tls {
-+		//TODO: might be relevant
- 		caCertFile := a.FindRootCAForCA()
- 		if caCertFile == "" {
- 			log.Infof("Using CA %s cert with system certs", a.secOpts.CAEndpoint)
+ 	if a.secOpts.FileMountedCerts {
+ 		log.Info("Workload is using file mounted certificates. Skipping connecting to CA")
+diff --git a/pkg/security/security.go b/pkg/security/security.go
+index 84dd906b1c..dee9d067c4 100644
+--- a/pkg/security/security.go
++++ b/pkg/security/security.go
+@@ -227,6 +227,13 @@ type SecretManager interface {
+ 	GenerateSecret(resourceName string) (*SecretItem, error)
+ }
+ 
++type SecretProvider interface {
++	SecretManager
++	Close()
++	SetUpdateCallback(func(string))
++	UpdateConfigTrustBundle([]byte) error
++}
++
+ // TokenExchanger provides common interfaces so that authentication providers could choose to implement their specific logic.
+ type TokenExchanger interface {
+ 	// ExchangeToken provides a common interface to exchange an existing token for a new one.
+diff --git a/security/pkg/nodeagent/cache/spiresecret.go b/security/pkg/nodeagent/cache/spiresecret.go
+new file mode 100644
+index 0000000000..a6ed15f0a8
+--- /dev/null
++++ b/security/pkg/nodeagent/cache/spiresecret.go
+@@ -0,0 +1,205 @@
++package cache
++
++import (
++	"bytes"
++	"crypto/x509"
++	"encoding/pem"
++	"fmt"
++	"sync"
++	"time"
++
++	"github.com/spiffe/go-spiffe/v2/spiffeid"
++	"github.com/spiffe/go-spiffe/v2/workloadapi"
++	"golang.org/x/net/context"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++	"istio.io/istio/pkg/security"
++	pkiutil "istio.io/istio/security/pkg/pki/util"
++	"istio.io/pkg/log"
++)
++
++type SpireSecretManager struct {
++	sync.RWMutex
++	trustDomain       spiffeid.TrustDomain
++	configTrustBundle []byte
++	secretItem        *security.SecretItem
++	notifyCallback    func(resourceName string)
++	cancelWatcher     context.CancelFunc
++}
++
++func NewSpireSecretManager(opt *security.Options) (*SpireSecretManager, error) {
++	td, err := spiffeid.TrustDomainFromString(opt.TrustDomain)
++	if err != nil {
++		return nil, fmt.Errorf("error trying to parse trust domain %q reason: %v", opt.TrustDomain, err)
++	}
++
++	sm := &SpireSecretManager{
++		trustDomain: td,
++	}
++
++	ctx, cancel := context.WithCancel(context.Background())
++	sm.cancelWatcher = cancel
++	go sm.watcherTask(ctx)
++
++	return sm, nil
++}
++
++func (s *SpireSecretManager) GenerateSecret(resourceName string) (*security.SecretItem, error) {
++	s.RLock()
++	defer s.RUnlock()
++
++	si := s.secretItem
++	if si == nil {
++		return nil, fmt.Errorf("secret was not in cache for resource: %v", resourceName)
++	}
++
++	if resourceName == security.RootCertReqResourceName {
++		rootCertBundle := s.mergeConfigTrustBundle(si.RootCert)
++		ns := &security.SecretItem{
++			ResourceName: resourceName,
++			RootCert:     rootCertBundle,
++		}
++		cacheLog.WithLabels("ttl", time.Until(si.ExpireTime)).Info("returned workload trust anchor from cache")
++		return ns, nil
++	}
++
++	ns := &security.SecretItem{
++		ResourceName:     resourceName,
++		CertificateChain: si.CertificateChain,
++		PrivateKey:       si.PrivateKey,
++		ExpireTime:       si.ExpireTime,
++		CreatedTime:      si.CreatedTime,
++	}
++	cacheLog.WithLabels("ttl", time.Until(si.ExpireTime)).Info("returned workload certificate from cache")
++	return ns, nil
++}
++
++func (s *SpireSecretManager) UpdateConfigTrustBundle(trustBundle []byte) error {
++	//TODO: remove this log after testing it
++	log.WithLabels("UpdateConfigTrustBundle").Info(string(trustBundle))
++	s.Lock()
++	defer s.Unlock()
++
++	if bytes.Equal(s.configTrustBundle, trustBundle) {
++		return nil
++	}
++	s.configTrustBundle = trustBundle
++	s.callUpdateCallback(security.RootCertReqResourceName)
++	return nil
++}
++
++func (s *SpireSecretManager) Close() {
++	if s.cancelWatcher != nil {
++		log.Info("Closing secret manager")
++		s.cancelWatcher()
++	}
++}
++
++func (s *SpireSecretManager) SetUpdateCallback(f func(resourceName string)) {
++	s.Lock()
++	defer s.Unlock()
++	s.notifyCallback = f
++}
++
++// UpdateX509SVIDs is run every time an SVID is updated or bundle
++func (s *SpireSecretManager) OnX509ContextUpdate(c *workloadapi.X509Context) {
++	log.Info("Got new identities from SPIRE") //TODO: change this log
++	if len(c.SVIDs) < 1 {
++		log.Error("Identities were not found on workload API response")
++		return
++	}
++	if len(c.SVIDs[0].Certificates) < 1 {
++		log.Error("Leaf certificate was not found on workload API response")
++		return
++	}
++	// lest's assume the first identity is the right one
++	svid := c.SVIDs[0]
++	workloadChain, workloadKey, err := svid.Marshal()
++	if err != nil {
++		log.Fatalf("Unable to marshal X.509 SVID: %v", err)
++		return
++	}
++
++	bundle, ok := c.Bundles.Get(s.trustDomain)
++	if !ok {
++		log.WithLabels("trust_domain", s.trustDomain).Fatal("Unable to get trust bundle for trust domain")
++		return
++	}
++
++	root, err := bundle.Marshal()
++	if err != nil {
++		log.Fatalf("Unable to marshal trust bundle: %v", err)
++		return
++	}
++
++	certChain := concatCerts([]string{string(workloadChain), string(root)})
++	leaf := c.SVIDs[0].Certificates[0]
++
++	item := &security.SecretItem{
++		CertificateChain: certChain,
++		PrivateKey:       workloadKey,
++		RootCert:         root,
++		ResourceName:     security.WorkloadKeyCertResourceName,
++		CreatedTime:      leaf.NotBefore,
++		ExpireTime:       leaf.NotAfter,
++	}
++
++	s.Lock()
++	defer s.Unlock()
++
++	s.secretItem = item
++
++	if s.secretItem == nil || !bytes.Equal(s.secretItem.RootCert, item.RootCert) {
++		s.callUpdateCallback(security.RootCertReqResourceName)
++	}
++	if s.secretItem == nil || !bytes.Equal(s.secretItem.CertificateChain, item.CertificateChain) {
++		s.callUpdateCallback(security.WorkloadKeyCertResourceName)
++	}
++}
++
++// OnX509ContextWatchError is run when the client runs into an error
++func (s *SpireSecretManager) OnX509ContextWatchError(err error) {
++	if status.Code(err) != codes.Canceled {
++		log.Infof("error while calling workload API: %v", err)
++	}
++}
++
++func (s *SpireSecretManager) callUpdateCallback(resourceName string) {
++	log.WithLabels("resource", resourceName).Info("Identity updated") //TODO: improve message
++	if s.notifyCallback != nil {
++		s.notifyCallback(resourceName)
++	}
++}
++
++func (s *SpireSecretManager) mergeConfigTrustBundle(rootCert []byte) []byte {
++	return pkiutil.AppendCertByte(s.configTrustBundle, rootCert)
++}
++
++func (s *SpireSecretManager) watcherTask(ctx context.Context) {
++	// Creates a new Workload API client, connecting to the socket path provided by SPIFFE_ENDPOINT_SOCKET
++	client, err := workloadapi.New(ctx)
++	if err != nil {
++		log.Fatalf("Unable to create workload API client: %v", err)
++	}
++	defer client.Close()
++
++	// TODO: which other errors aside from cancel can come from this?
++	err = client.WatchX509Context(ctx, s)
++	if err != nil && status.Code(err) != codes.Canceled {
++		log.Fatalf("Error watching SPIRE workload API: %v", err)
++	}
++}
++
++// getCertTimestamps parses the first certificate in certByte and returns cert expire
++// time and cert creation time, or return error if fails to parse certificate.
++func getCertTimestamps(certByte []byte) (time.Time, time.Time, error) {
++	block, _ := pem.Decode(certByte)
++	if block == nil {
++		return time.Time{}, time.Time{}, fmt.Errorf("failed to pem decode certificate")
++	}
++	cert, err := x509.ParseCertificate(block.Bytes)
++	if err != nil {
++		return time.Time{}, time.Time{}, fmt.Errorf("failed to parse certificate: %v", err)
++	}
++	return cert.NotBefore, cert.NotAfter, nil
++}

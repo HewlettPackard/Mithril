@@ -13,12 +13,12 @@ bash ./.temp/temp.sh
 rm -rf ./.temp
 
 # Get root-cert from secret of the POC and writes to file in the default Istio path for the root-cert
-kubectl -n istio-system get configmaps istio-ca-root-cert  -ojsonpath='{.data.root-cert\.pem}' | base64 -d > ./var/run/secrets/istio/root-cert.pem
+kubectl -n istio-system get configmaps istio-ca-root-cert  -ojsonpath='{.data.root-cert\.pem}' | base64 > ./var/run/secrets/istio/root-cert.pem
 
 # Get certs from secrets of the POC and writes to files in the default Istio path
-kubectl -n istio-system get secrets istio -ojsonpath='{.data.root-cert\.pem}' | base64 -d > ./etc/certs/root-cert.pem
-kubectl -n istio-system get secrets istio -ojsonpath='{.data.istiod-key\.pem}' | base64 -d > ./etc/certs/key.pem
-kubectl -n istio-system get secrets istio -ojsonpath='{.data.istiod-svid\.pem}' | base64 -d > ./etc/certs/cert-chain.pem
+kubectl -n istio-system get secrets istiod-certs -ojsonpath='{.data.root-cert\.pem}' | base64 -d > ./etc/certs/root-cert.pem
+kubectl -n istio-system get secrets istiod-certs -ojsonpath='{.data.istiod-key\.pem}' | base64 -d > ./etc/certs/key.pem
+kubectl -n istio-system get secrets istiod-certs -ojsonpath='{.data.istiod-svid\.pem}' | base64 -d > ./etc/certs/cert-chain.pem
 
 
 # Get script input parameters

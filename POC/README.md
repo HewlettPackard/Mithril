@@ -63,8 +63,8 @@ This will create the docker images with the tag `my-build`, and push them to the
 Before running the deploy script, specify your trust domain and cluster name on the spire server config at `spire/server-configmap.yaml`
 
 ```bash
-export TAG=my-build
-export HUB=localhost:5000
+TAG=my-build \
+HUB=localhost:5000 \
 ./deploy-all
 ```
 
@@ -212,10 +212,10 @@ eksctl create cluster \
     --managed
 ```
 
-4. Deploy the latest (master) tag using the images from the ECR.
+4. Deploy the latest (master) tag using the images from the ECR repository.
 ```bash
-export TAG=latest # use the latest image from master branch
-export HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
+TAG=latest \
+HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril \
 ./deploy-all
 ```
 When you are done, you can [clean up your istio deployment](#clean-up), and then delete the EKS cluster.

@@ -1,10 +1,5 @@
 #!/bin/bash
 
-if [[ -z "${HUB}" || -z "${TAG}" ]]; then
-    echo "The environment variables HUB and/or TAG are not set."
-    exit 1;
-fi
-
 (cd spire ; sh deploy-spire)
 (cd istio ; sh deploy-istio)
 (cd bookinfo ; sh deploy-bookinfo)

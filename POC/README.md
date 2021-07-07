@@ -78,6 +78,24 @@ configmap/istio-ca-root-cert created
 ✔ Ingress gateways installed                                                                                                                                                                                                  
 ✔ Installation complete                                                                                                                                                                                                       Thank you for installing Istio 1.10.  Please take a few minutes to tell us about your install/upgrade experience!  https://forms.gle/KjkrDnMPByq7akrYA
 peerauthentication.security.istio.io/default created
+namespace/spire created
+clusterrolebinding.rbac.authorization.k8s.io/k8s-workload-registrar-role-binding created
+clusterrole.rbac.authorization.k8s.io/k8s-workload-registrar-role created
+configmap/k8s-workload-registrar created
+Warning: apiextensions.k8s.io/v1beta1 CustomResourceDefinition is deprecated in v1.16+, unavailable in v1.22+; use apiextensions.k8s.io/v1 CustomResourceDefinition
+customresourcedefinition.apiextensions.k8s.io/spiffeids.spiffeid.spiffe.io created
+serviceaccount/spire-server created
+configmap/spire-bundle created
+clusterrole.rbac.authorization.k8s.io/spire-server-trust-role created
+clusterrolebinding.rbac.authorization.k8s.io/spire-server-trust-role-binding created
+configmap/spire-server created
+statefulset.apps/spire-server created
+service/spire-server created
+serviceaccount/spire-agent created
+clusterrole.rbac.authorization.k8s.io/spire-agent-cluster-role created
+clusterrolebinding.rbac.authorization.k8s.io/spire-agent-cluster-role-binding created
+configmap/spire-agent created
+daemonset.apps/spire-agent created
 secret/istio.details created
 secret/istio.productpage created
 secret/istio.ratings created
@@ -100,19 +118,6 @@ deployment.apps/productpage-v1 created
 gateway.networking.istio.io/bookinfo-gateway created
 virtualservice.networking.istio.io/bookinfo-service created
 destinationrule.networking.istio.io/enable-mtls created
-namespace/spire created
-serviceaccount/spire-server created
-configmap/spire-bundle created
-clusterrole.rbac.authorization.k8s.io/spire-server-trust-role created
-clusterrolebinding.rbac.authorization.k8s.io/spire-server-trust-role-binding created
-configmap/spire-server created
-statefulset.apps/spire-server created
-service/spire-server created
-serviceaccount/spire-agent created
-clusterrole.rbac.authorization.k8s.io/spire-agent-cluster-role created
-clusterrolebinding.rbac.authorization.k8s.io/spire-agent-cluster-role-binding created
-configmap/spire-agent created
-daemonset.apps/spire-agent created
 
 ```
 
@@ -126,88 +131,33 @@ Expected output:
 
 ```
 NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
-default              details-v1-87b44dc44-ztq9k                   2/2     Running   0          2m37s
-default              productpage-v1-675dbf6dc7-rtccq              2/2     Running   0          2m35s
-default              ratings-v1-65ffcb969b-958cg                  2/2     Running   0          2m36s
-default              reviews-v1-67458875c9-tvt66                  2/2     Running   0          2m36s
-default              reviews-v2-fcbd767db-29tpf                   2/2     Running   0          2m36s
-default              reviews-v3-6c84468bbf-jq4th                  2/2     Running   0          2m35s
-istio-system         istio-ingressgateway-7df65c94db-bk7r8        1/1     Running   0          2m42s
-istio-system         istiod-8596965f55-6fr2t                      1/1     Running   0          2m46s
-kube-system          coredns-558bd4d5db-cf5rv                     1/1     Running   0          4m15s
-kube-system          coredns-558bd4d5db-pbxqv                     1/1     Running   0          4m15s
-kube-system          etcd-kind-control-plane                      1/1     Running   0          4m16s
-kube-system          kindnet-l49vn                                1/1     Running   0          4m16s
-kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          4m16s
-kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          4m16s
-kube-system          kube-proxy-ffb2c                             1/1     Running   0          4m16s
-kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          4m29s
-local-path-storage   local-path-provisioner-547f784dff-slwfd      1/1     Running   0          4m15s
-spire                spire-agent-nnkpb                            1/1     Running   0          2m29s
-spire                spire-server-0                               1/1     Running   0          2m32s
+default              details-v1-c658fff7-cvj8d                    2/2     Running   0          6m19s
+default              productpage-v1-5f85c6d9d8-mb6jm              2/2     Running   0          6m18s
+default              ratings-v1-66db75fdb9-jv4ln                  2/2     Running   0          6m19s
+default              reviews-v1-dbcbb4f7c-jzkh5                   2/2     Running   0          6m19s
+default              reviews-v2-64854577cd-cw7zw                  2/2     Running   0          6m18s
+default              reviews-v3-bd5fcc875-8b722                   2/2     Running   0          6m18s
+istio-system         istio-ingressgateway-849d55784b-fwz7m        1/1     Running   0          6m36s
+istio-system         istiod-5c79c669f9-7qx5m                      1/1     Running   0          6m49s
+kube-system          coredns-74ff55c5b-pl5wd                      1/1     Running   0          19m
+kube-system          coredns-74ff55c5b-zq798                      1/1     Running   0          19m
+kube-system          etcd-kind-control-plane                      1/1     Running   0          19m
+kube-system          kindnet-cxrzk                                1/1     Running   0          19m
+kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          19m
+kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          19m
+kube-system          kube-proxy-xzjgd                             1/1     Running   0          19m
+kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          19m
+local-path-storage   local-path-provisioner-78776bfc44-4dp4x      1/1     Running   0          19m
+spire                spire-agent-w9jfd                            1/1     Running   0          6m21s
+spire                spire-server-0                               2/2     Running   0          6m24s
 ```
 
-Then, create SPIRE registration entries
-
-```bash
-CLUSTER_NAME=your-cluster TRUST_DOMAIN=your-domain \
-./spire/create-registration-entries.sh
-```
+### SPIRE Entries
+When using [K8S Workload Registrar](https://github.com/spiffe/spire/tree/main/support/k8s/k8s-workload-registrar) for automatic workload registration within Kubernetes, you can check the created entries using the following command:
 
 ```
-Creating registration entry for the node...
-Entry ID         : ed8db9a1-ba4b-4d62-8c75-9fcc4b14f004
-SPIFFE ID        : spiffe://example.org/ns/spire/sa/spire-agent
-Parent ID        : spiffe://example.org/spire/server
-Revision         : 0
-TTL              : default
-Selector         : k8s_sat:agent_ns:spire
-Selector         : k8s_sat:agent_sa:spire-agent
-Selector         : k8s_sat:cluster:demo-cluster
-
-Creating registration entry for ingress...
-Entry ID         : 75afec49-118a-49e8-859b-5b6a0191440e
-SPIFFE ID        : spiffe://example.org/istio/ingressgateway
-Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
-Revision         : 0
-TTL              : default
-Selector         : k8s:ns:istio-system
-Selector         : k8s:pod-label:app=istio-ingressgateway
-
-Creating registration entry for the bookinfo services...
-Entry ID         : 5b3a2d3e-8838-48cc-aac8-7073aeece819
-SPIFFE ID        : spiffe://example.org/bookinfo/details
-Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
-Revision         : 0
-TTL              : default
-Selector         : k8s:ns:default
-Selector         : k8s:sa:details
-
-Entry ID         : 0b852e64-e7d3-4c8e-889c-94962bca02ef
-SPIFFE ID        : spiffe://example.org/bookinfo/productpage
-Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
-Revision         : 0
-TTL              : default
-Selector         : k8s:ns:default
-Selector         : k8s:sa:productpage
-
-Entry ID         : 486343c1-c7b6-4baf-8552-d4651868d3d3
-SPIFFE ID        : spiffe://example.org/bookinfo/ratings
-Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
-Revision         : 0
-TTL              : default
-Selector         : k8s:ns:default
-Selector         : k8s:sa:ratings
-
-Entry ID         : 0321df08-c2be-4300-a26d-9c37c30a53a7
-SPIFFE ID        : spiffe://example.org/bookinfo/reviews
-Parent ID        : spiffe://example.org/ns/spire/sa/spire-agent
-Revision         : 0
-TTL              : default
-Selector         : k8s:ns:default
-Selector         : k8s:sa:reviews
+kubectl exec -i -t pod/spire-server-0 -n spire -c spire-server -- /bin/sh -c "bin/spire-server entry show -registrationUDSPath /run/spire/sockets/server.sock"
 ```
-
 
 ## Test example 
 

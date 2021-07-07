@@ -2,5 +2,5 @@
 kubectl create ns istio-system
 sleep 2
 kubectl apply -f secrets.yaml
-istioctl install -f istio-config.yaml
+istioctl install -f istio-config.yaml --skip-confirmation
 kubectl apply -f auth.yaml

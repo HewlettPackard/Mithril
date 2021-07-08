@@ -1,5 +1,5 @@
 diff --git a/go.mod b/go.mod
-index ffb824ae9b..ad872852cd 100644
+index 9ee231eb5b..4c236ef693 100644
 --- a/go.mod
 +++ b/go.mod
 @@ -71,6 +71,7 @@ require (
@@ -11,7 +11,7 @@ index ffb824ae9b..ad872852cd 100644
  	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
  	github.com/yl2chen/cidranger v1.0.2
 diff --git a/go.sum b/go.sum
-index 9ad3790a6e..e4aca84fc1 100644
+index 5201c16432..2839f69c62 100644
 --- a/go.sum
 +++ b/go.sum
 @@ -933,6 +933,8 @@ github.com/spf13/pflag v1.0.1/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnIn
@@ -56,42 +56,8 @@ index 9ad3790a6e..e4aca84fc1 100644
  gopkg.in/square/go-jose.v2 v2.5.1 h1:7odma5RETjNHWJnR32wx8t+Io4djHE1PqxCFx3iiZ2w=
  gopkg.in/square/go-jose.v2 v2.5.1/go.mod h1:M9dMgbHiYLoDGQrXy7OpJDJWiKiU//h+vD76mk0e1AI=
  gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 h1:uRGJdciOHaEIrze2W8Q3AKkepLTh2hOroT7a+7czfdQ=
-diff --git a/pilot/pkg/networking/core/v1alpha3/cluster_builder.go b/pilot/pkg/networking/core/v1alpha3/cluster_builder.go
-index fe074041f2..b72ea2adc1 100644
---- a/pilot/pkg/networking/core/v1alpha3/cluster_builder.go
-+++ b/pilot/pkg/networking/core/v1alpha3/cluster_builder.go
-@@ -16,6 +16,7 @@ package v1alpha3
- 
- import (
- 	"fmt"
-+	"net/url"
- 
- 	cluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
- 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-@@ -752,9 +753,20 @@ func (cb *ClusterBuilder) buildUpstreamClusterTLSContext(opts *buildClusterOpts,
- 		tlsContext.CommonTlsContext.TlsCertificateSdsSecretConfigs = append(tlsContext.CommonTlsContext.TlsCertificateSdsSecretConfigs,
- 			authn_model.ConstructSdsSecretConfig(model.GetOrDefault(metadataSDS.GetResourceName(), authn_model.SDSDefaultResourceName), proxy))
- 
-+		var sans []string
-+		for _, san := range tls.SubjectAltNames {
-+			u, err := url.Parse(san)
-+			if err != nil {
-+				continue
-+			}
-+			sans = append(sans, u.Scheme+"://"+u.Host)
-+		}
-+
- 		tlsContext.CommonTlsContext.ValidationContextType = &auth.CommonTlsContext_CombinedValidationContext{
- 			CombinedValidationContext: &auth.CommonTlsContext_CombinedCertificateValidationContext{
--				DefaultValidationContext: &auth.CertificateValidationContext{MatchSubjectAltNames: util.StringToExactMatch(tls.SubjectAltNames)},
-+				//TODO: do the same for the other cases
-+				DefaultValidationContext: &auth.CertificateValidationContext{MatchSubjectAltNames: util.StringToPrefixMatch(sans)},
-+				// DefaultValidationContext: &auth.CertificateValidationContext{MatchSubjectAltNames: util.StringToExactMatch(tls.SubjectAltNames)},
- 				ValidationContextSdsSecretConfig: authn_model.ConstructSdsSecretConfig(model.GetOrDefault(metadataSDS.GetRootResourceName(),
- 					authn_model.SDSRootResourceName), proxy),
- 			},
 diff --git a/pkg/istio-agent/agent.go b/pkg/istio-agent/agent.go
-index 6dc65603f3..04092f0096 100644
+index 6dc65603f3..ab2f9510ce 100644
 --- a/pkg/istio-agent/agent.go
 +++ b/pkg/istio-agent/agent.go
 @@ -83,7 +83,7 @@ type Agent struct {
@@ -103,21 +69,13 @@ index 6dc65603f3..04092f0096 100644
  
  	// Used when proxying envoy xds via istio-agent is enabled.
  	xdsProxy *XdsProxy
-@@ -160,7 +160,6 @@ func (a *Agent) Start() error {
- 	if err != nil {
- 		return fmt.Errorf("failed to start workload secret manager %v", err)
- 	}
--
- 	a.sdsServer, err = sds.NewServer(a.secOpts, a.secretCache)
- 	if err != nil {
- 		return fmt.Errorf("failed to start local sds server %v", err)
-@@ -282,7 +281,12 @@ func (a *Agent) FindRootCAForCA() string {
+@@ -282,7 +282,12 @@ func (a *Agent) FindRootCAForCA() string {
  }
  
  // newSecretManager creates the SecretManager for workload secrets
 -func (a *Agent) newSecretManager() (*cache.SecretManagerClient, error) {
 +func (a *Agent) newSecretManager() (security.SecretProvider, error) {
-+	if a.secOpts.PilotCertProvider == "SPIRE" {
++	if strings.ToLower(a.secOpts.PilotCertProvider) == "spire" {
 +		log.Info("Using SPIRE identity plane")
 +		return cache.NewSpireSecretManager(a.secOpts)
 +	}
@@ -145,16 +103,14 @@ index 84dd906b1c..dee9d067c4 100644
  	// ExchangeToken provides a common interface to exchange an existing token for a new one.
 diff --git a/security/pkg/nodeagent/cache/spiresecret.go b/security/pkg/nodeagent/cache/spiresecret.go
 new file mode 100644
-index 0000000000..a6ed15f0a8
+index 0000000000..57c37c367f
 --- /dev/null
 +++ b/security/pkg/nodeagent/cache/spiresecret.go
-@@ -0,0 +1,205 @@
+@@ -0,0 +1,187 @@
 +package cache
 +
 +import (
 +	"bytes"
-+	"crypto/x509"
-+	"encoding/pem"
 +	"fmt"
 +	"sync"
 +	"time"
@@ -298,14 +254,13 @@ index 0000000000..a6ed15f0a8
 +	s.Lock()
 +	defer s.Unlock()
 +
-+	s.secretItem = item
-+
 +	if s.secretItem == nil || !bytes.Equal(s.secretItem.RootCert, item.RootCert) {
 +		s.callUpdateCallback(security.RootCertReqResourceName)
 +	}
 +	if s.secretItem == nil || !bytes.Equal(s.secretItem.CertificateChain, item.CertificateChain) {
 +		s.callUpdateCallback(security.WorkloadKeyCertResourceName)
 +	}
++	s.secretItem = item
 +}
 +
 +// OnX509ContextWatchError is run when the client runs into an error
@@ -334,23 +289,8 @@ index 0000000000..a6ed15f0a8
 +	}
 +	defer client.Close()
 +
-+	// TODO: which other errors aside from cancel can come from this?
 +	err = client.WatchX509Context(ctx, s)
 +	if err != nil && status.Code(err) != codes.Canceled {
 +		log.Fatalf("Error watching SPIRE workload API: %v", err)
 +	}
-+}
-+
-+// getCertTimestamps parses the first certificate in certByte and returns cert expire
-+// time and cert creation time, or return error if fails to parse certificate.
-+func getCertTimestamps(certByte []byte) (time.Time, time.Time, error) {
-+	block, _ := pem.Decode(certByte)
-+	if block == nil {
-+		return time.Time{}, time.Time{}, fmt.Errorf("failed to pem decode certificate")
-+	}
-+	cert, err := x509.ParseCertificate(block.Bytes)
-+	if err != nil {
-+		return time.Time{}, time.Time{}, fmt.Errorf("failed to parse certificate: %v", err)
-+	}
-+	return cert.NotBefore, cert.NotAfter, nil
 +}

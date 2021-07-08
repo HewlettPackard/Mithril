@@ -65,7 +65,7 @@ Before running the deploy script, specify your trust domain and cluster name on 
 ```bash
 TAG=my-build \
 HUB=localhost:5000 \
-./deploy-all
+./deploy-all.sh
 ```
 
 The output should look like: 

@@ -14,8 +14,6 @@ spec:
       namespace: spire
       labels:
         app: spire-agent
-      annotations:
-        spiffe.io/spiffe-id: "spire-agent"
     spec:
       hostPID: true
       hostNetwork: true

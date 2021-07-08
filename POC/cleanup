@@ -1,3 +1,0 @@
-(cd istio ; sh delete-istio)
-(cd bookinfo ; ./cleanup.sh)
-(cd spire ; ./cleanup.sh)

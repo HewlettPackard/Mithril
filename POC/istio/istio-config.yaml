@@ -86,18 +86,12 @@ spec:
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
-<<<<<<< HEAD
-=======
         k8s:
           overlays:
             - apiVersion: apps/v1
               kind: Deployment
               name: istio-ingressgateway
               patches:
-                - path: spec.template.metadata.annotations
-                  value:
-                    spiffe.io/spiffe-id: "istio-ingressgateway"
-
                 - path: spec.template.spec.volumes[8]
                   value:
                     name: spire-agent-socket
@@ -128,4 +122,3 @@ spec:
               value: "SPIRE"
             - name: SPIFFE_ENDPOINT_SOCKET
               value: "unix:///run/spire/sockets/agent.sock"
->>>>>>> 9d3d72d (updates POC to make use of SPIRE server through workload API)

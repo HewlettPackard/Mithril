@@ -13,7 +13,7 @@ bash ./.temp/temp.sh
 rm -rf ./.temp
 
 # Get root-cert from secret of the POC and writes to file in the default Istio path for the root-cert
-kubectl -n istio-system get configmaps istio-ca-root-cert  -ojsonpath='{.data.root-cert\.pem}' | base64 > ./var/run/secrets/istio/root-cert.pem
+kubectl -n istio-system get configmaps istio-ca-root-cert  -ojsonpath='{.data.root-cert\.pem}' > ./var/run/secrets/istio/root-cert.pem
 
 # Get certs from secrets of the POC and writes to files in the default Istio path
 kubectl -n istio-system get secrets istiod-certs -ojsonpath='{.data.root-cert\.pem}' | base64 -d > ./etc/certs/root-cert.pem
@@ -71,11 +71,11 @@ tracing: {}" > $PWD/proxy-config-docker.yaml
     if [[ $PILOT_CERT_PROVIDER == "SPIRE" ]]
     then
         echo "PILOT_CERT_PROVIDER="$PILOT_CERT_PROVIDER
-        docker run -it -v $PWD/var/run/secrets/tokens/istio-token:/var/run/secrets/tokens/istio-token -v /tmp/agent.sock:/tmp/agent.sock \
+        docker run -it -v $PWD/var/run/secrets/tokens/istio-token:/var/run/secrets/tokens/istio-token -v /run/spire/sockets/agent.sock:/run/spire/sockets/agent.sock \
             -v $PWD/var/run/secrets/istio/:/var/run/secrets/istio/ \
             -v $PWD/etc/certs/:/etc/certs/ \
             --network host \
-            -e SPIFFE_ENDPOINT_SOCKET="unix:///tmp/agent.sock" \
+            -e SPIFFE_ENDPOINT_SOCKET="unix:///run/spire/sockets/agent.sock" \
             -e TRUST_DOMAIN="example.org" \
             -e PILOT_ENABLE_XDS_IDENTITY_CHECK=true \
             -e ENABLE_CA_SERVER=false \
@@ -83,7 +83,7 @@ tracing: {}" > $PWD/proxy-config-docker.yaml
             -e PROXY_CONFIG="$(< $PWD/proxy-config-docker.yaml envsubst)" \
             $HUB/proxyv2:$TAG proxy sidecar
     else
-        docker run -it -v $PWD/var/run/secrets/tokens/istio-token:/var/run/secrets/tokens/istio-token -v /tmp/agent.sock:/tmp/agent.sock \
+        docker run -it -v $PWD/var/run/secrets/tokens/istio-token:/var/run/secrets/tokens/istio-token -v /run/spire/sockets/agent.sock:/run/spire/sockets/agent.sock \
             -v $PWD/var/run/secrets/istio/:/var/run/secrets/istio/ \
             -v $PWD/etc/certs/:/etc/certs/ \
             --network host \
@@ -108,7 +108,7 @@ terminationDrainDuration: 0s
 tracing: {}" > $PWD/proxy-config.yaml
     if [[ $PILOT_CERT_PROVIDER == "SPIRE" ]]
     then
-        SPIFFE_ENDPOINT_SOCKET="unix:///tmp/agent.sock" TRUST_DOMAIN="example.org" PILOT_ENABLE_XDS_IDENTITY_CHECK=true PILOT_CERT_PROVIDER=$PILOT_CERT_PROVIDER PROXY_CONFIG="$(< $PWD/proxy-config.yaml envsubst)" go run ./pilot/cmd/pilot-agent proxy sidecar
+        SPIFFE_ENDPOINT_SOCKET="unix:///run/spire/sockets/agent.sock" TRUST_DOMAIN="example.org" PILOT_ENABLE_XDS_IDENTITY_CHECK=true PILOT_CERT_PROVIDER=$PILOT_CERT_PROVIDER PROXY_CONFIG="$(< $PWD/proxy-config.yaml envsubst)" go run ./pilot/cmd/pilot-agent proxy sidecar
     else
         PILOT_ENABLE_XDS_IDENTITY_CHECK=true PROXY_CONFIG="$(< $PWD/proxy-config.yaml envsubst)" go run ./pilot/cmd/pilot-agent proxy sidecar
     fi

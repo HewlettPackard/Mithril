@@ -1,6 +1,6 @@
 #!/bin/bash
 
-(cd spire ; sh deploy-spire.sh)
+(cd spire ; ./deploy-spire.sh)
 sleep 2
-(cd istio ; sh deploy-istio.sh)
-(cd bookinfo ; sh deploy-bookinfo.sh)
+(cd istio ; ./deploy-istio.sh)
+(cd bookinfo ; ./deploy-bookinfo.sh)

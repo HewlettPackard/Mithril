@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+
 echo "Deploying Istio..."
 
 if [[ $HUB ]]; then

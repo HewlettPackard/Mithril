@@ -229,3 +229,6 @@ eksctl delete cluster --region us-east-1 --name poc-cluster
 ./cleanup
 ```
 
+## Running Istio Agent
+
+Follow [Running Istio Agent Wiki](https://github.hpe.com/sec-eng/istio-spire/wiki/Running-Istio-Agent-locally-or-in-container)

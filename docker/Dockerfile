@@ -1,6 +1,10 @@
 FROM ubuntu:latest
 
 ARG DEBIAN_FRONTEND=noninteractive
+
+ENV TAG=my-build 
+ENV HUB=localhost:5000 
+ENV BUILD_WITH_CONTAINER=0
    
 WORKDIR /mithril
 

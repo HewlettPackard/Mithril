@@ -19,15 +19,15 @@ pipeline {
 
   stages {
 
-    // stage("notify-slack") {
-    //   steps {
-    //     script {
-    //       slackSend (
-    //         channel: CHANNEL_NAME,
-    //         message: "Hello. The pipeline ${currentBuild.fullDisplayName} started.")
-    //     }
-    //   }
-    // }
+    stage("notify-slack") {
+      steps {
+        script {
+          slackSend (
+            channel: CHANNEL_NAME,
+            message: "Hello. The pipeline ${currentBuild.fullDisplayName} started.")
+        }
+      }
+    }
 
     stage("make-poc-codebase") {
       steps {
@@ -39,96 +39,96 @@ pipeline {
       }
     }
 
-    // stage("build-and-push-images") {
-    //   environment {
-    //     TAG = makeTag() 
-    //     BUILD_WITH_CONTAINER = 0
-    //     GOOS = "linux"
+    stage("build-and-push-images") {
+      environment {
+        TAG = makeTag() 
+        BUILD_WITH_CONTAINER = 0
+        GOOS = "linux"
 
-    //     AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-    //     AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-    //   }
-    //   steps {
-    //     // Fetch secrets from Vault and use the mask token plugin
-    //     script {
-    //       def secrets = vaultGetSecrets()
+        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+      }
+      steps {
+        // Fetch secrets from Vault and use the mask token plugin
+        script {
+          def secrets = vaultGetSecrets()
 
-    //       def passwordMask = [ 
-    //         $class: 'MaskPasswordsBuildWrapper',
-    //         varPasswordPairs: [ [ password: secrets.dockerHubToken ] ]
-    //       ]
+          def passwordMask = [ 
+            $class: 'MaskPasswordsBuildWrapper',
+            varPasswordPairs: [ [ password: secrets.dockerHubToken ] ]
+          ]
 
-    //       // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
-    //       // and build tag, building Istio and pushing images to the Dockerhub of HPE
-    //       wrap(passwordMask) {
-    //         docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-    //           // Build and push to HPE registry
-    //           sh """
-    //             export HUB=${HPE_REGISTRY}
+          // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
+          // and build tag, building Istio and pushing images to the Dockerhub of HPE
+          wrap(passwordMask) {
+            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+              // Build and push to HPE registry
+              sh """
+                export HUB=${HPE_REGISTRY}
 
-    //             echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
+                echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
 
-    //             cd istio && make push
-    //           """
+                cd istio && make push
+              """
 
-    //           // Build and push to ECR registry
-    //           def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-    //           def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+              // Build and push to ECR registry
+              def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+              def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
 
-    //           sh """
-    //             export HUB=${ECR_HUB}
+              sh """
+                export HUB=${ECR_HUB}
 
-    //             aws ecr get-login-password --region ${ECR_REGION} | \
-    //               docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                aws ecr get-login-password --region ${ECR_REGION} | \
+                  docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-    //             cd istio && make push
-    //           """
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
+                cd istio && make push
+              """
+            }
+          }
+        }
+      }
+    }
 
-    // // Tag the current build as "latest" whenever a new commit
-    // // comes into master and pushes the tag to the ECR repository
-    // stage("tag-latest-images") {
-    //   when {
-    //     branch "master"
-    //   }
-    //   environment {
-    //     TAG = "latest"
-    //     AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-    //     AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-    //   }
-    //   steps {
-    //     script {
-    //       def secrets = vaultGetSecrets()
+    // Tag the current build as "latest" whenever a new commit
+    // comes into master and pushes the tag to the ECR repository
+    stage("tag-latest-images") {
+      when {
+        branch "master"
+      }
+      environment {
+        TAG = "latest"
+        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+      }
+      steps {
+        script {
+          def secrets = vaultGetSecrets()
 
-    //       def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
-    //       def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX
+          def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
+          def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX
 
-    //       docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-    //         sh """#!/bin/bash
-    //           set -x
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh """#!/bin/bash
+              set -x
 
-    //           aws ecr get-login-password --region ${ECR_REGION} | \
-    //             docker login --username AWS --password-stdin ${ECR_REGISTRY}
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
               
-    //           docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
-    //             pieces=(\$line)
-    //             docker tag "\${pieces[0]}" "\${pieces[1]}":${env.TAG}
-    //             docker push "\${pieces[1]}":${env.TAG}
-    //           done
-    //         """
-    //       }
-    //     }
-    //   }
-    // }
+              docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
+                pieces=(\$line)
+                docker tag "\${pieces[0]}" "\${pieces[1]}":${env.TAG}
+                docker push "\${pieces[1]}":${env.TAG}
+              done
+            """
+          }
+        }
+      }
+    }
 
     stage("distribute-poc"){
-      // when {
-      //   branch "master"
-      // }
+      when {
+        branch "master"
+      }
 
       environment {
         AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
@@ -151,22 +151,22 @@ pipeline {
     }
   }
   
-  // post {
-  //   success {
-  //     slackSend (
-  //       channel: CHANNEL_NAME,  
-  //       color: 'good', 
-  //       message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
-  //     )
-  //   }
-  //   failure {
-  //     slackSend (
-  //       channel: CHANNEL_NAME,  
-  //       color: 'bad', 
-  //       message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed. Check it here: ${env.BUILD_URL}"
-  //     )
-  //   }
-  // }
+  post {
+    success {
+      slackSend (
+        channel: CHANNEL_NAME,  
+        color: 'good', 
+        message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
+      )
+    }
+    failure {
+      slackSend (
+        channel: CHANNEL_NAME,  
+        color: 'bad', 
+        message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed. Check it here: ${env.BUILD_URL}"
+      )
+    }
+  }
 }
 
 // Method for creating the build tag

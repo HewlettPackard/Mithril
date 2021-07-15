@@ -141,7 +141,7 @@ pipeline {
             sh """
               cd ./POC
 
-              tar -zcvf mithril.tar.gz bookinfo spire istio deploy-all.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh
+              tar -zcvf mithril.tar.gz bookinfo spire istio deploy-all.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh doc/poc-instructions.md
 
               aws s3 cp mithril.tar.gz ${S3_BUCKET}
             """

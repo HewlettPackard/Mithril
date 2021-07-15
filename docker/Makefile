@@ -30,8 +30,7 @@ clear-img:
 	   docker rmi $(APP_NAME)
 
 # Build and Start the container
-start: build run
-	   
+start: build run	   
 
 # Docker release - build, tag and push the container
 push: build publish

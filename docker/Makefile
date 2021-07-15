@@ -29,15 +29,19 @@ clear: rm
 clear-img:
 	   docker rmi $(APP_NAME)
 
-# # Docker release - build, tag and push the container
-# push: build publish
+# Build and Start the container
+start: build run
+	   
 
-# # Docker publish
-# publish: login publish-latest publish-version 
+# Docker release - build, tag and push the container
+push: build publish
 
-# publish-latest: tag-latest
-# 	@echo 'publish latest to $(DOCKER_REPO)'
-# 	docker push $(DOCKER_REPO)/$(APP_NAME):latest
+# Docker publish
+publish: login publish-latest
+
+publish-latest: tag-latest
+	@echo 'publish latest to $(DOCKER_REPO)'
+	docker push $(DOCKER_REPO)/$(APP_NAME):latest
 
 # publish-version: tag-version 
 # 	@echo 'publish $(VERSION) to $(DOCKER_REPO)'
@@ -47,21 +51,9 @@ tag-latest:
 	@echo 'create tag latest'
 	docker tag $(APP_NAME) $(DOCKER_REPO)/$(APP_NAME):latest
 
-tag-version: 
-	@echo 'create tag $(VERSION)'
-	docker tag $(APP_NAME) $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
+# tag-version: 
+# 	@echo 'create tag $(VERSION)'
+# 	docker tag $(APP_NAME) $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
 
-# # generate script to login to HPE docker hub
-# CMD_REPOLOGIN := "eval $$\( docker login"
-# ifdef HUB_URL
-# CMD_REPOLOGIN += " $(HUB_URL)"
-# endif
-# ifdef DOCKER_USER
-# CMD_REPOLOGIN += " --username $(DOCKER_USER)"
-# endif
-# ifdef DOCKER_PWD
-# CMD_REPOLOGIN += " --password $(DOCKER_PWD)"
-# endif
-
-# login: ## Auto login to HPE docker hub MSR
-# 	@eval $(CMD_REPOLOGIN)
+login: ## Auto login to HPE docker hub MSR
+	docker login $(HUB_URL) -u $(DOCKER_USER) -p $(DOCKER_PWD)

@@ -11,6 +11,7 @@ build:
 
 # Runs the container
 run:
+	mkdir -p $(HOME)/.kube && touch $(HOME)/.kube/config
 	docker run -i -t --rm -v "$(DOCKER_SOCK_MAP)" -v "$(KUBE_CONFIG_MAP)" --network host --name $(APP_NAME) $(APP_NAME)
 
 # Stop running containers

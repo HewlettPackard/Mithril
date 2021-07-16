@@ -22,10 +22,11 @@ RUN wget https://golang.org/dl/go1.16.1.linux-amd64.tar.gz \
 ENV PATH="${PATH}:/usr/local/go/bin"
 
 # Spire installation
-RUN wget https://github.com/spiffe/spire/releases/download/v0.12.3/spire-0.12.3-linux-x86_64-glibc.tar.gz \
-    && tar zvxf spire-0.12.3-linux-x86_64-glibc.tar.gz \
-    && cp -r spire-0.12.3/. /opt/spire/ \
-    && rm -rf spire-0.12.3-linux-x86_64-glibc.tar.gz
+RUN wget https://github.com/spiffe/spire/releases/download/v1.0.0/spire-1.0.0-linux-x86_64-glibc.tar.gz \
+    && tar zvxf spire-1.0.0-linux-x86_64-glibc.tar.gz \
+    && mv spire-858d04b/ spire-1.0.0 \
+    && cp -r spire-1.0.0/. /opt/spire/ \
+    && rm -rf spire-1.0.0-linux-x86_64-glibc.tar.gz
 
 ENV PATH="${PATH}:/opt/spire/bin"
 

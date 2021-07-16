@@ -22,6 +22,32 @@ make run
 This command will start the container and you can follow this [guide](https://github.hpe.com/sec-eng/istio-spire/blob/master/POC/README.md) in order to set up the environment.
 
 # Cloning the image
-The repo that the image will be stored still to be determined and the image that will be deployed to the repo it's waiting the team approval.
+To clone the image you can use
 
-This documentation will be updated once the image it's deployed.
+```bash
+make pull
+```
+
+After downloading the image you can execute
+
+```bash
+make run
+```
+
+# Pushing the image to Mirantis Secure Registry
+Befor trying to push the image to MSR you need to set the environment variables in the `conf.env` file.
+
+
+You need to update the `DOCKER_USER` and `DOCKER_PWD` fields, which are your docker user and your docker password. 
+
+_Your **Docker password** is most likely your Private Access Token from MSR_
+
+After setting the correct credentials in the `conf.env` file you can automatically build and publish the image with the command
+```bash
+make push
+```
+
+You can also just push the image if there is any update made to it
+```bash
+make publish
+```

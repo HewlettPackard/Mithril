@@ -32,10 +32,19 @@ clear-img:
 # Build and Start the container
 start: build run	   
 
-# Docker release - build, tag and push the container
+# Build, tag and push the container
 push: build publish
 
-# Docker publish
+# Pull the image and tag it as $APP_NAME:latest
+pull: tag-image
+
+pull-image: 
+	docker pull hub.docker.hpecorp.net/sec-eng/mithril
+
+tag-image: pull-image
+		   docker tag hub.docker.hpecorp.net/sec-eng/mithril $(APP_NAME):latest
+		   
+# Login in and publish the image to the repo with the tag latest
 publish: login publish-latest
 
 publish-latest: tag-latest
@@ -54,5 +63,6 @@ tag-latest:
 # 	@echo 'create tag $(VERSION)'
 # 	docker tag $(APP_NAME) $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
 
-login: ## Auto login to HPE docker hub MSR
+# Auto login to HPE docker hub MSR
+login: 
 	docker login $(HUB_URL) -u $(DOCKER_USER) -p $(DOCKER_PWD)

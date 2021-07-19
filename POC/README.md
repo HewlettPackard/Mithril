@@ -216,7 +216,7 @@ eksctl create cluster \
 ```bash
 TAG=latest \
 HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril \
-./deploy-all
+./deploy-all.sh
 ```
 When you are done, you can [clean up your istio deployment](#clean-up), and then delete the EKS cluster.
 ```bash

@@ -1,8 +1,9 @@
 # Building the image
 
-To build the image you can use the follow command
+To build the image you can use the following command. In this command you can specify any istio branch version and istioctl version you want to be added into the container. By default it is cloning the branch *_release-1.10_* and installing the istioctl _1.10.1_
+
 ```bash
-make build
+make build ISTIO_VERSION=release-1.9 ISTIO_CTL_VERSION=1.9.1
 ```
 The image has all the needed dependencies to be able to run and deploy the POC.
 
@@ -16,18 +17,6 @@ make run
 ```
 
 This command will start the container and you can follow this [guide](https://github.hpe.com/sec-eng/istio-spire/blob/master/POC/README.md) in order to set up the environment.
-# Cloning the image
-To clone the image you can use
-
-```bash
-make pull
-```
-
-After downloading the image you can execute
-
-```bash
-make run
-```
 
 # Pushing the image to Mirantis Secure Registry
 Before trying to push the image to [MSR](https://hub.docker.hpecorp.net/repositories?namespace=sec-eng) you need to set the environment variables in the `conf.env` file.
@@ -47,6 +36,18 @@ You can also just push the image if there is any update made to it
 make publish
 ```
 
+# Pulling the image
+To clone the image you can use
+
+```bash
+make pull
+```
+
+After downloading the image you can execute it with
+
+```bash
+make run
+```
 ## Troubleshoot
 
 If you encounter any problem during the building of istio images it's probably due to caching since the docker engine it's been shared from the host.
@@ -59,4 +60,4 @@ docker rm $(docker ps -aq)
 docker rmi $(docker images -aq) --force
 ```
 
-These will stop and remove all containers also will clear all images.
+These commands will stop and remove all the containers, and clear all the images.

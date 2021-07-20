@@ -1,6 +1,9 @@
-FROM ubuntu:latest
+FROM ubuntu:20.04
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG ISTIO_VERSION=release-1.10
+ARG ISTIO_CTL_VERSION=1.10.1
+ARG PATCH_VERSION=1.10
 
 ENV TAG=my-build 
 ENV HUB=localhost:5000 
@@ -41,18 +44,18 @@ RUN curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64 \
     && mv ./kind /usr/local/bin
 
 # Istioctl Installation
-RUN curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.10.1 sh - \
-    && cp istio-1.10.1/bin/istioctl /usr/local/bin \
-    && mv istio-1.10.1 istioctl-1.10.1
+RUN curl -L https://istio.io/downloadIstio | ISTIO_VERSION=$ISTIO_CTL_VERSION sh - \
+    && cp istio-$ISTIO_CTL_VERSION/bin/istioctl /usr/local/bin \
+    && mv istio-$ISTIO_CTL_VERSION istioctl-$ISTIO_CTL_VERSION
 
 # Cloning istio source code
-RUN git clone --single-branch --branch release-1.10 https://github.com/istio/istio.git ./istio-source
+RUN git clone --single-branch --branch $ISTIO_VERSION https://github.com/istio/istio.git ./istio-source
 
 COPY . .
 
 WORKDIR /mithril/istio-source
 
 # Applying POC patch
-RUN git apply /mithril/POC/patches/poc.1.10.patch
+RUN git apply /mithril/POC/patches/poc.$PATCH_VERSION.patch
 
 WORKDIR /mithril

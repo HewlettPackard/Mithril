@@ -25,19 +25,19 @@ You need to update the `DOCKER_USER` and `DOCKER_PWD` fields, which are your doc
 
 _Your **Docker password** is most likely your Private Access Token from MSR_
 
-After setting the correct credentials in the `conf.env` file you can automatically build and publish the image with the command
+After setting the correct credentials in the `conf.env` file you can automatically **build** and **publish** the image with the command
 
 ```bash
 make push
 ```
 
-You can also just push the image if there is any update made to it
+You can also just publish the image if there is any update made to it
 ```bash
 make publish
 ```
 
 # Pulling the image
-To clone the image you can use
+To download the image you can use
 
 ```bash
 make pull
@@ -48,9 +48,9 @@ After downloading the image you can execute it with
 ```bash
 make run
 ```
-## Troubleshoot
+# Troubleshooting
 
-If you encounter any problem during the building of istio images it's probably due to caching since the docker engine it's been shared from the host.
+If you encounter any problem during the building of istio images it's probably due to caching since the docker engine is shared from the host.
 
 Exit the container and then you can execute these commands to clear the environment:
 
@@ -60,4 +60,4 @@ docker rm $(docker ps -aq)
 docker rmi $(docker images -aq) --force
 ```
 
-These commands will stop and remove all the containers, and clear all the images.
+These commands will stop and remove all the containers, and clean up all the images.

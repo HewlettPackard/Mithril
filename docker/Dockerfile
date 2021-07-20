@@ -17,6 +17,12 @@ RUN apt-get update \
 RUN gem install --no-document fpm \
     && gem update fpm
 
+# AWS CLI installation
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && rm -rf awscliv2.zip \
+    && ./aws/install
+
 # Go installation
 RUN wget https://golang.org/dl/go1.16.1.linux-amd64.tar.gz \
     && tar -C /usr/local -xzf go1.16.1.linux-amd64.tar.gz \

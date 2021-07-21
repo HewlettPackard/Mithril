@@ -36,14 +36,14 @@ Follow [aws cli install and configure instructions](https://aws.amazon.com/cli/?
 ## Create the cluster and the local docker registry
 
 ```bash
-./create-kind-cluster
+./create-kind-cluster.sh
 ```
 
 ## Create a secret for docker registry
 
+
 ```bash
-TAG=latest \
-HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/
+HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril \
 ./create-docker-registry-secret.sh
 ```
 
@@ -51,6 +51,8 @@ HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/
 In order to run the POC locally,
 
 ```bash
+TAG=latest \
+HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril \
 ./deploy-all.sh
 ```
 

@@ -40,7 +40,7 @@ Follow [kind install instructions](https://kind.sigs.k8s.io/docs/user/quick-star
 ## Create the cluster and the local docker registry
 
 ```bash
-./create-kind-cluster
+./create-kind-cluster.sh
 ```
 
 ## Build istio images
@@ -226,7 +226,7 @@ eksctl delete cluster --region us-east-1 --name poc-cluster
 # Clean up
 
 ```bash
-./cleanup
+./cleanup.sh
 ```
 
 ## Running Istio Agent

@@ -2,6 +2,9 @@
 
 set -e
 
+# Deploy the k8s operator that synchronizes the trust bundle across namespaces
+kubectl apply -f https://github.com/TheYkk/synator/raw/master/deploy.yml
+
 # Create the namespace
 kubectl apply -f spire-namespace.yaml
 

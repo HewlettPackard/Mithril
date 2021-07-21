@@ -17,8 +17,6 @@ spec:
     global:
       hub: localhost:5000
       tag: my-build
-      # pilotCertProvider: SPIRE
-      # pilotCertProvider: custom
       imagePullPolicy: "Always"
       imagePullSecrets:
         - secret-registry
@@ -37,14 +35,14 @@ spec:
               volumeMounts:
                 - name: xds-root-ca
                   mountPath:  /etc/certs/
-                  readOnly: true
+                  readOnly: false
                 - name: spire-agent-socket
                   mountPath: /run/spire/sockets
                   readOnly: true
             volumes:
               - name: xds-root-ca
                 configMap:
-                  name: istio-ca-root-cert
+                  name: trust-bundle
               - name: spire-agent-socket
                 hostPath:
                   path: /run/spire/sockets
@@ -60,11 +58,17 @@ spec:
           # Check that istio-agent's namespace and service account match the ones in the JWT token presented in the connection
           - name: PILOT_ENABLE_XDS_IDENTITY_CHECK
             value: "true"
+          # TODO: add when IstioD fetches its certificates from SPIRE
+#          - name: SPIFFE_ENDPOINT_SOCKET
+#            value: "unix:///run/spire/sockets/agent.sock"
+#          - name: PILOT_CERT_PROVIDER
+#            value: "spire"
         overlays:
           - apiVersion: apps/v1
             kind: Deployment
             name: istiod
             patches:
+             # TODO: remove all paths to certs when IstioD fetches its certs from SPIRE
               - path: spec.template.spec.containers.[name:discovery].args[8]
                 value: "--tlsCertFile=/run/istiod/certs/istiod-svid.pem"
               - path: spec.template.spec.containers.[name:discovery].args[9]
@@ -72,18 +76,33 @@ spec:
               - path: spec.template.spec.containers.[name:discovery].args[10]
                 value: "--caCertFile=/run/istiod/certs/root-cert.pem"
 
+            # TODO: remove when IstioD fetches its certs from SPIRE
               - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
                 value:
                   name: istiod-certs
                   mountPath: "/run/istiod/certs"
                   readOnly: true
 
-              # pod patches
+              - path: spec.template.spec.containers.[name:discovery].volumeMounts[8]
+                value:
+                  name: spire-agent-socket
+                  mountPath: "/run/spire/sockets/"
+                  readOnly: true
+
+              # TODO: remove when IstioD fetches its certs from SPIRE
               - path: spec.template.spec.volumes[7]
                 value:
                   name: istiod-certs
                   secret:
                     secretName: istiod-certs
+
+              - path: spec.template.spec.volumes[8]
+                value:
+                  name: spire-agent-socket
+                  hostPath:
+                    path: /run/spire/sockets
+                    type: Directory
+
 
     ingressGateways:
       - name: istio-ingressgateway
@@ -94,6 +113,11 @@ spec:
               kind: Deployment
               name: istio-ingressgateway
               patches:
+                - path: spec.template.spec.volumes[0]
+                  value:
+                    name: istiod-ca-cert
+                    configMap:
+                      name: trust-bundle
                 - path: spec.template.spec.volumes[8]
                   value:
                     name: spire-agent-socket
@@ -105,7 +129,7 @@ spec:
                   value:
                     name: xds-root-ca
                     configMap:
-                      name: istio-ca-root-cert
+                      name: trust-bundle
 
                 - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
                   value:
@@ -121,6 +145,6 @@ spec:
 
           env:
             - name: PILOT_CERT_PROVIDER
-              value: "SPIRE"
+              value: "spire"
             - name: SPIFFE_ENDPOINT_SOCKET
               value: "unix:///run/spire/sockets/agent.sock"

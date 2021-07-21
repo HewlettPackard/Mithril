@@ -61,7 +61,7 @@ spec:
             name: spire-agent
         - name: spire-bundle
           configMap:
-            name: spire-bundle
+            name: trust-bundle
         - name: spire-agent-socket
           hostPath:
             path: /run/spire/sockets

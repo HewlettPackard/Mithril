@@ -55,6 +55,9 @@ data:
 
       Notifier "k8sbundle" {
         plugin_data {
+          namespace = "spire"
+          config_map = "trust-bundle"
+          config_map_key = "root-cert.pem"
         }
       }
     }

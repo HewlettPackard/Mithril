@@ -11,7 +11,7 @@ Further needed dependencies can be added if there is a need, to continue with Mi
 
 # Running the container
 
-You can run the container using the follow command
+You can run the container using the following command
 ```bash
 make run
 ```

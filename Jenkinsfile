@@ -1,9 +1,10 @@
-CHANNEL_NAME = "#notify-project-mithril"
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:istio-aws-deps"
-LATEST_BRANCH = "1.10"
-HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
+CHANNEL_NAME = "#notify-project-mithril"
 ECR_REGION = "us-east-1"
-ECR_REPOSITORY = "mithril"
+ECR_REPOSITORY_PREFIX = "mithril"
+HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
+LATEST_BRANCH = "1.10"
+S3_BUCKET = "s3://mithril-customer-assets"
 
 // Start of the pipeline
 pipeline {
@@ -18,7 +19,7 @@ pipeline {
 
   stages {
 
-    stage('Notify Slack') {
+    stage("notify-slack") {
       steps {
         script {
           slackSend (
@@ -28,7 +29,7 @@ pipeline {
       }
     }
 
-    stage('make-poc-codebase') {
+    stage("make-poc-codebase") {
       steps {
         // Istio clone from the latest branch
         sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
@@ -38,7 +39,7 @@ pipeline {
       }
     }
 
-    stage('build-and-push-images') {
+    stage("build-and-push-images") {
       environment {
         TAG = makeTag() 
         BUILD_WITH_CONTAINER = 0
@@ -72,7 +73,7 @@ pipeline {
 
               // Build and push to ECR registry
               def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-              def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY;
+              def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
 
               sh """
                 export HUB=${ECR_HUB}
@@ -104,7 +105,7 @@ pipeline {
           def secrets = vaultGetSecrets()
 
           def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
-          def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY
+          def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX
 
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh """#!/bin/bash
@@ -118,6 +119,33 @@ pipeline {
                 docker tag "\${pieces[0]}" "\${pieces[1]}":${env.TAG}
                 docker push "\${pieces[1]}":${env.TAG}
               done
+            """
+          }
+        }
+      }
+    }
+
+    stage("distribute-poc"){
+      when {
+        branch "master"
+      }
+
+      environment {
+        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+      }
+      
+      steps {
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh """
+              cd ./POC
+
+              tar -zcvf mithril.tar.gz bookinfo spire istio \
+                deploy-all.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
+                doc/poc-instructions.md
+
+              aws s3 cp mithril.tar.gz ${S3_BUCKET}
             """
           }
         }
@@ -137,7 +165,7 @@ pipeline {
       slackSend (
         channel: CHANNEL_NAME,  
         color: 'bad', 
-        message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
+        message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed. Check it here: ${env.BUILD_URL}"
       )
     }
   }

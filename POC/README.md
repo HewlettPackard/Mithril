@@ -40,7 +40,7 @@ Follow [kind install instructions](https://kind.sigs.k8s.io/docs/user/quick-star
 ## Create the cluster and the local docker registry
 
 ```bash
-./create-kind-cluster
+./create-kind-cluster.sh
 ```
 
 ## Build istio images
@@ -216,7 +216,7 @@ eksctl create cluster \
 ```bash
 TAG=latest \
 HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril \
-./deploy-all
+./deploy-all.sh
 ```
 When you are done, you can [clean up your istio deployment](#clean-up), and then delete the EKS cluster.
 ```bash
@@ -226,7 +226,7 @@ eksctl delete cluster --region us-east-1 --name poc-cluster
 # Clean up
 
 ```bash
-./cleanup
+./cleanup.sh
 ```
 
 ## Running Istio Agent

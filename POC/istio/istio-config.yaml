@@ -20,6 +20,8 @@ spec:
       # pilotCertProvider: SPIRE
       # pilotCertProvider: custom
       imagePullPolicy: "Always"
+      imagePullSecrets:
+        - secret-registry
 
     sidecarInjectorWebhook:
       templates:

@@ -4,7 +4,7 @@ This is a Demo of the Mithril Project.
 
 The script will setup all the configuration to deploy `Mithril` followed by the deploy of the `Bookinfo` application example and a quick demonstration of `SPIRE` issuing identites.
 
-This Demo requires **a running kubernetes cluster** and the **AWS CLI fully configured**. you can check how to configure the AWS CLI [here](https://hpe-my.sharepoint.com/:w:/p/nathalia-satie_gomazako/EWJDgqIyzTNDrkPDkGB94L0BRNN4ZAG_mUBx1mT9i6dNzg?e=4fm7zp)
+This Demo requires **a running kubernetes cluster** and the **AWS CLI fully configured**. you can check how to configure the AWS CLI [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
 
 To run it, just execute the shell script:
 ```bash

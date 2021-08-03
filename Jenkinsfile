@@ -35,7 +35,7 @@ pipeline {
         sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
 
         // Apply Mithril patches
-        sh "cd istio && git apply ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch"
+        sh "cd istio && git apply ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch ${WORKSPACE}/POC/patches/fetch-istiod-certs.${LATEST_BRANCH}.patch"
       }
     }
 

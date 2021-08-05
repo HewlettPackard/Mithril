@@ -20,7 +20,7 @@ and
 tail -n 1000 $HOME/mithril/spire/workload.log
 ```
 
-You can also see the live logs using this command:
+You can also see the live logs using the commands bellow:
 ```bash
 watch kubectl logs $(kubectl get pod -l app=details -o jsonpath='{.items[0].metadata.name}') -c istio-proxy
 ```

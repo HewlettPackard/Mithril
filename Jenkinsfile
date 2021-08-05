@@ -5,6 +5,10 @@ ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
 LATEST_BRANCH = "1.10"
 S3_BUCKET = "s3://mithril-customer-assets"
+MAIN_BRANCH = "master"
+
+def SLACK_ERROR_MESSAGE
+def SLACK_ERROR_COLOR
 
 // Start of the pipeline
 pipeline {
@@ -15,7 +19,8 @@ pipeline {
   }
 
   // Nightly builds schedule only for master
-  triggers { cron( BRANCH_NAME == "master" ?  "00 00 * * *" : "") }
+  triggers { cron( BRANCH_NAME == MAIN_BRANCH ?  "00 00 * * *" : "") }
+
 
   stages {
 
@@ -24,7 +29,7 @@ pipeline {
         script {
           slackSend (
             channel: CHANNEL_NAME,
-            message: "Hello. The pipeline ${currentBuild.fullDisplayName} started.")
+            message: "Hello. The pipeline ${currentBuild.fullDisplayName} started. (<${env.BUILD_URL}|See Job>)")
         }
       }
     }
@@ -35,7 +40,27 @@ pipeline {
         sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
 
         // Apply Mithril patches
-        sh "cd istio && git apply ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch ${WORKSPACE}/POC/patches/fetch-istiod-certs.${LATEST_BRANCH}.patch"
+        sh """
+          cd istio
+          git apply \
+            ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch \
+            ${WORKSPACE}/POC/patches/fetch-istiod-certs.${LATEST_BRANCH}.patch \
+            ${WORKSPACE}/POC/patches/unit-tests.${LATEST_BRANCH}.patch
+        """
+      }
+    }
+
+    stage('test') {
+      steps {
+        sh """
+          set -x
+          export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
+          
+          cd istio         
+          make clean
+          make init
+          make test
+        """
       }
     }
 
@@ -93,7 +118,7 @@ pipeline {
     // comes into master and pushes the tag to the ECR repository
     stage("tag-latest-images") {
       when {
-        branch "master"
+        branch MAIN_BRANCH
       }
       environment {
         TAG = "latest"
@@ -125,9 +150,9 @@ pipeline {
       }
     }
 
-    stage("distribute-poc"){
+    stage("distribute-poc") {
       when {
-        branch "master"
+        branch MAIN_BRANCH
       }
 
       environment {
@@ -158,14 +183,22 @@ pipeline {
       slackSend (
         channel: CHANNEL_NAME,  
         color: 'good', 
-        message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
+        message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. (<${env.BUILD_URL}|See Job>)"
       )
     }
     failure {
+      script {
+        SLACK_ERROR_MESSAGE = "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
+        SLACK_ERROR_COLOR = "bad"
+        if (BRANCH_NAME == MAIN_BRANCH) {
+          SLACK_ERROR_MESSAGE = "@here The pipeline ${currentBuild.fullDisplayName} failed on `${MAIN_BRANCH}`"
+          SLACK_ERROR_COLOR = "danger"
+        }
+      }
       slackSend (
-        channel: CHANNEL_NAME,  
-        color: 'bad', 
-        message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed. Check it here: ${env.BUILD_URL}"
+        channel: CHANNEL_NAME,
+        color: SLACK_ERROR_COLOR,
+        message: "${SLACK_ERROR_MESSAGE} (<${env.BUILD_URL}|See Job>)",
       )
     }
   }

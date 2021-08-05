@@ -1,7 +1,7 @@
 #!/bin/bash
 # Environment Variables
-TAG=latest
-HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
+export TAG=latest
+export HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
 
 # Colors
 PURPLE='\033[0;35m'

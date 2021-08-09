@@ -1,6 +1,6 @@
 #!/bin/bash
 # Environment Variables
-export TAG=latest
+export TAG=stable
 export HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
 
 # Colors

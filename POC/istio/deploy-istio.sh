@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "Deploying Istio..."
-
 if [[ $HUB ]]; then
     echo "Using HUB from environment: $HUB"
     args="$args --set values.global.hub=$HUB"

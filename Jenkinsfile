@@ -143,7 +143,7 @@ pipeline {
 
               tar -zcvf mithril.tar.gz bookinfo spire istio \
                 deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
-                doc/poc-instructions.md
+                doc/poc-instructions.md demo/demo-script.sh demo/README.md
 
               aws s3 cp mithril.tar.gz ${S3_BUCKET}
             """

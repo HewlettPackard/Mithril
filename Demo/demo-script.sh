@@ -48,7 +48,10 @@ cd $HOME/mithril/bookinfo
 $HOME/mithril/forward-port.sh
 
 # Waiting for pods to be ready 
-kubectl wait pod --for=condition=Ready -l app=productpage,app=details,app=reviews,app=ratings
+kubectl wait pod --for=condition=Ready -l app=productpage
+kubectl wait pod --for=condition=Ready -l app=details
+kubectl wait pod --for=condition=Ready -l app=reviews
+kubectl wait pod --for=condition=Ready -l app=ratings
 
 # Check running pods
 echo -e "${GREEN}$(kubectl get pods -n default)${NC}"

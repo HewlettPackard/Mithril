@@ -51,7 +51,7 @@ HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril \
 In order to run the POC locally,
 
 ```bash
-TAG=latest \
+TAG=stable \
 HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril \
 ./deploy-all.sh
 ```

@@ -4,7 +4,10 @@
         {
             "Effect": "Allow",
             "Principal": {
-                "AWS": "arn:aws:iam::532440004545:user/Nathalia"
+                "AWS": [
+                    "arn:aws:iam::532440004545:root",
+                    "arn:aws:iam::537868109139:root"
+                ]
             },
             "Action": [
                 "s3:GetObject",

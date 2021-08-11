@@ -40,9 +40,6 @@ pipeline {
       steps {
         // Fetch secrets from Vault and use the mask token plugin
         script {
-          // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
-          // and build tag, building Istio and pushing images to the Dockerhub of HPE
-          wrap(passwordMask) {
             docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
               // Build and push to ECR registry
               def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
@@ -61,7 +58,6 @@ pipeline {
                 docker tag mithril:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
                 docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
               """
-            }
           }
         }
       }

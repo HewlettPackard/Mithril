@@ -8,7 +8,6 @@ terraform {
 
   required_version = ">= 0.14.9"
 }
-
 provider "aws" {
   region  = "us-east-1"
   profile = "scytale"
@@ -140,18 +139,12 @@ resource "aws_instance" "mithril_instance" {
     device_index         = 0
     network_interface_id = aws_network_interface.mithril-nic.id
   }
-
-  user_data = <<-EOF
-                #!/bin/bash
-                sudo apt update -y
-                sudo apt install docker.io awscli -y
-                aws configure set aws_access_key_id ${locals.aws_secrets.ACCESS_KEY_ID}
-                aws configure set aws_secret_access_key ${locals.aws_secrets.SECRET_ACCESS_KEY}
-                EOF
   tags = {
     Name = "mithril-testing"
   }
+  user_data = data.template_file.init.rendered
 }
+
 data "aws_secretsmanager_secret" "secrets" {
   name = "mithril-jenkins-integration-tests"
 }
@@ -159,6 +152,13 @@ data "aws_secretsmanager_secret" "secrets" {
 data "aws_secretsmanager_secret_version" "mithril_secret" {
   secret_id = data.aws_secretsmanager_secret.secrets.id
 }
-locals {
-  aws_secrets = jsondecode(data.aws_secretsmanager_secret_version.mithril_secret.secret_string)
+
+data "template_file" "init" {
+  template = file("user_data_bootstrap.sh")
+
+  vars = {
+    access_key        = jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.mithril_secret.secret_string))["ACCESS_KEY_ID"],
+    secret_access_key = jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.mithril_secret.secret_string))["SECRET_ACCESS_KEY"],
+    region            = "us-east-1"
+  }
 }

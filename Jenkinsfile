@@ -1,5 +1,5 @@
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:istio-aws-deps"
-CHANNEL_NAME = "#notify-project-mithril"
+CHANNEL_NAME = "@U021L6LHSHM"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
@@ -18,13 +18,51 @@ pipeline {
   triggers { cron( BRANCH_NAME == "master" ?  "00 00 * * *" : "") }
 
   stages {
+    // stage("notify-slack") {
+    //   steps {
+    //     script {
+    //       slackSend (
+    //         channel: CHANNEL_NAME,
+    //         message: "Hello. The pipeline ${currentBuild.fullDisplayName} started.")
+    //     }
+    //   }
+    // }
 
-    stage("notify-slack") {
+    stage("build-and-push-dev-images") {
+      environment {
+        TAG = makeTag() 
+        BUILD_WITH_CONTAINER = 0
+        GOOS = "linux"
+
+        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+      }
       steps {
+        // Fetch secrets from Vault and use the mask token plugin
         script {
-          slackSend (
-            channel: CHANNEL_NAME,
-            message: "Hello. The pipeline ${currentBuild.fullDisplayName} started.")
+          // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
+          // and build tag, building Istio and pushing images to the Dockerhub of HPE
+          wrap(passwordMask) {
+            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+              // Build and push to ECR registry
+              def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+              def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+
+              sh """
+                export HUB_URL=${ECR_HUB}
+                export MITHRIL_ECR=${ECR_HUB}:${MITHRIL_TAG}
+
+                aws ecr get-login-password --region ${ECR_REGION} | \
+                  docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
+                cd docker 
+
+                docker build -t mithril .
+                docker tag mithril:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
+                docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
+              """
+            }
+          }
         }
       }
     }
@@ -39,7 +77,7 @@ pipeline {
       }
     }
 
-    stage("build-and-push-images") {
+    stage("build-and-push-poc-images") {
       environment {
         TAG = makeTag() 
         BUILD_WITH_CONTAINER = 0
@@ -125,6 +163,36 @@ pipeline {
       }
     }
 
+    stage("run-integration-tests") {
+      when {
+        branch "master" //nightly build
+      }
+
+      environment {
+        TAG = makeTag()
+        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+      }
+      
+      steps {
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh """
+              cd ./Terraform
+
+              apt-get install -y gnupg software-properties-common curl \
+                && curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - \
+                && apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+                && apt-get update && apt-get install terraform
+
+              terraform init
+              terraform plan
+            """
+          }
+        }
+      }
+    }
+
     stage("distribute-poc"){
       when {
         branch "master"
@@ -153,22 +221,22 @@ pipeline {
     }
   }
   
-  post {
-    success {
-      slackSend (
-        channel: CHANNEL_NAME,  
-        color: 'good', 
-        message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
-      )
-    }
-    failure {
-      slackSend (
-        channel: CHANNEL_NAME,  
-        color: 'bad', 
-        message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed. Check it here: ${env.BUILD_URL}"
-      )
-    }
-  }
+  // post {
+  //   success {
+  //     slackSend (
+  //       channel: CHANNEL_NAME,  
+  //       color: 'good', 
+  //       message: "The pipeline ${currentBuild.fullDisplayName} completed successfully."
+  //     )
+  //   }
+  //   failure {
+  //     slackSend (
+  //       channel: CHANNEL_NAME,  
+  //       color: 'bad', 
+  //       message: "Ooops! The pipeline ${currentBuild.fullDisplayName} failed. Check it here: ${env.BUILD_URL}"
+  //     )
+  //   }
+  // }
 }
 
 // Method for creating the build tag

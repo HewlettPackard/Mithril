@@ -40,24 +40,26 @@ pipeline {
       steps {
         // Fetch secrets from Vault and use the mask token plugin
         script {
-            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-              // Build and push to ECR registry
-              def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-              def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+          def secrets = vaultGetSecrets()
 
-              sh """
-                export HUB_URL=${ECR_HUB}
-                export MITHRIL_ECR=${ECR_HUB}:${MITHRIL_TAG}
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            // Build and push to ECR registry
+            def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+            def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
 
-                aws ecr get-login-password --region ${ECR_REGION} | \
-                  docker login --username AWS --password-stdin ${ECR_REGISTRY}
+            sh """
+              export HUB_URL=${ECR_HUB}
+              export MITHRIL_ECR=${ECR_HUB}:${MITHRIL_TAG}
 
-                cd docker 
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-                docker build -t mithril .
-                docker tag mithril:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
-                docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
-              """
+              cd docker 
+
+              docker build -t mithril .
+              docker tag mithril:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
+              docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
+            """
           }
         }
       }

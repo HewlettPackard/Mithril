@@ -178,7 +178,7 @@ pipeline {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh """
-              cd ./Terraform
+              cd Terraform
 
               apt-get install -y gnupg software-properties-common curl 
               curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - 

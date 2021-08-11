@@ -36,6 +36,8 @@ pipeline {
       
       steps {
         script {
+          def secrets = vaultGetSecrets()
+          
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
             def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;

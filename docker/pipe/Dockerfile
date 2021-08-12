@@ -19,8 +19,8 @@ RUN apt-get -y install ruby ruby-dev rubygems build-essential rpm
 RUN gem install --no-document fpm
 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-RUN unzip awscliv2.zip
-RUN ./aws/install
+RUN unzip -o awscliv2.zip
+RUN ./aws/install --update
 
 RUN wget https://golang.org/dl/go1.16.1.linux-amd64.tar.gz
 RUN tar -C /usr/local -xzf go1.16.1.linux-amd64.tar.gz

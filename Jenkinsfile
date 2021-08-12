@@ -163,6 +163,8 @@ pipeline {
 
       environment {
         TAG = makeTag()
+        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
       }
       
       steps {
@@ -170,6 +172,9 @@ pipeline {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh """
               cd ./Terraform
+
+              aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID} --profile scytale
+              aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY} --profile scytale
 
               terraform init
               terraform plan

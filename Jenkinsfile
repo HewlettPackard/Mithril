@@ -46,12 +46,10 @@ pipeline {
               aws ecr get-login-password --region ${ECR_REGION} | \
                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-              cd docker 
-
               docker build -t mithril \
                 --build-arg http_proxy=http://proxy.houston.hpecorp.net:8080 \
                 --build-arg https_proxy=http://proxy.houston.hpecorp.net:8080 \
-                .
+                -f docker/Dockerfile .. 
               docker tag mithril:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
               docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
             """

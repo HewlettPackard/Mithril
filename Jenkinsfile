@@ -48,7 +48,7 @@ pipeline {
 
               cd docker 
 
-              docker build -t mithril .
+              docker build -t mithril --network=host .
               docker tag mithril:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
               docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
             """

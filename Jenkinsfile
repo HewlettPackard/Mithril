@@ -48,7 +48,10 @@ pipeline {
 
               cd docker 
 
-              docker build -t mithril --build-arg http_proxy=proxy.houston.hpecorp.net:8080 --build-arg https_proxy=proxy.houston.hpecorp.net:8080 --network=host .
+              docker build -t mithril \
+                --build-arg http_proxy=http://proxy.houston.hpecorp.net:8080 \
+                --build-arg https_proxy=http://proxy.houston.hpecorp.net:8080 \
+                .
               docker tag mithril:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
               docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
             """

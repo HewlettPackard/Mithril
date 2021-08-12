@@ -28,37 +28,37 @@ pipeline {
     //   }
     // }
 
-    // stage("build-and-push-dev-images"){
-    //   environment {
-    //     AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-    //     AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-    //   }
+    stage("build-and-push-dev-images"){
+      environment {
+        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+      }
       
-    //   steps {
-    //     script {
-    //       def secrets = vaultGetSecrets()
+      steps {
+        script {
+          def secrets = vaultGetSecrets()
           
-    //       docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-    //         def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-    //         def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+            def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
 
-    //         sh """
-    //           set -x
-    //           export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
+            sh """
+              set -x
+              export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
 
-    //           aws ecr get-login-password --region ${ECR_REGION} | \
-    //             docker login --username AWS --password-stdin ${ECR_REGISTRY}
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-    //           cd docker 
+              cd docker 
 
-    //           docker build -t mithril .
-    //           docker tag mithril:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
-    //           docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
-    //         """
-    //       }
-    //     }
-    //   }
-    // }
+              docker build -t mithril .
+              docker tag mithril:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
+              docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
+            """
+          }
+        }
+      }
+    }
 
     stage("make-poc-codebase") {
       // Remove

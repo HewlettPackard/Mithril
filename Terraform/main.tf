@@ -158,6 +158,12 @@ variable "TAG" {
 
 }
 
+variable "HUB" {
+  default     = "529024819027.dkr.ecr.us-east-1.amazonaws.com"
+  description = "HUB used to download the images from ECR repository"
+
+}
+
 data "template_file" "init" {
   template = file("user_data_bootstrap.sh")
 
@@ -165,6 +171,7 @@ data "template_file" "init" {
     access_key        = jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.mithril_secret.secret_string))["ACCESS_KEY_ID"],
     secret_access_key = jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.mithril_secret.secret_string))["SECRET_ACCESS_KEY"],
     region            = "us-east-1",
-    tag               = var.TAG
+    tag               = var.TAG,
+    hub               = var.HUB
   }
 }

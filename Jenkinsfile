@@ -1,5 +1,5 @@
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:pipeline"
-CHANNEL_NAME = "@U021L6LHSHM"
+CHANNEL_NAME = "#notify-project-mithril"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
@@ -45,11 +45,13 @@ pipeline {
             sh """
               aws ecr get-login-password --region ${ECR_REGION} | \
                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
+              
+              cd docker 
 
               docker build -t mithril \
                 --build-arg http_proxy=http://proxy.houston.hpecorp.net:8080 \
                 --build-arg https_proxy=http://proxy.houston.hpecorp.net:8080 \
-                -f docker/Dockerfile .. 
+                -f ./Dockerfile .. 
               docker tag mithril:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
               docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
             """
@@ -172,6 +174,7 @@ pipeline {
         AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
         AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
         AWS_PROFILE = "scytale"
+        AWS_PROFILE = "${vaultGetSecrets().key}"
       }
       
       steps {
@@ -182,6 +185,7 @@ pipeline {
 
               terraform init
               terraform plan
+              terraform apply 
             """
           }
         }

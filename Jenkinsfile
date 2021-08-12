@@ -220,6 +220,7 @@ pipeline {
   //     )
   //   }
   // }
+  }
 }
 
 // Method for creating the build tag

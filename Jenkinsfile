@@ -5,6 +5,8 @@ ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
 LATEST_BRANCH = "1.10"
 S3_BUCKET = "s3://mithril-customer-assets"
+AWS_PROFILE = "scytale"
+
 
 // Start of the pipeline
 pipeline {
@@ -177,7 +179,6 @@ pipeline {
         TAG = makeTag()
         AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
         AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-        AWS_PROFILE = "scytale"
         PEM = "${vaultGetSecrets().key}"
       }
       

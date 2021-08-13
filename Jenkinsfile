@@ -17,7 +17,9 @@ pipeline {
   }
 
   environment {
-    TAG = makeTag()
+    TAG = makeTag() 
+    BUILD_WITH_CONTAINER = 0
+    GOOS = "linux"
     AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
     AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
     EC2_SSH_KEY = "${vaultGetSecrets().EC2SSHKey}"
@@ -42,11 +44,6 @@ pipeline {
         branch "master"
       }
 
-      environment {
-        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-      }
-      
       steps {
         script {
           def secrets = vaultGetSecrets()
@@ -92,14 +89,7 @@ pipeline {
       when {
         branch "master"
       }
-      environment {
-        TAG = makeTag() 
-        BUILD_WITH_CONTAINER = 0
-        GOOS = "linux"
 
-        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-      }
       steps {
         // Fetch secrets from Vault and use the mask token plugin
         script {
@@ -146,11 +136,6 @@ pipeline {
     stage("tag-latest-images") {
       when {
         branch "master"
-      }
-      environment {
-        TAG = "latest"
-        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
       }
       steps {
         script {
@@ -206,11 +191,6 @@ pipeline {
         branch "master"
       }
 
-      environment {
-        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-      }
-      
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {

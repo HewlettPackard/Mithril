@@ -174,7 +174,7 @@ pipeline {
         AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
         AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
         AWS_PROFILE = "scytale"
-        AWS_PROFILE = "${vaultGetSecrets().key}"
+        PEM = "${vaultGetSecrets().key}"
       }
       
       steps {

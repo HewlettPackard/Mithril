@@ -1,4 +1,4 @@
-#!/bin/bash -xe
+#!/bin/bash
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 apt update -y
@@ -15,10 +15,10 @@ sed '/^+/d' /var/log/user-data.log > /var/log/user-data.log
 
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${hub}
 
-docker pull ${hub}/mithril:${tag}
+docker pull ${hub}:${tag}
 
 # Tagging for easier use within the docker command below
-docker tag ${hub}/mithril:${tag} mithril-testing:${tag}
+docker tag ${hub}:${tag} mithril-testing:${tag}
 
 # Creating kubernetes config to use kubectl inside the container
 mkdir -p $HOME/.kube && touch $HOME/.kube/config
@@ -30,6 +30,15 @@ docker run -i --rm \
 --network host mithril-testing:${tag} \
 /mithril/POC/create-kind-cluster.sh
 
+
+# Creating Docker secrets for ECR images
+docker run -i --rm \
+-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+-v "/.kube/config:/root/.kube/config:rw" \
+--network host mithril-testing:${tag} \
+bash -c "HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} /mithril/POC/create-docker-registry-secret.sh"
+
+# Deploying the PoC
 docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \

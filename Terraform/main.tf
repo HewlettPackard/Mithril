@@ -66,6 +66,7 @@ resource "aws_route_table_association" "a" {
   subnet_id      = aws_subnet.subnet-1.id
   route_table_id = aws_route_table.prod-route-table.id
 }
+
 # 6. Create Security Group to allow port 22,80,443
 resource "aws_security_group" "allow_web" {
   name        = "allow_web_traffic"
@@ -73,16 +74,9 @@ resource "aws_security_group" "allow_web" {
   vpc_id      = aws_vpc.prod-vpc.id
 
   ingress {
-    description = "HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
     description = "HTTP"
-    from_port   = 80
-    to_port     = 80
+    from_port   = 0
+    to_port     = 0
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -131,7 +125,7 @@ output "server_public_ip" {
 
 resource "aws_instance" "mithril_instance" {
   ami               = "ami-09e67e426f25ce0d7"
-  instance_type     = "t2.micro"
+  instance_type     = "t2.xlarge"
   availability_zone = "us-east-1a"
   key_name          = "key-pair"
 
@@ -139,6 +133,11 @@ resource "aws_instance" "mithril_instance" {
     device_index         = 0
     network_interface_id = aws_network_interface.mithril-nic.id
   }
+
+  root_block_device {
+    volume_size = 50
+  }
+
   tags = {
     Name = "mithril-testing"
   }
@@ -159,7 +158,7 @@ variable "TAG" {
 }
 
 variable "HUB" {
-  default     = "529024819027.dkr.ecr.us-east-1.amazonaws.com"
+  default     = "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril"
   description = "HUB used to download the images from ECR repository"
 
 }

@@ -16,6 +16,13 @@ pipeline {
     label 'docker-v20.10'
   }
 
+  environment {
+    TAG = makeTag()
+    AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+    AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+    EC2_SSH_KEY = "${vaultGetSecrets().EC2SSHKey}"
+  }
+  
   // Nightly builds schedule only for master
   triggers { cron( BRANCH_NAME == "master" ?  "00 00 * * *" : "") }
 
@@ -174,13 +181,6 @@ pipeline {
       // when {
       //   branch "master"
       // }
-
-      environment {
-        TAG = makeTag()
-        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-        PEM = "${vaultGetSecrets().key}"
-      }
       
       steps {
         script {

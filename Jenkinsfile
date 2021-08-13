@@ -29,6 +29,10 @@ pipeline {
     // }
 
     stage("build-and-push-dev-images"){
+      when {
+        branch "master"
+      }
+      
       environment {
         AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
         AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
@@ -185,7 +189,9 @@ pipeline {
 
               terraform init
               terraform plan
-              terraform apply -var TAG="latest"
+              terraform apply -auto-aprove
+
+              curl $(terraform output -raw server_public_ip):8000/productpage
             """
           }
         }

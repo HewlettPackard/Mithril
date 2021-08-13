@@ -32,7 +32,7 @@ pipeline {
       when {
         branch "master"
       }
-      
+
       environment {
         AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
         AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
@@ -189,9 +189,12 @@ pipeline {
 
               terraform init
               terraform plan
-              terraform apply -auto-aprove
+              terraform apply -auto-approve
 
               curl $(terraform output -raw server_public_ip):8000/productpage
+
+              terraform destroy -auto-approve
+
             """
           }
         }

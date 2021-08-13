@@ -191,7 +191,6 @@ pipeline {
               terraform plan
               terraform apply -auto-approve
 
-              curl $(terraform output -raw server_public_ip):8000/productpage
 
               terraform destroy -auto-approve
 

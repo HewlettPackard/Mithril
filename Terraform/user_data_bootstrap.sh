@@ -30,7 +30,6 @@ docker run -i --rm \
 --network host mithril-testing:${tag} \
 /mithril/POC/create-kind-cluster.sh
 
-
 # Creating Docker secrets for ECR images
 docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
@@ -44,3 +43,10 @@ docker run -i --rm \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${tag} \
 bash -c "cd /mithril/POC && TAG=${tag} HUB=${hub} ./deploy-all.sh"
+
+sudo docker run -i --rm \
+ -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+ -v "/.kube/config:/root/.kube/config:rw" \
+ --network host mithril-testing:latest \
+ bash -c 'INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") \
+ && kubectl port-forward "$INGRESS_POD"  8000:8080 -n istio-system'

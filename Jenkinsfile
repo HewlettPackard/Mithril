@@ -216,6 +216,7 @@ pipeline {
         }
       }
     }
+  }
   
   // post {
   //   success {

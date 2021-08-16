@@ -208,8 +208,8 @@ pipeline {
 
               echo 
               echo $EC2_SSH_KEY | base64 -d >> key.pem
-              # EC2_INSTANCE_IP=$(terraform output | grep -oP "server_public_ip = '\\K[^']+")
-              EC2_INSTANCE_IP="18.215.27.189"
+              EC2_INSTANCE_IP=$(terraform output | grep -oP "server_public_ip = '\\K[^']+")
+              # EC2_INSTANCE_IP="18.215.27.189"
               cat deploy-poc.sh | ssh -i key.pem -oStrictHostKeyChecking=no ubuntu@$EC2_INSTANCE_IP
               sleep 2
               cat test-poc.sh | ssh -i key.pem -oStrictHostKeyChecking=no ubuntu@$EC2_INSTANCE_IP | grep "Simple Bookstore App" | tr -d ' ' > test-response

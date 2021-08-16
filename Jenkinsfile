@@ -199,7 +199,7 @@ pipeline {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/sh
-              set -e
+              # set -e
 
               cd terraform
               terraform init

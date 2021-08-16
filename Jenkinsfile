@@ -204,6 +204,8 @@ pipeline {
               terraform plan
               terraform apply -auto-approve
               
+              env
+              
               echo ${env.EC2_SSH_KEY} 
               echo ${env.EC2_SSH_KEY} | base64 -d >> key.pem
               # EC2_INSTANCE_IP=$(terraform output | grep -oP "server_public_ip = '\\K[^']+")

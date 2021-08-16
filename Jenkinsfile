@@ -6,7 +6,6 @@ HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
 LATEST_BRANCH = "1.10"
 S3_BUCKET = "s3://mithril-customer-assets"
 AWS_PROFILE = "scytale"
-
 MAIN_BRANCH = "master"
 
 def SLACK_ERROR_MESSAGE
@@ -195,14 +194,14 @@ pipeline {
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh """
+            sh '''
               cd terraform
 
               terraform init
               terraform plan
               terraform apply -auto-approve
               
-              echo "${env.EC2_SSH_KEY}" | base64 -d >> key.pem
+              echo ${env.EC2_SSH_KEY} | base64 -d >> key.pem
               EC2_INSTANCE_IP=$(terraform output | grep -oP 'server_public_ip = "\K[^"]+')
               cat deploy-poc.sh | ssh -i key.pem -oStrictHostKeyChecking=no ubuntu@${EC2_INSTANCE_IP}
               sleep 2
@@ -211,7 +210,7 @@ pipeline {
 
               terraform destroy -auto-approve
 
-            """
+            '''
           }
         }
       }

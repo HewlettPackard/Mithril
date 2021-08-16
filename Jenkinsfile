@@ -196,9 +196,9 @@ pipeline {
       // }
       
       steps {
+         docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/sh
               cd terraform
-
               terraform init
               terraform plan
               terraform apply -auto-approve
@@ -209,11 +209,10 @@ pipeline {
               sleep 2
               cat test-poc.sh | ssh -i key.pem -oStrictHostKeyChecking=no ubuntu@${EC2_INSTANCE_IP} | grep "Simple Bookstore App" | tr -d ' ' > test-response
               #compare files
-
               terraform destroy -auto-approve
-
             '''
-      }
+          }
+        }
     }
 
     stage("distribute-poc"){

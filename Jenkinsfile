@@ -94,7 +94,7 @@ pipeline {
       }
     }
 
-    stage('test') {
+    stage("unit-test") {
       // Remove
       when {
         branch "master"
@@ -196,9 +196,7 @@ pipeline {
       // }
       
       steps {
-        script {
-          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh '''
+            sh '''#!/bin/sh
               cd terraform
 
               terraform init
@@ -215,8 +213,6 @@ pipeline {
               terraform destroy -auto-approve
 
             '''
-          }
-        }
       }
     }
 

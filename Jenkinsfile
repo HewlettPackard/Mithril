@@ -95,6 +95,10 @@ pipeline {
     }
 
     stage('test') {
+      // Remove
+      when {
+        branch "master"
+      }
       steps {
         sh """
           set -x

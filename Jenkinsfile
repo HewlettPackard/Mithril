@@ -202,11 +202,10 @@ pipeline {
               set -e
               
               cd terraform
-              # terraform init
-              # terraform plan
-              # terraform apply -auto-approve
+              terraform init
+              terraform plan
+              terraform apply -auto-approve
 
-              echo 
               echo $EC2_SSH_KEY | base64 -d >> key.pem
               EC2_INSTANCE_IP=$(terraform output | grep -oP "server_public_ip = '\\K[^']+")
               # EC2_INSTANCE_IP="18.215.27.189"

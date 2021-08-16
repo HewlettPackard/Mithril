@@ -215,7 +215,7 @@ pipeline {
               # sleep 2
               # cat test-poc.sh | ssh -i key.pem -oStrictHostKeyChecking=no ubuntu@${EC2_INSTANCE_IP} | grep "Simple Bookstore App" | tr -d ' ' > test-response
               # compare files
-              terraform destroy -auto-approve
+              # terraform destroy -auto-approve
             '''
           }
         }

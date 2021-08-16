@@ -190,7 +190,7 @@ pipeline {
       }
     }
     
-  stage("run-integration-tests") {
+    stage("run-integration-tests") {
       // when {
       //   branch "master"
       // }
@@ -199,14 +199,16 @@ pipeline {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/sh
+              set -e
+              
               cd terraform
               terraform init
               terraform plan
               terraform apply -auto-approve
-              
+
               env
               
-              echo ${env.EC2_SSH_KEY} 
+              echo $EC2_SSH_KEY
               echo ${env.EC2_SSH_KEY} | base64 -d >> key.pem
               # EC2_INSTANCE_IP=$(terraform output | grep -oP "server_public_ip = '\\K[^']+")
               # cat deploy-poc.sh | ssh -i key.pem -oStrictHostKeyChecking=no ubuntu@${EC2_INSTANCE_IP}

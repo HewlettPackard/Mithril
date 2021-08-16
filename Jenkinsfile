@@ -208,6 +208,7 @@ pipeline {
 
               echo $EC2_SSH_KEY | base64 -d >> key.pem
               EC2_INSTANCE_IP=$(terraform output | grep -oP "server_public_ip = '\\K[^']+")
+              echo $EC2_INSTANCE_IP
               # EC2_INSTANCE_IP="18.215.27.189"
               cat deploy-poc.sh | ssh -i key.pem -oStrictHostKeyChecking=no ubuntu@$EC2_INSTANCE_IP
               sleep 2

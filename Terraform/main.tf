@@ -127,7 +127,7 @@ resource "aws_instance" "mithril_instance" {
   ami               = "ami-09e67e426f25ce0d7"
   instance_type     = "t2.xlarge"
   availability_zone = "us-east-1a"
-  key_name          = "key-pair"
+  key_name          = "mithril-integration-test"
 
   network_interface {
     device_index         = 0

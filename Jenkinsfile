@@ -171,13 +171,17 @@ pipeline {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh """
-              cd ./Terraform
-
+              cd ./terraform
               terraform init
               terraform plan
               terraform apply -auto-approve
-
-
+              
+              echo ${env.EC2_SSH_KEY} | base64 -d >> key.pem
+              EC2_INSTANCE_IP=$(terraform output | grep -oP 'server_public_ip = "\K[^"]+')
+              cat deploy-poc.sh | ssh -i key.pem -oStrictHostKeyChecking=no ubuntu@${EC2_INSTANCE_IP}
+              sleep 2
+              cat test-poc.sh | ssh -i key.pem -oStrictHostKeyChecking=no ubuntu@${EC2_INSTANCE_IP} | grep "Simple Bookstore App" | tr -d ' ' > test-response
+              #compare files
               terraform destroy -auto-approve
 
             """

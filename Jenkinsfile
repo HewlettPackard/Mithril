@@ -23,10 +23,9 @@ pipeline {
     TAG = makeTag() 
     BUILD_WITH_CONTAINER = 0
     GOOS = "linux"
-    SECRETS = "${vaultGetSecrets()}"
-    AWS_ACCESS_KEY_ID = "${SECRETS.awsAccessKeyID}"
-    AWS_SECRET_ACCESS_KEY = "${SECRETS.awsSecretAccessKeyID}"
-    EC2_SSH_KEY = "${SECRETS.EC2SSHKey}"
+    AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+    AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+    EC2_SSH_KEY = "${vaultGetSecrets().EC2SSHKey}"
   }
   
   // Nightly builds schedule only for master

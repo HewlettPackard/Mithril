@@ -201,7 +201,7 @@ pipeline {
             sh '''#!/bin/sh
               # set -e
 
-              sudo ufw status
+              ufw status
 
               EC2_INSTANCE_IP="34.194.116.255"
               echo $EC2_SSH_KEY | base64 -d >> key.pem

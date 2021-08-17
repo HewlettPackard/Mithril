@@ -196,44 +196,19 @@ pipeline {
       // }
       
       steps {
-        script {
-          def remote = [:]
-          remote.user = 'ubuntu'
-          remote.allowAnyHosts = true
-
-          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+        // script {
+          // docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/sh
               # set -e
 
-              # cd terraform
-              # terraform init
-              # terraform plan
-              # terraform apply -auto-approve
-
-
               EC2_INSTANCE_IP="34.194.116.255"
-              remote.host = EC2_INSTANCE_IP
-              remote.name = EC2_INSTANCE_IP
               echo $EC2_SSH_KEY | base64 -d >> key.pem
 
-              remote.identityFile = key.pem
-
-              sshCommand remote: remote, command: "ls -lrt"
-
-
               ssh -tt -i key.pem -oStrictHostKeyChecking=no ubuntu@$EC2_INSTANCE_IP
-              
-              # EC2_INSTANCE_IP=$(terraform output | grep -oP 'server_public_ip = "\\K[^"]+')
-              # terraform output
-              # echo $EC2_INSTANCE_IP
-              # cat deploy-poc.sh | ssh -i key.pem -oStrictHostKeyChecking=no ubuntu@$EC2_INSTANCE_IP
-              sleep 2
-              cat test-poc.sh | ssh -i key.pem -oStrictHostKeyChecking=no ubuntu@$EC2_INSTANCE_IP | grep "Simple Bookstore App" | tr -d ' ' > test-response
-              # compare files
-              # terraform destroy -auto-approve
+            
             '''
-          }
-        }
+          // }
+        // }
       }
     }
   }

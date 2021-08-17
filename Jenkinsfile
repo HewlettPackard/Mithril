@@ -196,8 +196,8 @@ pipeline {
       // }
       
       steps {
-        // script {
-          // docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/sh
               # set -e
               ufw status
@@ -208,8 +208,8 @@ pipeline {
               ssh -tt -i key.pem -oStrictHostKeyChecking=no ubuntu@$EC2_INSTANCE_IP
             
             '''
-          // }
-        // }
+          }
+        }
       }
     }
   }

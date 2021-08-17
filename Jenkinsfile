@@ -200,7 +200,7 @@ pipeline {
           // docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/sh
               # set -e
-
+              apt-get install ufw
               ufw status
 
               EC2_INSTANCE_IP="34.194.116.255"

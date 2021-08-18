@@ -57,3 +57,10 @@ To check the current policies:
 ```
 aws ecr get-repository-policy --repository-name mithril/app
 ```
+
+## Customers
+
+Our assets are available for the following accounts:
+
+- 532440004545 Nath
+- 537868109139 GSE Team

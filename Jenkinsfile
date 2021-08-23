@@ -192,22 +192,31 @@ pipeline {
     
     stage("run-integration-tests") {
       // when {
-      //   branch "master"
+      //   branch MAIN_BRANCH
       // }
-      
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh '''#!/bin/sh
+            sh """#!/bin/sh
               # set -e
-              ufw status
+              
+              # cd terraform
+              # terraform init
+              # terraform plan
+              # terraform apply -auto-approve
 
-              EC2_INSTANCE_IP="34.194.116.255"
-              echo $EC2_SSH_KEY | base64 -d >> key.pem
+              sleep 100
 
-              ssh -tt -i key.pem -oStrictHostKeyChecking=no ubuntu@$EC2_INSTANCE_IP
-            
-            '''
+              aws s3 cp s3://mithril-customer-assets/curl_response.txt  .
+
+              File=curl_response.txt   
+
+              if grep -q "no healthy upstream" "$File";
+              then
+              error("Integration tests run failed")
+              
+              # terraform destroy -auto-approve
+            """
           }
         }
       }

@@ -208,9 +208,9 @@ pipeline {
 
                 aws s3 cp s3://mithril-customer-assets/curl_response.txt .
 
-                # if grep -q "no healthy upstream" "curl_response.txt";
-                # then
-                # error("Integration tests run failed")
+                if grep -q "no healthy upstream" "curl_response.txt";
+                then
+                error("Integration tests run failed")
                 
                 # terraform destroy -auto-approve
               """
@@ -218,7 +218,6 @@ pipeline {
           }
         }
       }
-    }
     
     stage("distribute-poc") {
       when {
@@ -246,6 +245,7 @@ pipeline {
         }
       }
     }
+  }
 
   // post {
   //   success {

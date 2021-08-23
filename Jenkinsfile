@@ -192,7 +192,7 @@ pipeline {
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh '''#!/bin/sh
+            sh """#!/bin/sh
               # set -e
 
               # cd terraform
@@ -200,17 +200,26 @@ pipeline {
               # terraform plan
               # terraform apply -auto-approve -var "TAG"=latest
 
-              # aws s3api head-object --bucket s3://mithril-customer-assets --key curl_response.txt || not_exist=true if [ $not_exist ]; then echo "it does not exist" else echo "it exists" fi
+              sleep 400
+
+              aws s3api head-object --bucket mithril-customer-assets --key curl_response.txt --output text --no-cli-pager || not_exist=true 
+              if [ $not_exist ]; 
+                then 
+                  echo "it does not exist" 
+                else 
+                  echo "it exists" 
+              fi
 
               aws s3 cp s3://mithril-customer-assets/curl_response.txt .
 
               if grep -q "no healthy upstream" "curl_response.txt"
-              then
-              error "Integration tests run failed"
+                then
+                  cat curl_response.txt
+                  error "Integration tests run failed"
               fi
               
               # terraform destroy -auto-approve
-            '''
+            """
           }
         }
       }

@@ -216,7 +216,9 @@ pipeline {
                 then
                   cat curl_response.txt
                   currentBuild.result = "FAILURE"
-                  throw new Exception('Throw to stop pipeline')
+                  throw new Exception("Throw to stop pipeline")
+                else 
+                  echo "test successful" 
               fi
               
               # terraform destroy -auto-approve

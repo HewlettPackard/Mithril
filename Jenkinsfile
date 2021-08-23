@@ -218,34 +218,30 @@ pipeline {
         }
       }
     }
-    
-    stage("distribute-poc") {
-      when {
-        branch MAIN_BRANCH
-      }
-
-      environment {
-        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-      }
-      
-      steps {
-        script {
-          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh """
-              cd ./POC
-
-              tar -zcvf mithril.tar.gz bookinfo spire istio \
-                deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
-                doc/poc-instructions.md demo/demo-script.sh demo/README.md
-
-              aws s3 cp mithril.tar.gz ${S3_BUCKET}
-            """
-          }
-        }
-      }
-    }
   }
+    
+  //   stage("distribute-poc") {
+  //     when {
+  //       branch MAIN_BRANCH
+  //     }
+
+  //     steps {
+  //       script {
+  //         docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+  //           sh """
+  //             cd ./POC
+
+  //             tar -zcvf mithril.tar.gz bookinfo spire istio \
+  //               deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
+  //               doc/poc-instructions.md demo/demo-script.sh demo/README.md
+
+  //             aws s3 cp mithril.tar.gz ${S3_BUCKET}
+  //           """
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   // post {
   //   success {

@@ -204,9 +204,10 @@ pipeline {
 
               aws s3 cp s3://mithril-customer-assets/curl_response.txt .
 
-              if grep -q "no healthy upstream" "curl_response.txt";
+              if grep -q "no healthy upstream" "curl_response.txt"
               then
               echo "Integration tests run failed"
+              fi
               
               # terraform destroy -auto-approve
             '''

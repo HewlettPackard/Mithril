@@ -31,17 +31,16 @@ pipeline {
   // Nightly builds schedule only for master
   triggers { cron( BRANCH_NAME == MAIN_BRANCH ?  "00 00 * * *" : "") }
 
-
   stages {
-    // stage("notify-slack") {
-    //   steps {
-    //     script {
-            // slackSend (
-            //   channel: CHANNEL_NAME,
-            //   message: "Hello. The pipeline ${currentBuild.fullDisplayName} started. (<${env.BUILD_URL}|See Job>)")
-    //     }
-    //   }
-    // }
+      // stage("notify-slack") {
+      //   steps {
+      //     script {
+              // slackSend (
+              //   channel: CHANNEL_NAME,
+              //   message: "Hello. The pipeline ${currentBuild.fullDisplayName} started. (<${env.BUILD_URL}|See Job>)")
+      //     }
+      //   }
+      // }
 
     stage("build-and-push-dev-images"){
       when {
@@ -189,40 +188,67 @@ pipeline {
         }
       }
     }
-    
+
     stage("run-integration-tests") {
-      // when {
-      //   branch MAIN_BRANCH
-      // }
+        // when {
+        //   branch MAIN_BRANCH
+        // }
+        steps {
+          script {
+            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+              sh """#!/bin/sh
+                # set -e
+                
+                # cd terraform
+                # terraform init
+                # terraform plan
+                # terraform apply -auto-approve
+
+                # aws s3api head-object --bucket s3://mithril-customer-assets --key curl_response.txt || not_exist=true if [ $not_exist ]; then echo "it does not exist" else echo "it exists" fi
+
+                sleep 100
+
+                aws s3 cp s3://mithril-customer-assets/curl_response.txt .
+
+                if grep -q "no healthy upstream" "curl_response.txt";
+                then
+                error("Integration tests run failed")
+                
+                # terraform destroy -auto-approve
+              """
+            }
+          }
+        }
+      }
+    }
+    
+    stage("distribute-poc") {
+      when {
+        branch MAIN_BRANCH
+      }
+
+      environment {
+        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+      }
+      
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh """#!/bin/sh
-              # set -e
-              
-              # cd terraform
-              # terraform init
-              # terraform plan
-              # terraform apply -auto-approve
+            sh """
+              cd ./POC
 
-              sleep 100
+              tar -zcvf mithril.tar.gz bookinfo spire istio \
+                deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
+                doc/poc-instructions.md demo/demo-script.sh demo/README.md
 
-              aws s3 cp s3://mithril-customer-assets/curl_response.txt  .
-
-              File=curl_response.txt   
-
-              if grep -q "no healthy upstream" "$File";
-              then
-              error("Integration tests run failed")
-              
-              # terraform destroy -auto-approve
+              aws s3 cp mithril.tar.gz ${S3_BUCKET}
             """
           }
         }
       }
     }
-  }
-  
+
   // post {
   //   success {
   //     slackSend (

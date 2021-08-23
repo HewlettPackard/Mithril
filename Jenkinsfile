@@ -190,34 +190,34 @@ pipeline {
     }
 
     stage("run-integration-tests") {
-        // when {
-        //   branch MAIN_BRANCH
-        // }
-        steps {
-          script {
-            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-              sh """#!/bin/sh
-                # set -e
-                
-                # cd terraform
-                # terraform init
-                # terraform plan
-                # terraform apply -auto-approve
+      // when {
+      //   branch MAIN_BRANCH
+      // }
+      steps {
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh """#!/bin/sh
+              # set -e
+              
+              # cd terraform
+              # terraform init
+              # terraform plan
+              # terraform apply -auto-approve
 
-                # aws s3api head-object --bucket s3://mithril-customer-assets --key curl_response.txt || not_exist=true if [ $not_exist ]; then echo "it does not exist" else echo "it exists" fi
+              # aws s3api head-object --bucket s3://mithril-customer-assets --key curl_response.txt || not_exist=true if [ $not_exist ]; then echo "it does not exist" else echo "it exists" fi
 
-                aws s3 cp s3://mithril-customer-assets/curl_response.txt .
+              aws s3 cp s3://mithril-customer-assets/curl_response.txt .
 
-                if grep -q "no healthy upstream" "curl_response.txt";
-                then
-                error("Integration tests run failed")
-                
-                # terraform destroy -auto-approve
-              """
-            }
+              # if grep -q "no healthy upstream" "curl_response.txt";
+              # then
+              # error("Integration tests run failed")
+              
+              # terraform destroy -auto-approve
+            """
           }
         }
       }
+    }
     
     stage("distribute-poc") {
       when {

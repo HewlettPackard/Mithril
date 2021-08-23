@@ -186,7 +186,7 @@ pipeline {
     
     stage("run-integration-tests") {
       // when {
-      //   branch "master"
+      //   branch MAIN_BRANCH
       // }
       
       steps {
@@ -194,17 +194,53 @@ pipeline {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/sh
               # set -e
-              ufw status
-              EC2_INSTANCE_IP="34.194.116.255"
-              echo $EC2_SSH_KEY | base64 -d >> key.pem
-              ssh -tt -i key.pem -oStrictHostKeyChecking=no ubuntu@$EC2_INSTANCE_IP
-            
+
+              # cd terraform
+              # terraform init
+              # terraform plan
+              # terraform apply -auto-approve
+
+              # aws s3api head-object --bucket s3://mithril-customer-assets --key curl_response.txt || not_exist=true if [ $not_exist ]; then echo "it does not exist" else echo "it exists" fi
+
+              aws s3 cp s3://mithril-customer-assets/curl_response.txt .
+
+              # if grep -q "no healthy upstream" "curl_response.txt";
+              # then
+              # error("Integration tests run failed")
+              
+              # terraform destroy -auto-approve
             '''
           }
         }
       }
     }
   }
+
+  // stage("distribute-poc") {
+  //     when {
+  //       branch MAIN_BRANCH
+  //     }
+
+  //     environment {
+  //       AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+  //       AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+  //     }
+      
+  //     steps {
+  //       script {
+  //         docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+  //           sh """
+  //             cd ./POC
+  //             tar -zcvf mithril.tar.gz bookinfo spire istio \
+  //               deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
+  //               doc/poc-instructions.md demo/demo-script.sh demo/README.md
+  //             aws s3 cp mithril.tar.gz ${S3_BUCKET}
+  //           """
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
   
   // post {
   //   success {

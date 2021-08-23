@@ -206,7 +206,7 @@ pipeline {
 
               if grep -q "no healthy upstream" "curl_response.txt"
               then
-              echo "Integration tests run failed"
+              error "Integration tests run failed"
               fi
               
               # terraform destroy -auto-approve

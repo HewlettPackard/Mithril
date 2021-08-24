@@ -57,4 +57,4 @@ bash -c 'kubectl rollout status deployment productpage-v1'
 curl localhost:8000/productpage > ${build_id}.txt
 
 # Copying response to S3 bucket
-aws s3 cp /${build_id}.txt s3://mithril-customer-assets/ --region us-east-1
+aws s3 cp /${build_id}.txt s3://mithril-artifacts/ --region us-east-1

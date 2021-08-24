@@ -200,9 +200,17 @@ pipeline {
               # terraform plan
               # terraform apply -auto-approve -var "TAG"=latest
 
-              sleep 400
+              # sleep 400
 
-              aws s3api head-object --bucket mithril-customer-assets --key curl_response.txt --output text --no-cli-pager || not_exist=true 
+              not_exist=true
+              num_tries=0
+              while [[ $num_tries<2 ]]; 
+                do 
+                  aws s3api head-object --bucket mithril-customer-assets --key curl_response.txt --no-cli-pager || not_exist=true; 
+                  num_tries=num_tries+1
+                sleep 10; 
+              done
+
               if [ $not_exist ]; 
                 then 
                   echo "it does not exist" 
@@ -212,7 +220,7 @@ pipeline {
 
               aws s3 cp s3://mithril-customer-assets/curl_response.txt .
 
-              if grep -q "no healthy upstream" "curl_response.txt"
+              if grep -q "no healthy upstream" "curl_response.txt";
                 then
                   cat curl_response.txt
                   currentBuild.result = "FAILURE"

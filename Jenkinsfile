@@ -1,12 +1,13 @@
+AWS_PROFILE = "scytale"
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:pipeline"
 CHANNEL_NAME = "#notify-project-mithril"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
 LATEST_BRANCH = "1.10"
-S3_BUCKET = "s3://mithril-customer-assets"
-AWS_PROFILE = "scytale"
 MAIN_BRANCH = "master"
+ARTIFACTS_BUCKET_NAME = "mithril-artifacts"
+S3_CUSTOMER_BUCKET = "s3://mithril-customer-assets"
 
 def SLACK_ERROR_MESSAGE
 def SLACK_ERROR_COLOR
@@ -20,7 +21,7 @@ pipeline {
   }
 
   environment {
-    TAG = makeTag() 
+    TAG = makeTag()  // Mudar para tag
     BUILD_WITH_CONTAINER = 0
     GOOS = "linux"
     AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
@@ -191,26 +192,81 @@ pipeline {
       
       steps {
         script {
+          boolean stopPipeline = false
+
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh '''#!/bin/sh
+            sh '''#!/bin/bash
               # set -e
+
+              filename="${TAG}.txt"
 
               # cd terraform
               # terraform init
               # terraform plan
-              # terraform apply -auto-approve -var "TAG"=latest
+              # terraform apply -auto-approve -var "BUILD_ID"=${TAG} -var "ECR_REGION"=${ECR_REGION} -var "ARTIFACT_BUCKET_NAME"=${ARTIFACT_BUCKET_NAME}
 
-              # aws s3api head-object --bucket s3://mithril-customer-assets --key curl_response.txt || not_exist=true if [ $not_exist ]; then echo "it does not exist" else echo "it exists" fi
+              sleep 400
 
-              aws s3 cp s3://mithril-customer-assets/curl_response.txt .
+              BUCKET_EXISTS=false
+              num_tries=0
 
-              if grep -q "no healthy upstream" "curl_response.txt"
-              then
-              echo "Integration tests run failed"
+              while [ $num_tries -lt 2 ]; 
+              do 
+                aws s3api head-object --bucket mithril-artifacts --key "${filename}" --no-cli-pager
+                if [ $? -eq 0 ];
+                  then 
+                    BUCKET_EXISTS=true
+                    break
+
+                  else
+                      ((num_tries++))
+                      sleep 10; 
+                fi
+              done
+
+              if [ $BUCKET_EXISTS ]; 
+                then 
+                  echo "it exists" 
+                  aws s3 cp "s3://mithril-artifacts/${filename}" .
+
+                else 
+                  echo "it does not exist - stop stage" 
+                  stopPipeline = true
+                  currentBuild.result = 'FAILURE'
+
+                  # terraform destroy -auto-approve
               fi
-              
-              # terraform destroy -auto-approve
             '''
+          }
+
+          if(stopPipeline) {
+            throw new Exception("Testing artifacts don't exist!")
+          }
+          
+          sh '''#!/bin/bash
+            filename="${TAG}.txt" 
+
+            cd terraform
+
+            if grep -q "no healthy upstream" "${filename}";
+              then
+                cat curl_response.txt
+                echo "stop stage"
+                stopPipeline = true
+                currentBuild.result = 'FAILURE'
+
+                terraform destroy -auto-approve
+
+              else 
+                echo "test successful" 
+            fi
+
+            # terraform destroy -auto-approve
+              
+          '''
+
+          if(stopPipeline) {
+            throw new Exception("Tests failed")
           }
         }
       }
@@ -221,21 +277,18 @@ pipeline {
   //     when {
   //       branch MAIN_BRANCH
   //     }
-
-  //     environment {
-  //       AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-  //       AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-  //     }
       
   //     steps {
   //       script {
   //         docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
   //           sh """
   //             cd ./POC
+  //             
   //             tar -zcvf mithril.tar.gz bookinfo spire istio \
   //               deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
   //               doc/poc-instructions.md demo/demo-script.sh demo/README.md
-  //             aws s3 cp mithril.tar.gz ${S3_BUCKET}
+  //             
+                  // aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
   //           """
   //         }
   //       }

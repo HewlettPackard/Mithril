@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 
 RUN apt-get -y install git make bash curl util-linux gcc libffi-dev libc6-dev apt-utils wget \
-    apt-transport-https ca-certificates gnupg lsb-release ufw net-tools
+    apt-transport-https ca-certificates gnupg lsb-release ufw net-tools connect-proxy
 
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 RUN echo \

@@ -8,13 +8,13 @@ terraform {
 
   required_version = ">= 0.14.9"
 }
+
 provider "aws" {
   region  = "us-east-1"
   profile = "scytale"
 }
 
 # 1. Create vpc
-
 resource "aws_vpc" "prod-vpc" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -23,14 +23,11 @@ resource "aws_vpc" "prod-vpc" {
 }
 
 # 2. Create Internet Gateway
-
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.prod-vpc.id
-
-
 }
-# 3. Create Custom Route Table
 
+# 3. Create Custom Route Table
 resource "aws_route_table" "prod-route-table" {
   vpc_id = aws_vpc.prod-vpc.id
 
@@ -50,7 +47,6 @@ resource "aws_route_table" "prod-route-table" {
 }
 
 # 4. Create a Subnet 
-
 resource "aws_subnet" "subnet-1" {
   vpc_id            = aws_vpc.prod-vpc.id
   cidr_block        = "10.0.1.0/24"
@@ -101,15 +97,13 @@ resource "aws_security_group" "allow_web" {
 }
 
 # 7. Create a network interface with an ip in the subnet that was created in step 4
-
 resource "aws_network_interface" "mithril-nic" {
   subnet_id       = aws_subnet.subnet-1.id
   private_ips     = ["10.0.1.50"]
   security_groups = [aws_security_group.allow_web.id]
-
 }
-# 8. Assign an elastic IP to the network interface created in step 7
 
+# 8. Assign an elastic IP to the network interface created in step 7
 resource "aws_eip" "one" {
   vpc                       = true
   network_interface         = aws_network_interface.mithril-nic.id
@@ -122,7 +116,6 @@ output "server_public_ip" {
 }
 
 # 9. Create Ubuntu server
-
 resource "aws_instance" "mithril_instance" {
   ami               = "ami-09e67e426f25ce0d7"
   instance_type     = "t2.xlarge"
@@ -151,16 +144,20 @@ data "aws_secretsmanager_secret" "secrets" {
 data "aws_secretsmanager_secret_version" "mithril_secret" {
   secret_id = data.aws_secretsmanager_secret.secrets.id
 }
+
 variable "TAG" {
   default     = "latest"
   description = "TAG used to download the images from ECR repository"
+}
 
+variable "BUILD_ID" {
+  default     = "build_id"
+  description = "Build ID from Jenkins Pipeline"
 }
 
 variable "HUB" {
   default     = "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril"
   description = "HUB used to download the images from ECR repository"
-
 }
 
 data "template_file" "init" {
@@ -171,6 +168,7 @@ data "template_file" "init" {
     secret_access_key = jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.mithril_secret.secret_string))["SECRET_ACCESS_KEY"],
     region            = "us-east-1",
     tag               = var.TAG,
-    hub               = var.HUB
+    hub               = var.HUB,
+    build_id          = var.BUILD_ID
   }
 }

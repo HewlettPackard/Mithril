@@ -203,7 +203,7 @@ pipeline {
               # cd terraform
               # terraform init
               # terraform plan
-              # terraform apply -auto-approve -var "TAG"=${TAG}
+              # terraform apply -auto-approve -var "BUILD_ID"=${TAG}
 
               # sleep 400
 
@@ -227,11 +227,22 @@ pipeline {
               if [ $BUCKET_EXISTS ]; 
                   then 
                       echo "it does not exist - stop stage" 
+                      stopPipeline = true
+                      currentBuild.result = 'FAILURE'
                   else 
                       echo "it exists" 
                       aws s3 cp "s3://mithril-customer-assets/${filename}" .
               fi
 
+            '''
+          }
+
+          if(stopPipeline) {
+            throw new Exception("Something went wrong!")
+          }
+
+          
+          sh '''#!/bin/bash
               if grep -q "no healthy upstream" "${filename}";
                 then
                   cat curl_response.txt
@@ -243,8 +254,7 @@ pipeline {
               fi
               
               # terraform destroy -auto-approve
-            '''
-          }
+          '''
 
           if(stopPipeline) {
             throw new Exception("Something went wrong!")

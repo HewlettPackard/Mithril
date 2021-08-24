@@ -12,7 +12,7 @@ ENV BUILD_WITH_CONTAINER=0
 WORKDIR /mithril
 
 RUN apt-get update \
-    && apt-get -y install git make bash curl docker.io ruby ruby-dev rpm wget util-linux gcc libffi-dev libc6-dev apt-utils
+    && apt-get -y install git make bash curl docker.io ruby ruby-dev rpm wget util-linux gcc libffi-dev libc6-dev apt-utils connect-proxy
 
 RUN gem install --no-document fpm \
     && gem update fpm

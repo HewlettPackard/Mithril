@@ -244,10 +244,10 @@ pipeline {
               terraform destroy -auto-approve
             '''
           }
-        }
 
-        if(stopPipeline) {
-          throw new Exception("Something went wrong!")
+          if(stopPipeline) {
+            throw new Exception("Something went wrong!")
+          }
         }
       }
     }

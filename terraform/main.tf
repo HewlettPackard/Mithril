@@ -1,19 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 3.27"
-    }
-  }
-
-  required_version = ">= 0.14.9"
-}
-
-provider "aws" {
-  region  = "us-east-1"
-  profile = "scytale"
-}
-
 # 1. Create vpc
 resource "aws_vpc" "prod-vpc" {
   cidr_block = "10.0.0.0/16"
@@ -103,24 +87,12 @@ resource "aws_network_interface" "mithril-nic" {
   security_groups = [aws_security_group.allow_web.id]
 }
 
-# 8. Assign an elastic IP to the network interface created in step 7
-resource "aws_eip" "one" {
-  vpc                       = true
-  network_interface         = aws_network_interface.mithril-nic.id
-  associate_with_private_ip = "10.0.1.50"
-  depends_on                = [aws_internet_gateway.gw]
-}
-
-output "server_public_ip" {
-  value = aws_eip.one.public_ip
-}
-
 # 9. Create Ubuntu server
 resource "aws_instance" "mithril_instance" {
-  ami               = "ami-09e67e426f25ce0d7"
-  instance_type     = "t2.xlarge"
+  ami               = var.EC2_AMI
+  instance_type     = var.EC2_INSTANCE_TYPE
   availability_zone = "us-east-1a"
-  key_name          = "mithril-integration-test"
+  key_name          = var.EC2_KEY_PAIR
 
   network_interface {
     device_index         = 0
@@ -128,7 +100,7 @@ resource "aws_instance" "mithril_instance" {
   }
 
   root_block_device {
-    volume_size = 50
+    volume_size = var.VOLUME_SIZE
   }
 
   tags = {
@@ -145,28 +117,13 @@ data "aws_secretsmanager_secret_version" "mithril_secret" {
   secret_id = data.aws_secretsmanager_secret.secrets.id
 }
 
-variable "TAG" {
-  default     = "latest"
-  description = "TAG used to download the images from ECR repository"
-}
-
-variable "BUILD_ID" {
-  default     = "build_id"
-  description = "Build ID from Jenkins Pipeline"
-}
-
-variable "HUB" {
-  default     = "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril"
-  description = "HUB used to download the images from ECR repository"
-}
-
 data "template_file" "init" {
   template = file("user_data_bootstrap.sh")
 
   vars = {
     access_key        = jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.mithril_secret.secret_string))["ACCESS_KEY_ID"],
     secret_access_key = jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.mithril_secret.secret_string))["SECRET_ACCESS_KEY"],
-    region            = "us-east-1",
+    region            = var.ECR_REGION,
     tag               = var.TAG,
     hub               = var.HUB,
     build_id          = var.BUILD_ID

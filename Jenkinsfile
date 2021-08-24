@@ -1,6 +1,6 @@
 AWS_PROFILE = "scytale"
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:pipeline"
-CHANNEL_NAME = "#notify-project-mithril"
+CHANNEL_NAME = "@U021L6LHSHM"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
@@ -21,7 +21,7 @@ pipeline {
   }
 
   environment {
-    TAG = makeTag()  // Mudar para tag
+    BUILD_TAG = makeTag()  // Mudar para build id e colocar em cima
     BUILD_WITH_CONTAINER = 0
     GOOS = "linux"
     AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
@@ -32,22 +32,21 @@ pipeline {
   // Nightly builds schedule only for master
   triggers { cron( BRANCH_NAME == MAIN_BRANCH ?  "00 00 * * *" : "") }
 
-
   stages {
-    // stage("notify-slack") {
-    //   steps {
-    //     script {
-            // slackSend (
-            //   channel: CHANNEL_NAME,
-            //   message: "Hello. The pipeline ${currentBuild.fullDisplayName} started. (<${env.BUILD_URL}|See Job>)")
-    //     }
-    //   }
-    // }
+    stage("notify-slack") {
+      steps {
+        script {
+          slackSend (
+            channel: CHANNEL_NAME,
+            message: "Hello. The pipeline ${currentBuild.fullDisplayName} started. (<${env.BUILD_URL}|See Job>)")
+        }
+      }
+    }
 
     stage("build-and-push-dev-images"){
-      when {
-        branch "master"
-      }
+      // when {
+      //   branch MAIN_BRANCH
+      // }
 
       steps {
         script {
@@ -75,10 +74,6 @@ pipeline {
     }
 
     stage("make-poc-codebase") {
-      // Remove
-      when {
-        branch "master"
-      }
       steps {
         // Istio clone from the latest branch
         sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
@@ -95,10 +90,10 @@ pipeline {
     }
 
     stage("unit-test") {
-      // Remove
       when {
-        branch "master"
+        branch MAIN_BRANCH
       }
+
       steps {
         sh """
           set -x
@@ -113,11 +108,6 @@ pipeline {
     }
 
     stage("build-and-push-poc-images") {
-      // Remoooove
-      when {
-        branch "master"
-      }
-
       steps {
         // Fetch secrets from Vault and use the mask token plugin
         script {
@@ -176,8 +166,8 @@ pipeline {
               
               docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
                 pieces=(\$line)
-                docker tag "\${pieces[0]}" "\${pieces[1]}":${env.TAG}
-                docker push "\${pieces[1]}":${env.TAG}
+                docker tag "\${pieces[0]}" "\${pieces[1]}":${env.BUILD_TAG}
+                docker push "\${pieces[1]}":${env.BUILD_TAG}
               done
             """
           }
@@ -192,27 +182,23 @@ pipeline {
       
       steps {
         script {
-          boolean stopPipeline = false
-
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
-              # set -e
 
-              filename="${TAG}.txt"
+              cd terraform
+              terraform init
+              terraform plan
+              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG}
 
-              # cd terraform
-              # terraform init
-              # terraform plan
-              # terraform apply -auto-approve -var "BUILD_ID"=${TAG} -var "ECR_REGION"=${ECR_REGION} -var "ARTIFACT_BUCKET_NAME"=${ARTIFACT_BUCKET_NAME}
-
+              # time it takes to the script at user_data_bootstrap.sh
               sleep 400
 
               BUCKET_EXISTS=false
               num_tries=0
 
-              while [ $num_tries -lt 2 ]; 
+              while [ $num_tries -lt 5 ]; 
               do 
-                aws s3api head-object --bucket mithril-artifacts --key "${filename}" --no-cli-pager
+                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}.txt" --no-cli-pager
                 if [ $? -eq 0 ];
                   then 
                     BUCKET_EXISTS=true
@@ -224,102 +210,82 @@ pipeline {
                 fi
               done
 
-              if [ $BUCKET_EXISTS ]; 
+              terraform destroy -auto-approve
+
+              if $BUCKET_EXISTS; 
                 then 
-                  echo "it exists" 
-                  aws s3 cp "s3://mithril-artifacts/${filename}" .
+                  echo "Artifact object exists" 
+                  aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}.txt" .
 
                 else 
-                  echo "it does not exist - stop stage" 
-                  stopPipeline = true
-                  currentBuild.result = 'FAILURE'
+                  echo "Artifact object does not exist" 
+                  exit 1
 
-                  # terraform destroy -auto-approve
               fi
-            '''
-          }
 
-          if(stopPipeline) {
-            throw new Exception("Testing artifacts don't exist!")
-          }
-          
-          sh '''#!/bin/bash
-            filename="${TAG}.txt" 
+              if grep -q "no healthy upstream" "${BUILD_TAG}.txt";
+                then
+                  cat "${BUILD_TAG}.txt"
+                  echo "Test failed" 
+                  exit 1
 
-            cd terraform
-
-            if grep -q "no healthy upstream" "${filename}";
-              then
-                cat curl_response.txt
-                echo "stop stage"
-                stopPipeline = true
-                currentBuild.result = 'FAILURE'
-
-                terraform destroy -auto-approve
-
-              else 
-                echo "test successful" 
-            fi
-
-            # terraform destroy -auto-approve
-              
+                else 
+                  echo "Test successful" 
+              fi
           '''
+          }
+        }
+      }
+    }
 
-          if(stopPipeline) {
-            throw new Exception("Tests failed")
+    stage("distribute-poc") {
+      when {
+        branch MAIN_BRANCH
+      }
+      
+      steps {
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh """
+              cd ./POC
+              
+              tar -zcvf mithril.tar.gz bookinfo spire istio \
+                deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
+                doc/poc-instructions.md demo/demo-script.sh demo/README.md
+              
+              aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
+            """
           }
         }
       }
     }
   }
-
-  // stage("distribute-poc") {
-  //     when {
-  //       branch MAIN_BRANCH
-  //     }
-      
-  //     steps {
-  //       script {
-  //         docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-  //           sh """
-  //             cd ./POC
-  //             
-  //             tar -zcvf mithril.tar.gz bookinfo spire istio \
-  //               deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
-  //               doc/poc-instructions.md demo/demo-script.sh demo/README.md
-  //             
-                  // aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
-  //           """
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
   
-  // post {
-  //   success {
-  //     slackSend (
-  //       channel: CHANNEL_NAME,  
-  //       color: 'good', 
-  //       message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. (<${env.BUILD_URL}|See Job>)"
-  //     )
-  //   }
-  //   failure {
-  //     script {
-  //       SLACK_ERROR_MESSAGE = "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
-  //       SLACK_ERROR_COLOR = "bad"
-  //       if (BRANCH_NAME == MAIN_BRANCH) {
-  //         SLACK_ERROR_MESSAGE = "@here The pipeline ${currentBuild.fullDisplayName} failed on `${MAIN_BRANCH}`"
-  //         SLACK_ERROR_COLOR = "danger"
-  //       }
-  //     }
-  //     slackSend (
-  //       channel: CHANNEL_NAME,
-  //       color: SLACK_ERROR_COLOR,
-  //       message: "${SLACK_ERROR_MESSAGE} (<${env.BUILD_URL}|See Job>)",
-  //     )
-  //   }
-  // }
+  post {
+    success {
+      slackSend (
+        channel: CHANNEL_NAME,  
+        color: 'good', 
+        message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. (<${env.BUILD_URL}|See Job>)"
+      )
+    }
+
+    failure {
+      script {
+        SLACK_ERROR_MESSAGE = "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
+        SLACK_ERROR_COLOR = "bad"
+        if (BRANCH_NAME == MAIN_BRANCH) {
+          SLACK_ERROR_MESSAGE = "@here The pipeline ${currentBuild.fullDisplayName} failed on `${MAIN_BRANCH}`"
+          SLACK_ERROR_COLOR = "danger"
+        }
+      }
+      slackSend (
+        channel: CHANNEL_NAME,
+        color: SLACK_ERROR_COLOR,
+        message: "${SLACK_ERROR_MESSAGE} (<${env.BUILD_URL}|See Job>)",
+      )
+    }
+  }
 }
 
 // Method for creating the build tag

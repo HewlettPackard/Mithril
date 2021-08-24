@@ -192,7 +192,7 @@ pipeline {
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh '''#!/bin/sh
+            sh '''#!/bin/bash
               # set -e
 
               filename="curl_response_${TAG}.txt"
@@ -234,6 +234,8 @@ pipeline {
             '''
           }
         }
+
+        echo ${currentBuild.result}
       }
     }
   }

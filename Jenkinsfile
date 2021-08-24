@@ -195,6 +195,8 @@ pipeline {
             sh '''#!/bin/sh
               # set -e
 
+              filename=curl_response_${TAG}.txt
+
               # cd terraform
               # terraform init
               # terraform plan
@@ -206,7 +208,7 @@ pipeline {
               num_tries=0
               while [[ $num_tries<2 ]]; 
                 do 
-                  aws s3api head-object --bucket mithril-customer-assets --key curl_response.txt --no-cli-pager || not_exist=true; 
+                  aws s3api head-object --bucket mithril-customer-assets --key filename --no-cli-pager || not_exist=true; 
                   num_tries=num_tries+1
                 sleep 10; 
               done
@@ -218,9 +220,9 @@ pipeline {
                   echo "it exists" 
               fi
 
-              aws s3 cp s3://mithril-customer-assets/curl_response.txt .
+              aws s3 cp "s3://mithril-customer-assets/${filename}" .
 
-              if grep -q "no healthy upstream" "curl_response.txt";
+              if grep -q "no healthy upstream" filename;
                 then
                   cat curl_response.txt
                   currentBuild.result = "FAILURE"

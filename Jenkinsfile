@@ -195,7 +195,7 @@ pipeline {
             sh '''#!/bin/sh
               # set -e
 
-              filename=curl_response_${TAG}.txt
+              filename="curl_response_${TAG}.txt"
 
               # cd terraform
               # terraform init
@@ -206,27 +206,26 @@ pipeline {
 
               not_exist=true
               num_tries=0
-              while [[ $num_tries<2 ]]; 
+              while [ $num_tries -lt 2 ]; 
                 do 
                   aws s3api head-object --bucket mithril-customer-assets --key filename --no-cli-pager || not_exist=true; 
-                  num_tries=num_tries+1
-                sleep 10; 
+                  ((num_tries++))
+                  sleep 10; 
               done
 
               if [ $not_exist ]; 
                 then 
-                  echo "it does not exist" 
+                  echo "it does not exist - stop stage" 
                 else 
                   echo "it exists" 
+                  aws s3 cp "s3://mithril-customer-assets/${filename}" .
               fi
-
-              aws s3 cp "s3://mithril-customer-assets/${filename}" .
 
               if grep -q "no healthy upstream" filename;
                 then
                   cat curl_response.txt
                   currentBuild.result = "FAILURE"
-                  throw new Exception("Throw to stop pipeline")
+                  echo "stop stage"
                 else 
                   echo "test successful" 
               fi

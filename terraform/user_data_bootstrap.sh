@@ -42,13 +42,19 @@ bash -c "cd /mithril/POC && TAG=${tag} HUB=${hub} ./deploy-all.sh"
 docker run -i -d --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
---network host mithril-testing:latest \
+--network host mithril-testing:${tag} \
 bash -c 'INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") \
 && kubectl port-forward "$INGRESS_POD"  8000:8080 -n istio-system'
 
 # Waiting for POD to be ready
-sleep 90
+docker run -i --rm \
+-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+-v "/.kube/config:/root/.kube/config:rw" \
+--network host mithril-testing:${tag} \
+bash -c 'kubectl rollout status deployment productpage-v1'
 
+# Request to productpage workload
 curl localhost:8000/productpage > curl_response_${tag}.txt
 
+# Copying response to S3 bucket
 aws s3 cp /curl_response_${tag}.txt s3://mithril-customer-assets/ --region us-east-1

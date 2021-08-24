@@ -197,8 +197,7 @@ pipeline {
             sh '''#!/bin/bash
               # set -e
 
-              # filename="curl_response_${TAG}.txt"
-              filename="curl_response.txt"
+              filename="curl_response_${TAG}.txt"
 
               cd terraform
               terraform init
@@ -244,19 +243,20 @@ pipeline {
           }
           
           sh '''#!/bin/bash
+            filename="curl_response_${TAG}.txt" 
 
-              if grep -q "no healthy upstream" "${filename}";
-                then
-                  cat curl_response.txt
-                  echo "stop stage"
-                  stopPipeline = true
-                  currentBuild.result = 'FAILURE'
+            if grep -q "no healthy upstream" "${filename}";
+              then
+                cat curl_response.txt
+                echo "stop stage"
+                stopPipeline = true
+                currentBuild.result = 'FAILURE'
 
-                  terraform destroy -auto-approve
+                terraform destroy -auto-approve
 
-                else 
-                  echo "test successful" 
-              fi
+              else 
+                echo "test successful" 
+            fi
               
           '''
 

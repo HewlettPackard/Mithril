@@ -197,7 +197,6 @@ pipeline {
 
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
-              set -e
 
               cd terraform
               terraform init

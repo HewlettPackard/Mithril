@@ -87,7 +87,19 @@ resource "aws_network_interface" "mithril-nic" {
   security_groups = [aws_security_group.allow_web.id]
 }
 
-# 8. Create Ubuntu server
+# 8. Assign an elastic IP to the network interface created in step 7
+resource "aws_eip" "one" {
+  vpc                       = true
+  network_interface         = aws_network_interface.mithril-nic.id
+  associate_with_private_ip = "10.0.1.50"
+  depends_on                = [aws_internet_gateway.gw]
+}
+
+output "server_public_ip" {
+  value = aws_eip.one.public_ip
+}
+
+# 9. Create Ubuntu server
 resource "aws_instance" "mithril_instance" {
   ami               = var.EC2_AMI
   instance_type     = var.EC2_INSTANCE_TYPE

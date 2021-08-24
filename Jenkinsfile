@@ -197,26 +197,27 @@ pipeline {
             sh '''#!/bin/bash
               # set -e
 
-              filename="curl_response_${TAG}.txt"
+              # filename="curl_response_${TAG}.txt"
+              filename="curl_response.txt"
 
-              cd terraform
-              terraform init
-              terraform plan
-              terraform apply -auto-approve -var "TAG"=${TAG}
+              # cd terraform
+              # terraform init
+              # terraform plan
+              # terraform apply -auto-approve -var "TAG"=${TAG}
 
-              sleep 400
+              # sleep 400
 
               BUCKET_EXISTS=false
               num_tries=0
-              while [[ ! $BUCKET_EXISTS ]] && [$num_tries -lt 2 ]; 
+
+              while [ $num_tries -lt 2 ]; 
               do 
                   aws s3api head-object --bucket mithril-customer-assets --key "${filename}" --no-cli-pager
                   if [ $? -eq 0 ];
                       then 
-                          echo "bucket existe"
                           BUCKET_EXISTS=true
+                          break
                       else
-                          echo "bucket nao existe"
                           ((num_tries++))
                           sleep 10; 
                   fi
@@ -224,11 +225,11 @@ pipeline {
               done
 
               if [ $BUCKET_EXISTS ]; 
-              then 
-                  echo "it does not exist - stop stage" 
-              else 
-                  echo "it exists" 
-                  aws s3 cp "s3://mithril-customer-assets/${filename}" .
+                  then 
+                      echo "it does not exist - stop stage" 
+                  else 
+                      echo "it exists" 
+                      aws s3 cp "s3://mithril-customer-assets/${filename}" .
               fi
 
               if grep -q "no healthy upstream" "${filename}";
@@ -241,7 +242,7 @@ pipeline {
                   echo "test successful" 
               fi
               
-              terraform destroy -auto-approve
+              # terraform destroy -auto-approve
             '''
           }
 

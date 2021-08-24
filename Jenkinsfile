@@ -200,12 +200,12 @@ pipeline {
               # filename="curl_response_${TAG}.txt"
               filename="curl_response.txt"
 
-              # cd terraform
-              # terraform init
-              # terraform plan
-              # terraform apply -auto-approve -var "BUILD_ID"=${TAG}
+              cd terraform
+              terraform init
+              terraform plan
+              terraform apply -auto-approve -var "BUILD_ID"=${TAG}
 
-              # sleep 400
+              sleep 400
 
               BUCKET_EXISTS=false
               num_tries=0
@@ -214,23 +214,27 @@ pipeline {
               do 
                 aws s3api head-object --bucket mithril-customer-assets --key "${filename}" --no-cli-pager
                 if [ $? -eq 0 ];
-                    then 
-                        BUCKET_EXISTS=true
-                        break
-                    else
-                        ((num_tries++))
-                        sleep 10; 
+                  then 
+                    BUCKET_EXISTS=true
+                    break
+
+                  else
+                      ((num_tries++))
+                      sleep 10; 
                 fi
               done
 
               if [ $BUCKET_EXISTS ]; 
-                  then 
-                      echo "it exists" 
-                      aws s3 cp "s3://mithril-customer-assets/${filename}" .
-                  else 
-                      echo "it does not exist - stop stage" 
-                      stopPipeline = true
-                      currentBuild.result = 'FAILURE'
+                then 
+                  echo "it exists" 
+                  aws s3 cp "s3://mithril-customer-assets/${filename}" .
+
+                else 
+                  echo "it does not exist - stop stage" 
+                  stopPipeline = true
+                  currentBuild.result = 'FAILURE'
+
+                  terraform destroy -auto-approve
               fi
             '''
           }
@@ -247,11 +251,13 @@ pipeline {
                   echo "stop stage"
                   stopPipeline = true
                   currentBuild.result = 'FAILURE'
+
+                  terraform destroy -auto-approve
+
                 else 
                   echo "test successful" 
               fi
               
-              # terraform destroy -auto-approve
           '''
 
           if(stopPipeline) {

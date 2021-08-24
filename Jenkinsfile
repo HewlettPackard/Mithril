@@ -21,7 +21,7 @@ pipeline {
   }
 
   environment {
-    TAG = makeTag() 
+    TAG = makeTag()  // Mudar para tag
     BUILD_WITH_CONTAINER = 0
     GOOS = "linux"
     AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
@@ -200,10 +200,10 @@ pipeline {
 
               filename="${TAG}.txt"
 
-              cd terraform
-              terraform init
-              terraform plan
-              terraform apply -auto-approve -var "BUILD_ID"=${TAG}
+              # cd terraform
+              # terraform init
+              # terraform plan
+              # terraform apply -auto-approve -var "BUILD_ID"=${TAG} -var "ECR_REGION"=${ECR_REGION} -var "ARTIFACT_BUCKET_NAME"=${ARTIFACT_BUCKET_NAME}
 
               sleep 400
 
@@ -212,7 +212,7 @@ pipeline {
 
               while [ $num_tries -lt 2 ]; 
               do 
-                aws s3api head-object --bucket "${ARTIFACTS_BUCKET_NAME}" --key "${filename}" --no-cli-pager
+                aws s3api head-object --bucket mithril-artifacts --key "${filename}" --no-cli-pager
                 if [ $? -eq 0 ];
                   then 
                     BUCKET_EXISTS=true
@@ -227,14 +227,14 @@ pipeline {
               if [ $BUCKET_EXISTS ]; 
                 then 
                   echo "it exists" 
-                  aws s3 cp "s3://${ARTIFACTS_BUCKET_NAME}/${filename}" .
+                  aws s3 cp "s3://mithril-artifacts/${filename}" .
 
                 else 
                   echo "it does not exist - stop stage" 
                   stopPipeline = true
                   currentBuild.result = 'FAILURE'
 
-                  terraform destroy -auto-approve
+                  # terraform destroy -auto-approve
               fi
             '''
           }
@@ -260,6 +260,8 @@ pipeline {
               else 
                 echo "test successful" 
             fi
+
+            terraform destroy -auto-approve
               
           '''
 

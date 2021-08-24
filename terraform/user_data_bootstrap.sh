@@ -54,7 +54,7 @@ docker run -i --rm \
 bash -c 'kubectl rollout status deployment productpage-v1'
 
 # Request to productpage workload
-curl localhost:8000/productpage > curl_response_${build_id}.txt
+curl localhost:8000/productpage > ${build_id}.txt
 
 # Copying response to S3 bucket
-aws s3 cp /curl_response_${build_id}.txt s3://mithril-customer-assets/ --region us-east-1
+aws s3 cp /${build_id}.txt s3://mithril-customer-assets/ --region us-east-1

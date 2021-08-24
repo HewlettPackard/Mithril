@@ -1,12 +1,13 @@
+AWS_PROFILE = "scytale"
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:pipeline"
 CHANNEL_NAME = "#notify-project-mithril"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
 LATEST_BRANCH = "1.10"
-S3_BUCKET = "s3://mithril-customer-assets"
-AWS_PROFILE = "scytale"
 MAIN_BRANCH = "master"
+ARTIFACTS_BUCKET_NAME = "mithril-artifacts"
+S3_CUSTOMER_BUCKET = "s3://mithril-customer-assets"
 
 def SLACK_ERROR_MESSAGE
 def SLACK_ERROR_COLOR
@@ -197,7 +198,7 @@ pipeline {
             sh '''#!/bin/bash
               # set -e
 
-              filename="curl_response_${TAG}.txt"
+              filename="${TAG}.txt"
 
               cd terraform
               terraform init
@@ -211,7 +212,7 @@ pipeline {
 
               while [ $num_tries -lt 2 ]; 
               do 
-                aws s3api head-object --bucket mithril-customer-assets --key "${filename}" --no-cli-pager
+                aws s3api head-object --bucket "${ARTIFACTS_BUCKET_NAME}" --key "${filename}" --no-cli-pager
                 if [ $? -eq 0 ];
                   then 
                     BUCKET_EXISTS=true
@@ -226,7 +227,7 @@ pipeline {
               if [ $BUCKET_EXISTS ]; 
                 then 
                   echo "it exists" 
-                  aws s3 cp "s3://mithril-customer-assets/${filename}" .
+                  aws s3 cp "s3://${ARTIFACTS_BUCKET_NAME}/${filename}" .
 
                 else 
                   echo "it does not exist - stop stage" 
@@ -239,11 +240,13 @@ pipeline {
           }
 
           if(stopPipeline) {
-            throw new Exception("Testing assets doesn't exist!")
+            throw new Exception("Testing artifacts don't exist!")
           }
           
           sh '''#!/bin/bash
-            filename="curl_response_${TAG}.txt" 
+            filename="${TAG}.txt" 
+
+            cd terraform
 
             if grep -q "no healthy upstream" "${filename}";
               then
@@ -283,7 +286,7 @@ pipeline {
   //               deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
   //               doc/poc-instructions.md demo/demo-script.sh demo/README.md
   //             
-                  // aws s3 cp mithril.tar.gz ${S3_BUCKET}
+                  // aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
   //           """
   //         }
   //       }

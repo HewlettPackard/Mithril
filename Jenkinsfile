@@ -191,7 +191,7 @@ pipeline {
       
       steps {
         script {
-          currentBuild.result = "SUCCESS"
+          boolean stopPipeline = false
 
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
@@ -234,8 +234,9 @@ pipeline {
               if grep -q "no healthy upstream" "${filename}";
                 then
                   cat curl_response.txt
-                  currentBuild.result = "FAILURE"
                   echo "stop stage"
+                  stopPipeline = true
+                  currentBuild.result = 'FAILURE'
                 else 
                   echo "test successful" 
               fi
@@ -245,8 +246,8 @@ pipeline {
           }
         }
 
-        if (currentBuild.result === "FAILURE") {
-            throw new Exception("Throw to stop pipeline")
+        if(stopPipeline) {
+          throw new Exception("Something went wrong!")
         }
       }
     }

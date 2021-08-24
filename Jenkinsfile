@@ -212,37 +212,35 @@ pipeline {
 
               while [ $num_tries -lt 2 ]; 
               do 
-                  aws s3api head-object --bucket mithril-customer-assets --key "${filename}" --no-cli-pager
-                  if [ $? -eq 0 ];
-                      then 
-                          BUCKET_EXISTS=true
-                          break
-                      else
-                          ((num_tries++))
-                          sleep 10; 
-                  fi
-                  echo $BUCKET_EXISTS
+                aws s3api head-object --bucket mithril-customer-assets --key "${filename}" --no-cli-pager
+                if [ $? -eq 0 ];
+                    then 
+                        BUCKET_EXISTS=true
+                        break
+                    else
+                        ((num_tries++))
+                        sleep 10; 
+                fi
               done
 
               if [ $BUCKET_EXISTS ]; 
                   then 
+                      echo "it exists" 
+                      aws s3 cp "s3://mithril-customer-assets/${filename}" .
+                  else 
                       echo "it does not exist - stop stage" 
                       stopPipeline = true
                       currentBuild.result = 'FAILURE'
-                  else 
-                      echo "it exists" 
-                      aws s3 cp "s3://mithril-customer-assets/${filename}" .
               fi
-
             '''
           }
 
           if(stopPipeline) {
-            throw new Exception("Something went wrong!")
+            throw new Exception("Testing assets doesn't exist!")
           }
-
           
           sh '''#!/bin/bash
+
               if grep -q "no healthy upstream" "${filename}";
                 then
                   cat curl_response.txt
@@ -257,7 +255,7 @@ pipeline {
           '''
 
           if(stopPipeline) {
-            throw new Exception("Something went wrong!")
+            throw new Exception("Tests failed")
           }
         }
       }

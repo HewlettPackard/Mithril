@@ -87,7 +87,7 @@ resource "aws_network_interface" "mithril-nic" {
   security_groups = [aws_security_group.allow_web.id]
 }
 
-# 9. Create Ubuntu server
+# 8. Create Ubuntu server
 resource "aws_instance" "mithril_instance" {
   ami               = var.EC2_AMI
   instance_type     = var.EC2_INSTANCE_TYPE

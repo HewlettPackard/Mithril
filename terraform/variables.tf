@@ -39,7 +39,7 @@ variable "EC2_INSTANCE_TYPE" {
 }
 
 variable "EC2_KEY_PAIR" {
-  default     = "mithril-integration-testing"
+  default     = "mithril-integration-test"
   description = "AWS key pair name used to connect to the EC2 instance"
 }
 

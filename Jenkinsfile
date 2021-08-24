@@ -222,10 +222,12 @@ pipeline {
                 fi
               done
 
+              terraform destroy -auto-approve
+
               if $BUCKET_EXISTS; 
                 then 
                   echo "it exists" 
-                  aws s3 cp "s3://mithril-artifacts/${ARTIFACT_FILE}" ..
+                  aws s3 cp "s3://mithril-artifacts/${ARTIFACT_FILE}" .
 
                 else 
                   echo "it does not exist - stop stage" 
@@ -233,19 +235,15 @@ pipeline {
 
               fi
 
-              terraform destroy -auto-approve
+              if grep -q "no healthy upstream" "${filename}";
+                then
+                  cat curl_response.txt
+                  echo "stop stage"
+                  exit 1
 
-            filename="${TAG}.txt" 
-
-            if grep -q "no healthy upstream" "${filename}";
-              then
-                cat curl_response.txt
-                echo "stop stage"
-                exit 1
-
-              else 
-                echo "test successful" 
-            fi
+                else 
+                  echo "test successful" 
+              fi
           '''
         }
       }

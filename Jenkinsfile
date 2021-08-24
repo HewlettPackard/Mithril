@@ -22,7 +22,7 @@ pipeline {
 
   environment {
     TAG = makeTag()  // Mudar para build id e colocar em cima
-    ARTIFACT_FILE = "${TAG}.txt"
+    ARTIFACT_FILE = "curl_response.txt"
     BUILD_WITH_CONTAINER = 0
     GOOS = "linux"
     AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
@@ -229,39 +229,24 @@ pipeline {
 
                 else 
                   echo "it does not exist - stop stage" 
-                  stopPipeline=true
-                  "${currentBuild.result}"="FAILURE"
+                  exit 1
 
               fi
 
               terraform destroy -auto-approve
 
-            '''
-          }
-
-          if(stopPipeline) {
-            throw new Exception("Testing artifacts don't exist!")
-          }
-          
-          sh '''#!/bin/bash
             filename="${TAG}.txt" 
 
             if grep -q "no healthy upstream" "${filename}";
               then
                 cat curl_response.txt
                 echo "stop stage"
-                stopPipeline=true
-                
-                "${currentBuild.result}"="FAILURE"
+                exit 1
 
               else 
                 echo "test successful" 
             fi
           '''
-
-          if(stopPipeline) {
-            throw new Exception("Tests failed!")
-          }
         }
       }
     }

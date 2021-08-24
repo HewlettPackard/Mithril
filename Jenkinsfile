@@ -235,7 +235,7 @@ pipeline {
           }
         }
 
-        echo ${currentBuild.result}
+        echo "${currentBuild.result}"
       }
     }
   }

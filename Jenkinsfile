@@ -261,7 +261,7 @@ pipeline {
                 echo "test successful" 
             fi
 
-            terraform destroy -auto-approve
+            # terraform destroy -auto-approve
               
           '''
 

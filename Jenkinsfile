@@ -231,7 +231,7 @@ pipeline {
                 else 
                   echo "it does not exist - stop stage" 
                   stopPipeline=true
-                  ${currentBuild.result}='FAILURE'
+                  "${currentBuild.result}"="FAILURE"
 
               fi
 
@@ -252,7 +252,8 @@ pipeline {
                 cat curl_response.txt
                 echo "stop stage"
                 stopPipeline=true
-                ${currentBuild.result}='FAILURE'
+                
+                "${currentBuild.result}"="FAILURE"
 
               else 
                 echo "test successful" 

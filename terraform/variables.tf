@@ -19,7 +19,7 @@ variable "ECR_REGION" {
 }
 
 variable "ARTIFACT_BUCKET_NAME" {
-  default     = "artifact_bucket_name"
+  default     = "mithril-artifacts"
   description = "S3 Bucket name for the Mithril Artifacts"
 }
 

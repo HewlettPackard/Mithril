@@ -200,10 +200,10 @@ pipeline {
 
               filename="${TAG}.txt"
 
-              # cd terraform
-              # terraform init
-              # terraform plan
-              # terraform apply -auto-approve -var "BUILD_ID"=${TAG} -var "ECR_REGION"=${ECR_REGION} -var "ARTIFACT_BUCKET_NAME"=${ARTIFACT_BUCKET_NAME}
+              cd terraform
+              terraform init
+              terraform plan
+              terraform apply -auto-approve -var "BUILD_ID"=${TAG} \
 
               sleep 400
 
@@ -224,7 +224,7 @@ pipeline {
                 fi
               done
 
-              if [ $BUCKET_EXISTS ]; 
+              if $BUCKET_EXISTS; 
                 then 
                   echo "it exists" 
                   aws s3 cp "s3://mithril-artifacts/${filename}" .
@@ -234,8 +234,10 @@ pipeline {
                   stopPipeline = true
                   currentBuild.result = 'FAILURE'
 
-                  # terraform destroy -auto-approve
               fi
+
+              terraform destroy -auto-approve
+
             '''
           }
 
@@ -255,14 +257,9 @@ pipeline {
                 stopPipeline = true
                 currentBuild.result = 'FAILURE'
 
-                terraform destroy -auto-approve
-
               else 
                 echo "test successful" 
             fi
-
-            # terraform destroy -auto-approve
-              
           '''
 
           if(stopPipeline) {

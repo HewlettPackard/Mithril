@@ -3,9 +3,9 @@ variable "TAG" {
   description = "TAG used to download the images from ECR repository"
 }
 
-variable "BUILD_ID" {
-  default     = "build_id"
-  description = "Build ID from Jenkins Pipeline"
+variable "BUILD_TAG" {
+  default     = "latest"
+  description = "Build TAG from Jenkins Pipeline"
 }
 
 variable "HUB" {

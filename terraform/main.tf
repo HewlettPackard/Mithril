@@ -49,7 +49,7 @@ resource "aws_route_table_association" "a" {
 
 # 6. Create Security Group to allow ports
 resource "aws_security_group" "allow_web" {
-  name        = "allow_web_traffic"
+  name        = "mithril_sg_test"
   description = "Allow Web inbound traffic"
   vpc_id      = aws_vpc.prod-vpc.id
 
@@ -138,6 +138,6 @@ data "template_file" "init" {
     region            = var.ECR_REGION,
     tag               = var.TAG,
     hub               = var.HUB,
-    build_id          = var.BUILD_ID
+    build_tag         = var.BUILD_TAG
   }
 }

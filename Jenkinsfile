@@ -89,6 +89,7 @@ pipeline {
     }
 
     stage("unit-test") {
+      //Remove
       when {
         branch MAIN_BRANCH
       }
@@ -107,6 +108,10 @@ pipeline {
     }
 
     stage("build-and-push-poc-images") {
+      //Remove
+      when {
+        branch MAIN_BRANCH
+      }
       environment {
         BUILD_WITH_CONTAINER = 0
       }

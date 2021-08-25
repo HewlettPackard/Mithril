@@ -22,7 +22,7 @@ pipeline {
 
   environment {
     TAG = makeTag()  // Mudar para build id e colocar em cima
-    ARTIFACT_FILE = "curl_response.txt"
+    // ARTIFACT_FILE = "curl_response.txt"
     BUILD_WITH_CONTAINER = 0
     GOOS = "linux"
     AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
@@ -210,7 +210,7 @@ pipeline {
 
               while [ $num_tries -lt 2 ]; 
               do 
-                aws s3api head-object --bucket mithril-artifacts --key "${ARTIFACT_FILE}" --no-cli-pager
+                aws s3api head-object --bucket mithril-artifacts --key "${TAG}" --no-cli-pager
                 if [ $? -eq 0 ];
                   then 
                     BUCKET_EXISTS=true
@@ -222,12 +222,12 @@ pipeline {
                 fi
               done
 
-              terraform destroy -auto-approve
+             # terraform destroy -auto-approve
 
               if $BUCKET_EXISTS; 
                 then 
                   echo "it exists" 
-                  aws s3 cp "s3://mithril-artifacts/${ARTIFACT_FILE}" .
+                  aws s3 cp "s3://mithril-artifacts/${TAG}" .
 
                 else 
                   echo "it does not exist - stop stage" 
@@ -235,7 +235,7 @@ pipeline {
 
               fi
 
-              if grep -q "no healthy upstream" "${filename}";
+              if grep -q "no healthy upstream" "${TAG}";
                 then
                   cat curl_response.txt
                   echo "stop stage"

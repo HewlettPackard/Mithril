@@ -189,8 +189,6 @@ pipeline {
       
       steps {
         script {
-          boolean stopPipeline = false
-
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
 

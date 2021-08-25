@@ -222,7 +222,7 @@ pipeline {
                 fi
               done
 
-             # terraform destroy -auto-approve
+              terraform destroy -auto-approve
 
               if $BUCKET_EXISTS; 
                 then 

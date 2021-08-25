@@ -210,7 +210,7 @@ pipeline {
 
               while [ $num_tries -lt 2 ]; 
               do 
-                aws s3api head-object --bucket mithril-artifacts --key "${TAG}" --no-cli-pager
+                aws s3api head-object --bucket mithril-artifacts --key "${TAG}.txt" --no-cli-pager
                 if [ $? -eq 0 ];
                   then 
                     BUCKET_EXISTS=true
@@ -227,7 +227,7 @@ pipeline {
               if $BUCKET_EXISTS; 
                 then 
                   echo "it exists" 
-                  aws s3 cp "s3://mithril-artifacts/${TAG}" .
+                  aws s3 cp "s3://mithril-artifacts/${TAG}.txt" .
 
                 else 
                   echo "it does not exist - stop stage" 
@@ -235,9 +235,9 @@ pipeline {
 
               fi
 
-              if grep -q "no healthy upstream" "${TAG}";
+              if grep -q "no healthy upstream" "${TAG}.txt";
                 then
-                  cat curl_response.txt
+                  cat "${TAG}.txt"
                   echo "stop stage"
                   exit 1
 

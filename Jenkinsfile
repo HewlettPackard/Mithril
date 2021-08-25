@@ -1,6 +1,6 @@
-AWS_PROFILE = "scytale"
+AWS_PROFILE = "mithril-jenkins"
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:pipeline"
-CHANNEL_NAME = "@U021L6LHSHM"
+CHANNEL_NAME = "#notify-project-mithril"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
@@ -22,7 +22,6 @@ pipeline {
 
   environment {
     BUILD_TAG = makeTag()  // Mudar para build id e colocar em cima
-    BUILD_WITH_CONTAINER = 0
     GOOS = "linux"
     AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
     AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
@@ -44,9 +43,9 @@ pipeline {
     }
 
     stage("build-and-push-dev-images"){
-      // when {
-      //   branch MAIN_BRANCH
-      // }
+      when {
+        branch MAIN_BRANCH
+      }
 
       steps {
         script {
@@ -108,6 +107,9 @@ pipeline {
     }
 
     stage("build-and-push-poc-images") {
+      environment {
+        BUILD_WITH_CONTAINER = 0
+      }
       steps {
         // Fetch secrets from Vault and use the mask token plugin
         script {
@@ -188,7 +190,7 @@ pipeline {
               cd terraform
               terraform init
               terraform plan
-              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG}
+              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
 
               # time it takes to the script at user_data_bootstrap.sh
               sleep 400

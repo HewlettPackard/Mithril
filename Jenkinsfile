@@ -89,10 +89,6 @@ pipeline {
     }
 
     stage("unit-test") {
-      //Remove
-      when {
-        branch MAIN_BRANCH
-      }
 
       steps {
         sh """

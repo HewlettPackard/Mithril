@@ -193,13 +193,10 @@ pipeline {
               terraform plan
               terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
 
-              # time it takes to the script at user_data_bootstrap.sh
-              sleep 400
-
               BUCKET_EXISTS=false
               num_tries=0
 
-              while [ $num_tries -lt 5 ]; 
+              while [ $num_tries -lt 10 ]; 
               do 
                 aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}.txt" --no-cli-pager
                 if [ $? -eq 0 ];
@@ -209,7 +206,7 @@ pipeline {
 
                   else
                       ((num_tries++))
-                      sleep 10; 
+                      sleep 100; 
                 fi
               done
 
@@ -223,7 +220,6 @@ pipeline {
                 else 
                   echo "Artifact object does not exist" 
                   exit 1
-
               fi
 
               if grep -q "no healthy upstream" "${BUILD_TAG}.txt";

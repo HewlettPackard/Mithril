@@ -175,7 +175,7 @@ pipeline {
 
               tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch
 
-              aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET-BUCKET}
+              aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
             """
           }
         }

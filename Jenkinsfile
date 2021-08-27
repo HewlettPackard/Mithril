@@ -5,6 +5,7 @@ ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
 LATEST_BRANCH = "1.10"
 S3_BUCKET = "s3://mithril-customer-assets"
+S3_PATCHSET_BUCKET = "s3://mithril-poc-patchset"
 MAIN_BRANCH = "master"
 
 def SLACK_ERROR_MESSAGE
@@ -171,6 +172,10 @@ pipeline {
                 doc/poc-instructions.md demo/demo-script.sh demo/README.md
 
               aws s3 cp mithril.tar.gz ${S3_BUCKET}
+
+              tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch
+
+              aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET-BUCKET}
             """
           }
         }

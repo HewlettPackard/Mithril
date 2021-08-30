@@ -5,8 +5,9 @@ ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
 LATEST_BRANCH = "1.10"
-MAIN_BRANCH = "master"
+S3_PATCHSET_BUCKET = "s3://mithril-poc-patchset"
 S3_CUSTOMER_BUCKET = "s3://mithril-customer-assets"
+MAIN_BRANCH = "master"
 
 def SLACK_ERROR_MESSAGE
 def SLACK_ERROR_COLOR
@@ -246,8 +247,11 @@ pipeline {
               tar -zcvf mithril.tar.gz bookinfo spire istio \
                 deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
                 doc/poc-instructions.md demo/demo-script.sh demo/README.md
-              
               aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
+
+
+              tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch
+              aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
             """
           }
         }

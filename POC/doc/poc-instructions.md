@@ -109,7 +109,7 @@ The output is an HTML page that should not have any error sections.
 Forward host port 8000 to port 8080 (ingressgateway pod port) inside the cluster:
 
 ```bash
-./forward-port
+./forward-port.sh
 
 Forwarding from 127.0.0.1:8000 -> 8080
 Forwarding from [::1]:8000 -> 8080

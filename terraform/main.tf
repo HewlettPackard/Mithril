@@ -1,19 +1,19 @@
 # 1. Create vpc
-resource "aws_vpc" "prod-vpc" {
+resource "aws_vpc" "testing-vpc" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = "production"
+    Name = "testing"
   }
 }
 
 # 2. Create Internet Gateway
 resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.prod-vpc.id
+  vpc_id = aws_vpc.testing-vpc.id
 }
 
 # 3. Create Custom Route Table
-resource "aws_route_table" "prod-route-table" {
-  vpc_id = aws_vpc.prod-vpc.id
+resource "aws_route_table" "testing-route-table" {
+  vpc_id = aws_vpc.testing-vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -32,26 +32,26 @@ resource "aws_route_table" "prod-route-table" {
 
 # 4. Create a Subnet 
 resource "aws_subnet" "subnet-1" {
-  vpc_id            = aws_vpc.prod-vpc.id
+  vpc_id            = aws_vpc.testing-vpc.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-east-1a"
 
   tags = {
-    Name = "prod-subnet"
+    Name = "testing-subnet"
   }
 }
 
 # 5. Associate subnet with Route Table
 resource "aws_route_table_association" "a" {
   subnet_id      = aws_subnet.subnet-1.id
-  route_table_id = aws_route_table.prod-route-table.id
+  route_table_id = aws_route_table.testing-route-table.id
 }
 
 # 6. Create Security Group to allow ports
 resource "aws_security_group" "allow_web" {
   name        = "mithril_sg_test"
   description = "Allow Web inbound traffic"
-  vpc_id      = aws_vpc.prod-vpc.id
+  vpc_id      = aws_vpc.testing-vpc.id
 
   ingress {
     description = "HTTP"
@@ -130,7 +130,7 @@ data "aws_secretsmanager_secret_version" "mithril_secret" {
 }
 
 data "template_file" "init" {
-  template = file("user_data_bootstrap.sh")
+  template = file("integration-tests.sh")
 
   vars = {
     access_key        = jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.mithril_secret.secret_string))["ACCESS_KEY_ID"],

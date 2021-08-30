@@ -1,5 +1,6 @@
 AWS_PROFILE = "mithril-jenkins"
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:pipeline"
+DEVELOPMENT_IMAGE = "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest"
 CHANNEL_NAME = "#notify-project-mithril"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
@@ -8,6 +9,7 @@ LATEST_BRANCH = "1.10"
 S3_PATCHSET_BUCKET = "s3://mithril-poc-patchset"
 S3_CUSTOMER_BUCKET = "s3://mithril-customer-assets"
 MAIN_BRANCH = "master"
+PROXY="http://proxy.houston.hpecorp.net:8080"
 
 def SLACK_ERROR_MESSAGE
 def SLACK_ERROR_COLOR
@@ -61,11 +63,11 @@ pipeline {
               
               cd docker 
               docker build -t mithril \
-                --build-arg http_proxy=http://proxy.houston.hpecorp.net:8080 \
-                --build-arg https_proxy=http://proxy.houston.hpecorp.net:8080 \
+                --build-arg http_proxy=${PROXY} \
+                --build-arg https_proxy=${PROXY} \
                 -f ./Dockerfile .. 
-              docker tag mithril:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
-              docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest
+              docker tag mithril:latest ${DEVELOPMENT_IMAGE}
+              docker push ${DEVELOPMENT_IMAGE}
             """
           }
         }
@@ -186,7 +188,6 @@ pipeline {
 
               cd terraform
               terraform init
-              terraform plan
               terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
 
               BUCKET_EXISTS=false

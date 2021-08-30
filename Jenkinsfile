@@ -193,7 +193,7 @@ pipeline {
               BUCKET_EXISTS=false
               num_tries=0
 
-              while [ $num_tries -lt 80 ]; 
+              while [ $num_tries -lt 500 ]; 
               do 
                 aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}.txt" --no-cli-pager
                 if [ $? -eq 0 ];
@@ -203,7 +203,7 @@ pipeline {
 
                   else
                       ((num_tries++))
-                      sleep 10; 
+                      sleep 1; 
                 fi
               done
 

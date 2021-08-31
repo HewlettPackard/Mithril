@@ -19,10 +19,15 @@ RUN apt-get -y install ruby ruby-dev rubygems build-essential rpm
 RUN gem install --no-document fpm
 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-RUN unzip awscliv2.zip
-RUN ./aws/install
+RUN unzip -o awscliv2.zip
+RUN ./aws/install --update
 
 RUN wget https://golang.org/dl/go1.16.1.linux-amd64.tar.gz
 RUN tar -C /usr/local -xzf go1.16.1.linux-amd64.tar.gz
 
 ENV PATH=/usr/local/go/bin:$PATH
+
+RUN apt-get install -y gnupg software-properties-common curl \
+    && curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - \
+    && apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+    && apt-get update && apt-get install terraform

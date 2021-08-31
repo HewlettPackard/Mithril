@@ -1,12 +1,15 @@
-BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:istio-aws-deps"
+AWS_PROFILE = "mithril-jenkins"
+BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:pipeline"
+DEVELOPMENT_IMAGE = "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest"
 CHANNEL_NAME = "#notify-project-mithril"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
 LATEST_BRANCH = "1.10"
-S3_BUCKET = "s3://mithril-customer-assets"
 S3_PATCHSET_BUCKET = "s3://mithril-poc-patchset"
+S3_CUSTOMER_BUCKET = "s3://mithril-customer-assets"
 MAIN_BRANCH = "master"
+PROXY="http://proxy.houston.hpecorp.net:8080"
 
 def SLACK_ERROR_MESSAGE
 def SLACK_ERROR_COLOR
@@ -19,18 +22,53 @@ pipeline {
     label 'docker-v20.10'
   }
 
+  environment {
+    BUILD_TAG = makeTag()
+    GOOS = "linux"
+    AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
+    AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
+    EC2_SSH_KEY = "${vaultGetSecrets().EC2SSHKey}"
+  }
+  
   // Nightly builds schedule only for master
   triggers { cron( BRANCH_NAME == MAIN_BRANCH ?  "00 00 * * *" : "") }
 
-
   stages {
-
     stage("notify-slack") {
       steps {
         script {
           slackSend (
             channel: CHANNEL_NAME,
             message: "Hello. The pipeline ${currentBuild.fullDisplayName} started. (<${env.BUILD_URL}|See Job>)")
+        }
+      }
+    }
+
+    stage("build-and-push-dev-images"){
+      when {
+        branch MAIN_BRANCH
+      }
+
+      steps {
+        script {
+          def secrets = vaultGetSecrets()
+          
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+            def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+
+            sh """
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
+              
+              docker build -t mithril \
+                --build-arg http_proxy=${PROXY} \
+                --build-arg https_proxy=${PROXY} \
+                -f .docker/Dockerfile .. 
+              docker tag mithril:latest ${DEVELOPMENT_IMAGE}
+              docker push ${DEVELOPMENT_IMAGE}
+            """
+          }
         }
       }
     }
@@ -51,7 +89,8 @@ pipeline {
       }
     }
 
-    stage('test') {
+    stage("unit-test") {
+
       steps {
         sh """
           set -x
@@ -65,14 +104,9 @@ pipeline {
       }
     }
 
-    stage("build-and-push-images") {
+    stage("build-and-push-poc-images") {
       environment {
-        TAG = makeTag() 
         BUILD_WITH_CONTAINER = 0
-        GOOS = "linux"
-
-        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
       }
       steps {
         // Fetch secrets from Vault and use the mask token plugin
@@ -91,9 +125,7 @@ pipeline {
               // Build and push to HPE registry
               sh """
                 export HUB=${HPE_REGISTRY}
-
                 echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
-
                 cd istio && make push
               """
 
@@ -103,10 +135,8 @@ pipeline {
 
               sh """
                 export HUB=${ECR_HUB}
-
                 aws ecr get-login-password --region ${ECR_REGION} | \
                   docker login --username AWS --password-stdin ${ECR_REGISTRY}
-
                 cd istio && make push
               """
             }
@@ -121,11 +151,6 @@ pipeline {
       when {
         branch MAIN_BRANCH
       }
-      environment {
-        TAG = "latest"
-        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-      }
       steps {
         script {
           def secrets = vaultGetSecrets()
@@ -136,16 +161,73 @@ pipeline {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh """#!/bin/bash
               set -x
-
               aws ecr get-login-password --region ${ECR_REGION} | \
                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
               
               docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
                 pieces=(\$line)
-                docker tag "\${pieces[0]}" "\${pieces[1]}":${env.TAG}
-                docker push "\${pieces[1]}":${env.TAG}
+                docker tag "\${pieces[0]}" "\${pieces[1]}":${env.BUILD_TAG}
+                docker push "\${pieces[1]}":${env.BUILD_TAG}
               done
             """
+          }
+        }
+      }
+    }
+    
+    stage("run-integration-tests") {
+      when {
+        branch MAIN_BRANCH
+      }
+      
+      steps {
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh '''#!/bin/bash
+
+              cd terraform
+              terraform init
+              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
+
+              BUCKET_EXISTS=false
+              num_tries=0
+
+              while [ $num_tries -lt 500 ]; 
+              do 
+                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}.txt" --no-cli-pager
+                if [ $? -eq 0 ];
+                  then 
+                    BUCKET_EXISTS=true
+                    break
+
+                  else
+                      ((num_tries++))
+                      sleep 1; 
+                fi
+              done
+
+              terraform destroy -auto-approve
+
+              if $BUCKET_EXISTS; 
+                then 
+                  echo "Artifact object exists" 
+                  aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}.txt" .
+
+                else 
+                  echo "Artifact object does not exist" 
+                  exit 1
+              fi
+
+              if grep -q "no healthy upstream" "${BUILD_TAG}.txt";
+                then
+                  cat "${BUILD_TAG}.txt"
+                  echo "Test failed" 
+                  exit 1
+
+                else 
+                  echo "Test successful" 
+              fi
+          '''
           }
         }
       }
@@ -155,26 +237,20 @@ pipeline {
       when {
         branch MAIN_BRANCH
       }
-
-      environment {
-        AWS_ACCESS_KEY_ID = "${vaultGetSecrets().awsAccessKeyID}"
-        AWS_SECRET_ACCESS_KEY = "${vaultGetSecrets().awsSecretAccessKeyID}"
-      }
       
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh """
               cd ./POC
-
+              
               tar -zcvf mithril.tar.gz bookinfo spire istio \
                 deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
                 doc/poc-instructions.md demo/demo-script.sh demo/README.md
+              aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
 
-              aws s3 cp mithril.tar.gz ${S3_BUCKET}
 
               tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch
-
               aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
             """
           }
@@ -182,7 +258,7 @@ pipeline {
       }
     }
   }
-  
+
   post {
     success {
       slackSend (
@@ -191,6 +267,7 @@ pipeline {
         message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. (<${env.BUILD_URL}|See Job>)"
       )
     }
+
     failure {
       script {
         SLACK_ERROR_MESSAGE = "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."

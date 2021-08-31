@@ -19,9 +19,9 @@ RUN gem install --no-document fpm \
 
 # AWS CLI installation
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
-    && unzip awscliv2.zip \
+    && unzip -o awscliv2.zip \
     && rm -rf awscliv2.zip \
-    && ./aws/install
+    && ./aws/install --update
 
 # Go installation
 RUN wget https://golang.org/dl/go1.16.1.linux-amd64.tar.gz \
@@ -54,6 +54,12 @@ RUN curl -L https://istio.io/downloadIstio | ISTIO_VERSION=$ISTIO_CTL_VERSION sh
     && cp istio-$ISTIO_CTL_VERSION/bin/istioctl /usr/local/bin \
     && mv istio-$ISTIO_CTL_VERSION istioctl-$ISTIO_CTL_VERSION
 
+# Terraform
+RUN apt-get install -y gnupg software-properties-common curl \
+    && curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - \
+    && apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+    && apt-get update && apt-get install terraform
+
 # Cloning istio source code
 RUN git clone --single-branch --branch $ISTIO_VERSION https://github.com/istio/istio.git ./istio-source
 
@@ -62,6 +68,6 @@ COPY . .
 WORKDIR /mithril/istio-source
 
 # Applying POC patch
-RUN git apply /mithril/POC/patches/poc.$PATCH_VERSION.patch
+RUN git apply /mithril/POC/patches/poc.$PATCH_VERSION.patch /mithril/POC/patches/fetch-istiod-certs.$PATCH_VERSION.patch
 
 WORKDIR /mithril

@@ -64,7 +64,7 @@ pipeline {
               docker build -t mithril \
                 --build-arg http_proxy=${PROXY} \
                 --build-arg https_proxy=${PROXY} \
-                -f ./docker/Dockerfile .. 
+                -f ./docker/Dockerfile .
               docker tag mithril:latest ${DEVELOPMENT_IMAGE}
               docker push ${DEVELOPMENT_IMAGE}
             """

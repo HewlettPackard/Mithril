@@ -45,6 +45,7 @@ pipeline {
     }
 
     stage("build-and-push-dev-images"){
+      //remove
       when {
         branch MAIN_BRANCH
       }
@@ -74,6 +75,11 @@ pipeline {
     }
 
     stage("make-poc-codebase") {
+      //remove
+      when {
+        branch MAIN_BRANCH
+      }
+
       steps {
         // Istio clone from the latest branch
         sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
@@ -90,6 +96,10 @@ pipeline {
     }
 
     stage("unit-test") {
+      //remove
+      when {
+        branch MAIN_BRANCH
+      }
 
       steps {
         sh """
@@ -105,6 +115,11 @@ pipeline {
     }
 
     stage("build-and-push-poc-images") {
+      //remove
+      when {
+        branch MAIN_BRANCH
+      }
+
       environment {
         BUILD_WITH_CONTAINER = 0
       }
@@ -176,18 +191,18 @@ pipeline {
     }
     
     stage("run-integration-tests") {
-      when {
-        branch MAIN_BRANCH
-      }
+      // when {
+      //   branch MAIN_BRANCH
+      // }
       
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
 
-              cd terraform
+              cd terraform/workload=
               terraform init
-              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
+              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var
 
               BUCKET_EXISTS=false
               num_tries=0
@@ -234,6 +249,7 @@ pipeline {
     }
 
     stage("distribute-poc") {
+      //remove
       when {
         branch MAIN_BRANCH
       }

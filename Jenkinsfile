@@ -202,7 +202,7 @@ pipeline {
 
               cd terraform/workload-to-ingress-upstream-disk
               terraform init
-              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var
+              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
 
               BUCKET_EXISTS=false
               num_tries=0

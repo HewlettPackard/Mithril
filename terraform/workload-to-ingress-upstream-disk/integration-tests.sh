@@ -53,7 +53,7 @@ docker run -i --rm \
 --network host mithril-testing:${tag} \
 bash -c 'kubectl rollout status deployment productpage-v1'
 
-HOST_IP=$(hostname -i | awk '{print $1}')
+HOST_IP=$(hostname -I | awk '{print $1}')
 
 # Request to productpage workload
 curl localhost:8000/productpage > ${build_tag}.txt
@@ -81,8 +81,8 @@ bash -c 'kubectl rollout status deployment sleep'
 
 CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}")
 
-echo $HOST_IP
-#kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://${HOST_IP}:8000/productpage"
+echo $${HOST_IP}
+kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://$${HOST_IP}:8000/productpage"
 
 # Copying response to S3 bucket
 aws s3 cp /${build_tag}.txt s3://mithril-artifacts/ --region us-east-1

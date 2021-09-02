@@ -53,7 +53,7 @@ docker run -i --rm \
 --network host mithril-testing:${tag} \
 bash -c 'kubectl rollout status deployment productpage-v1'
 
-HOST_IP=$(hostname -I | awk '{print $1}')
+HOST_IP=$(hostname -i | awk '{print $1}')
 
 # Request to productpage workload
 curl localhost:8000/productpage > ${build_tag}.txt

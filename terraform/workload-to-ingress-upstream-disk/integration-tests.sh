@@ -22,7 +22,7 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${tag} \
-/mithril/POC/create-kind-cluster.sh
+/mithril/usecases/server-cluster/create-kind-cluster.sh
 
 # Creating Docker secrets for ECR images
 docker run -i --rm \
@@ -36,7 +36,7 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${tag} \
-bash -c "cd /mithril/POC && TAG=${tag} HUB=${hub} ./deploy-all.sh"
+bash -c "cd /mithril/usecases/server-cluster && TAG=${tag} HUB=${hub} ./deploy-all.sh"
 
 # Port Forwarding the POD
 docker run -i -d --rm \
@@ -53,8 +53,35 @@ docker run -i --rm \
 --network host mithril-testing:${tag} \
 bash -c 'kubectl rollout status deployment productpage-v1'
 
+HOST_IP=$(hostname -I | awk '{print $1}')
+
 # Request to productpage workload
 curl localhost:8000/productpage > ${build_tag}.txt
+
+# Creating kind cluster for the client
+docker run -i --rm \
+-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+-v "/.kube/config:/root/.kube/config:rw" \
+--network host mithril-testing:${tag} \
+/mithril/usecases/client-cluster/create-kind-cluster.sh
+
+# Deploying the PoC
+docker run -i --rm \
+-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+-v "/.kube/config:/root/.kube/config:rw" \
+--network host mithril-testing:${tag} \
+bash -c "cd /mithril/usecases/client-cluster && TAG=${tag} HUB=${hub} ./deploy-all.sh"
+
+# Waiting for POD to be ready
+docker run -i --rm \
+-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+-v "/.kube/config:/root/.kube/config:rw" \
+--network host mithril-testing:${tag} \
+bash -c 'kubectl rollout status deployment sleep'
+
+CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}")
+
+kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://${HOST_IP}:8000/productpage"
 
 # Copying response to S3 bucket
 aws s3 cp /${build_tag}.txt s3://mithril-artifacts/ --region us-east-1

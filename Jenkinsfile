@@ -200,7 +200,7 @@ pipeline {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
 
-              cd terraform/workload=
+              cd terraform/workload-to-ingress-upstream-disk
               terraform init
               terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var
 

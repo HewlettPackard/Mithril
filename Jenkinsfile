@@ -45,6 +45,10 @@ pipeline {
     }
 
     stage("build-and-push-dev-images"){
+    //remove
+          when {
+            branch MAIN_BRANCH
+          }
       steps {
         script {
           def secrets = vaultGetSecrets()

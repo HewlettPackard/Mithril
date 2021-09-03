@@ -22,7 +22,7 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${tag} \
-/mithril/usecases/server-cluster/create-kind-cluster.sh
+/mithril/usecases/workload-to-ingress-upstream-disk/server-cluster/create-kind-cluster.sh
 
 # Creating Docker secrets for ECR images
 docker run -i --rm \
@@ -36,7 +36,7 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${tag} \
-bash -c "cd /mithril/usecases/server-cluster && TAG=${tag} HUB=${hub} ./deploy-all.sh"
+bash -c "cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && TAG=${tag} HUB=${hub} ./deploy-all.sh"
 
 # Port Forwarding the POD
 docker run -i -d --rm \
@@ -63,14 +63,14 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${tag} \
-/mithril/usecases/client-cluster/create-kind-cluster.sh
+/mithril/usecases/workload-to-ingress-upstream-disk/client-cluster/create-kind-cluster.sh
 
 # Deploying the PoC
 docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${tag} \
-bash -c "cd /mithril/usecases/client-cluster && TAG=${tag} HUB=${hub} ./deploy-all.sh"
+bash -c "cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && TAG=${tag} HUB=${hub} ./deploy-all.sh"
 
 # Waiting for POD to be ready
 docker run -i --rm \

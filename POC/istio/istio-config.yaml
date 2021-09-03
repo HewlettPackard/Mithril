@@ -28,8 +28,8 @@ spec:
             containers:
             - name: istio-proxy
               env:
-              - name: PILOT_CERT_PROVIDER
-                value: "SPIRE"
+              - name: CA_PROVIDER
+                value: "spiffe"
               - name: SPIFFE_ENDPOINT_SOCKET
                 value: "unix:///run/spire/sockets/agent.sock"
               volumeMounts:
@@ -58,10 +58,11 @@ spec:
           # Check that istio-agent's namespace and service account match the ones in the JWT token presented in the connection
           - name: PILOT_ENABLE_XDS_IDENTITY_CHECK
             value: "true"
+          # Configure the SPIFFE Workload API as the cert provider for istiod
+          - name: PILOT_CERT_PROVIDER
+            value: "spiffe"
           - name: SPIFFE_ENDPOINT_SOCKET
             value: "unix:///run/spire/sockets/agent.sock"
-          - name: PILOT_CERT_PROVIDER
-            value: "spire"
         overlays:
           - apiVersion: apps/v1
             kind: Deployment
@@ -120,7 +121,7 @@ spec:
                     readOnly: true
 
           env:
-            - name: PILOT_CERT_PROVIDER
-              value: "spire"
+            - name: CA_PROVIDER
+              value: "spiffe"
             - name: SPIFFE_ENDPOINT_SOCKET
               value: "unix:///run/spire/sockets/agent.sock"

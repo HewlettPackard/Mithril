@@ -15,7 +15,7 @@ diff --git a/pilot/pkg/bootstrap/server.go b/pilot/pkg/bootstrap/server.go
  	// RWConfigStore is the configstore which allows updates, particularly for status.
  	RWConfigStore model.ConfigStoreCache
 +
-+	// source of X.509 certs and bundle, when using SPIRE as cert provider
++	// source of X.509 certs and bundle, when using SPIFFE Workload API as cert provider
 +	x509Source *workloadapi.X509Source
  }
 
@@ -25,7 +25,7 @@ diff --git a/pilot/pkg/bootstrap/server.go b/pilot/pkg/bootstrap/server.go
  		fn(s)
  	}
 +
-+	if strings.EqualFold(features.PilotCertProvider.Get(), SpireCertProvider) {
++	if strings.EqualFold(features.PilotCertProvider.Get(), SpiffeCertProvider) {
 +		ctx := context.Background()
 +		x509Source, err := workloadapi.NewX509Source(ctx)
 +		if err != nil {
@@ -45,7 +45,7 @@ diff --git a/pilot/pkg/bootstrap/server.go b/pilot/pkg/bootstrap/server.go
 +	pilotCertProvider := features.PilotCertProvider.Get()
 +	log.Infof("pilotCertProvider: %s", pilotCertProvider)
 +
-+	if strings.EqualFold(pilotCertProvider, SpireCertProvider) {
++	if strings.EqualFold(pilotCertProvider, SpiffeCertProvider) {
 +
 +		chain, key, err := s.getCertAndKeyBytes()
 +		if err != nil {
@@ -78,13 +78,13 @@ diff --git a/pilot/pkg/bootstrap/server.go b/pilot/pkg/bootstrap/server.go
 +			<-updatedChan
 +			chain, key, err := s.getCertAndKeyBytes()
 +			if err != nil {
-+				log.Errorf("error watching SPIRE updates: %v", err)
++				log.Errorf("error watching SPIFFE updates: %v", err)
 +				continue
 +			}
 +
 +			bundleBytes, err := s.getBundleBytes()
 +			if err != nil {
-+				log.Errorf("error watching SPIRE updates: %v", err)
++				log.Errorf("error watching SPIFFE updates: %v", err)
 +				continue
 +			}
 +
@@ -133,7 +133,7 @@ diff --git a/pilot/pkg/bootstrap/server.go b/pilot/pkg/bootstrap/server.go
  // createPeerCertVerifier creates a SPIFFE certificate verifier with the current istiod configuration.
  func (s *Server) createPeerCertVerifier(tlsOptions TLSOptions) (*spiffe.PeerCertVerifier, error) {
 -	if tlsOptions.CaCertFile == "" && s.CA == nil && features.SpiffeBundleEndpoints == "" {
-+	if tlsOptions.CaCertFile == "" && s.CA == nil && features.SpiffeBundleEndpoints == "" && strings.ToLower(features.PilotCertProvider.Get()) != SpireCertProvider {
++	if tlsOptions.CaCertFile == "" && s.CA == nil && features.SpiffeBundleEndpoints == "" && strings.ToLower(features.PilotCertProvider.Get()) != SpiffeCertProvider {
  		// Running locally without configured certs - no TLS mode
  		return nil, nil
  	}
@@ -141,7 +141,7 @@ diff --git a/pilot/pkg/bootstrap/server.go b/pilot/pkg/bootstrap/server.go
  		peerCertVerifier.AddMappings(certMap)
  	}
 
-+	if strings.EqualFold(features.PilotCertProvider.Get(), SpireCertProvider) {
++	if strings.EqualFold(features.PilotCertProvider.Get(), SpiffeCertProvider) {
 +		bundleBytes, err := s.getBundleBytes()
 +		if err != nil {
 +			return nil, err
@@ -163,7 +163,7 @@ diff --git a/pilot/pkg/bootstrap/certcontroller.go b/pilot/pkg/bootstrap/certcon
  var (
  	KubernetesCAProvider = "kubernetes"
  	IstiodCAProvider     = "istiod"
-+	SpireCertProvider    = "spire"
++	SpiffeCertProvider    = "spiffe"
  )
  
  // CertController can create certificates signed by K8S server.

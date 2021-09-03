@@ -75,9 +75,9 @@ index 6dc65603f3..ab2f9510ce 100644
  // newSecretManager creates the SecretManager for workload secrets
 -func (a *Agent) newSecretManager() (*cache.SecretManagerClient, error) {
 +func (a *Agent) newSecretManager() (security.SecretProvider, error) {
-+	if strings.ToLower(a.secOpts.PilotCertProvider) == "spire" {
-+		log.Info("Using SPIRE identity plane")
-+		return cache.NewSpireSecretManager(a.secOpts)
++	if strings.ToLower(a.secOpts.CAProviderName) == "spiffe" {
++		log.Info("Using SPIFFE identity plane")
++		return cache.NewSpiffeSecretManager(a.secOpts)
 +	}
 +
  	// If proxy is using file mounted certs, we do not have to connect to CA.
@@ -101,11 +101,11 @@ index 84dd906b1c..dee9d067c4 100644
  // TokenExchanger provides common interfaces so that authentication providers could choose to implement their specific logic.
  type TokenExchanger interface {
  	// ExchangeToken provides a common interface to exchange an existing token for a new one.
-diff --git a/security/pkg/nodeagent/cache/spiresecret.go b/security/pkg/nodeagent/cache/spiresecret.go
+diff --git a/security/pkg/nodeagent/cache/spiffesecret.go b/security/pkg/nodeagent/cache/spiffesecret.go
 new file mode 100644
 index 0000000000..57c37c367f
 --- /dev/null
-+++ b/security/pkg/nodeagent/cache/spiresecret.go
++++ b/security/pkg/nodeagent/cache/spiffesecret.go
 @@ -0,0 +1,187 @@
 +package cache
 +
@@ -125,7 +125,7 @@ index 0000000000..57c37c367f
 +	"istio.io/pkg/log"
 +)
 +
-+type SpireSecretManager struct {
++type SpiffeSecretManager struct {
 +	sync.RWMutex
 +	trustDomain       spiffeid.TrustDomain
 +	configTrustBundle []byte
@@ -134,13 +134,13 @@ index 0000000000..57c37c367f
 +	cancelWatcher     context.CancelFunc
 +}
 +
-+func NewSpireSecretManager(opt *security.Options) (*SpireSecretManager, error) {
++func NewSpiffeSecretManager(opt *security.Options) (*SpiffeSecretManager, error) {
 +	td, err := spiffeid.TrustDomainFromString(opt.TrustDomain)
 +	if err != nil {
 +		return nil, fmt.Errorf("error trying to parse trust domain %q reason: %v", opt.TrustDomain, err)
 +	}
 +
-+	sm := &SpireSecretManager{
++	sm := &SpiffeSecretManager{
 +		trustDomain: td,
 +	}
 +
@@ -151,7 +151,7 @@ index 0000000000..57c37c367f
 +	return sm, nil
 +}
 +
-+func (s *SpireSecretManager) GenerateSecret(resourceName string) (*security.SecretItem, error) {
++func (s *SpiffeSecretManager) GenerateSecret(resourceName string) (*security.SecretItem, error) {
 +	s.RLock()
 +	defer s.RUnlock()
 +
@@ -181,8 +181,7 @@ index 0000000000..57c37c367f
 +	return ns, nil
 +}
 +
-+func (s *SpireSecretManager) UpdateConfigTrustBundle(trustBundle []byte) error {
-+	//TODO: remove this log after testing it
++func (s *SpiffeSecretManager) UpdateConfigTrustBundle(trustBundle []byte) error {
 +	log.WithLabels("UpdateConfigTrustBundle").Info(string(trustBundle))
 +	s.Lock()
 +	defer s.Unlock()
@@ -195,22 +194,22 @@ index 0000000000..57c37c367f
 +	return nil
 +}
 +
-+func (s *SpireSecretManager) Close() {
++func (s *SpiffeSecretManager) Close() {
 +	if s.cancelWatcher != nil {
 +		log.Info("Closing secret manager")
 +		s.cancelWatcher()
 +	}
 +}
 +
-+func (s *SpireSecretManager) SetUpdateCallback(f func(resourceName string)) {
++func (s *SpiffeSecretManager) SetUpdateCallback(f func(resourceName string)) {
 +	s.Lock()
 +	defer s.Unlock()
 +	s.notifyCallback = f
 +}
 +
 +// UpdateX509SVIDs is run every time an SVID is updated or bundle
-+func (s *SpireSecretManager) OnX509ContextUpdate(c *workloadapi.X509Context) {
-+	log.Info("Got new identities from SPIRE") //TODO: change this log
++func (s *SpiffeSecretManager) OnX509ContextUpdate(c *workloadapi.X509Context) {
++	log.Info("Got new identities from the SPIFFE Workload API")
 +	if len(c.SVIDs) < 1 {
 +		log.Error("Identities were not found on workload API response")
 +		return
@@ -264,24 +263,24 @@ index 0000000000..57c37c367f
 +}
 +
 +// OnX509ContextWatchError is run when the client runs into an error
-+func (s *SpireSecretManager) OnX509ContextWatchError(err error) {
++func (s *SpiffeSecretManager) OnX509ContextWatchError(err error) {
 +	if status.Code(err) != codes.Canceled {
 +		log.Infof("error while calling workload API: %v", err)
 +	}
 +}
 +
-+func (s *SpireSecretManager) callUpdateCallback(resourceName string) {
++func (s *SpiffeSecretManager) callUpdateCallback(resourceName string) {
 +	log.WithLabels("resource", resourceName).Info("Identity updated") //TODO: improve message
 +	if s.notifyCallback != nil {
 +		s.notifyCallback(resourceName)
 +	}
 +}
 +
-+func (s *SpireSecretManager) mergeConfigTrustBundle(rootCert []byte) []byte {
++func (s *SpiffeSecretManager) mergeConfigTrustBundle(rootCert []byte) []byte {
 +	return pkiutil.AppendCertByte(s.configTrustBundle, rootCert)
 +}
 +
-+func (s *SpireSecretManager) watcherTask(ctx context.Context) {
++func (s *SpiffeSecretManager) watcherTask(ctx context.Context) {
 +	// Creates a new Workload API client, connecting to the socket path provided by SPIFFE_ENDPOINT_SOCKET
 +	client, err := workloadapi.New(ctx)
 +	if err != nil {
@@ -291,6 +290,6 @@ index 0000000000..57c37c367f
 +
 +	err = client.WatchX509Context(ctx, s)
 +	if err != nil && status.Code(err) != codes.Canceled {
-+		log.Fatalf("Error watching SPIRE workload API: %v", err)
++		log.Fatalf("Error watching SPIFFE workload API: %v", err)
 +	}
 +}

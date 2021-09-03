@@ -22,7 +22,8 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${tag} \
-find /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster -type f -iname "*.sh" -exec chmod +x {} \; && \
+chmod +x /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster/create-kind-cluster.sh && \
+chmod +x /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster/deploy-all.sh && \
 /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster/create-kind-cluster.sh
 
 # Creating Docker secrets for ECR images
@@ -64,7 +65,8 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${tag} \
-find /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster -type f -iname "*.sh" -exec chmod +x {} \; && \
+chmod +x /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster/create-kind-cluster.sh && \
+chmod +x /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster/deploy-all.sh && \
 /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster/create-kind-cluster.sh
 
 # Deploying the PoC

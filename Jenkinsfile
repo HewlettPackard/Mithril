@@ -250,7 +250,7 @@ pipeline {
               aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
 
 
-              tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch
+              tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch patches/poc-patchset-master.patch
               aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
             """
           }

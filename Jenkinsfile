@@ -1,7 +1,7 @@
 AWS_PROFILE = "mithril-jenkins"
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:pipeline"
 DEVELOPMENT_IMAGE = "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril"
-CHANNEL_NAME = "#notify-project-mithril"
+CHANNEL_NAME = "@U021L6LHSHM"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
@@ -196,6 +196,29 @@ pipeline {
             sh '''#!/bin/bash
 
               cd terraform/workload-to-ingress-upstream-disk
+              terraform init
+              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
+
+              BUCKET_EXISTS=false
+              num_tries=0
+
+              while [ $num_tries -lt 500 ]; 
+              do 
+                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}.txt" --no-cli-pager
+                if [ $? -eq 0 ];
+                  then 
+                    BUCKET_EXISTS=true
+                    break
+
+                  else
+                      ((num_tries++))
+                      sleep 1; 
+                fi
+              done
+
+              terraform destroy -auto-approve
+
+              cd terraform/simple-mithril
               terraform init
               terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
 

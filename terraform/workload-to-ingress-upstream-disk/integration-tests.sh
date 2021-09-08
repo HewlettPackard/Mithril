@@ -86,7 +86,7 @@ echo $${HOST_IP}
 kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://$${HOST_IP}:8000/productpage"
 
 # Copying response to S3 bucket
-aws s3 cp /${build_tag}-workload.txt s3://mithril-artifacts/ --region us-east-1
+aws s3 cp /${build_tag}.txt s3://mithril-artifacts/ --region us-east-1
 
 # Test simple_bookinfo_test
 docker run -i --rm \
@@ -96,7 +96,7 @@ docker run -i --rm \
 bash -c 'cd e2e && go test workload_to_ingress_upstream_disk_test.go'
 
 # Generate log files
-cp /var/log/user-data.log ${build_tag}-workload-log.txt
+cp /var/log/user-data.log ${build_tag}.txt
 
 # Copying log to S3 bucket
-aws s3 cp /${build_tag}-workload-log.txt s3://mithril-artifacts/ --region us-east-1
+aws s3 cp /${build_tag}.txt s3://mithril-artifacts/ --region us-east-1

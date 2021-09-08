@@ -22,7 +22,7 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c "/mithril/usecases/workload-to-ingress-upstream-disk/server-cluster/create-kind-cluster.sh"
+bash -c "/mithril/usecases/workload-to-ingress-upstream-disk/server-cluster/create-namespaces.sh && /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster/create-kind-cluster.sh"
 
 # Creating Docker secrets for ECR images
 docker run -i --rm \
@@ -97,6 +97,7 @@ bash -c 'cd e2e && go test workload_to_ingress_upstream_disk_test.go'
 
 # Generate log files
 cp /var/log/user-data.log ${build_tag}.txt
+echo '===== $${PWD} =====' >> ${build_tag}.txt
 
 # Copying log to S3 bucket
 aws s3 cp /${build_tag}.txt s3://mithril-artifacts/ --region us-east-1

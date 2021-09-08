@@ -1,6 +1,6 @@
 AWS_PROFILE = "mithril-jenkins"
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:pipeline"
-DEVELOPMENT_IMAGE = "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest"
+DEVELOPMENT_IMAGE = "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril"
 CHANNEL_NAME = "#notify-project-mithril"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
@@ -45,10 +45,6 @@ pipeline {
     }
 
     stage("build-and-push-dev-images"){
-    //remove
-          when {
-            branch MAIN_BRANCH
-          }
       steps {
         script {
           def secrets = vaultGetSecrets()
@@ -65,8 +61,8 @@ pipeline {
                 --build-arg http_proxy=${PROXY} \
                 --build-arg https_proxy=${PROXY} \
                 -f ./docker/Dockerfile .
-              docker tag mithril:latest ${DEVELOPMENT_IMAGE}
-              docker push ${DEVELOPMENT_IMAGE}
+              docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
+              docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
             """
           }
         }

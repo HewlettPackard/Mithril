@@ -9,7 +9,7 @@ aws configure set aws_secret_access_key ${secret_access_key}
 
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${hub}
 
-echo "===== " ${PWD} " ====="
+echo "===== " $${PWD} " ====="
 
 ls && cd .. && ls
 

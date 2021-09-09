@@ -9,6 +9,8 @@ aws configure set aws_secret_access_key ${secret_access_key}
 
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${hub}
 
+echo "===== " ${PWD} " ====="
+
 docker pull ${hub}:${tag}
 
 # Tagging for easier use within the docker command below

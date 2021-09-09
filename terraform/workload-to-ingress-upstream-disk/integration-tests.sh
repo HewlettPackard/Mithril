@@ -11,8 +11,6 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 
 echo "===== " $${PWD} " ====="
 
-ls && cd .. && ls
-
 docker pull ${hub}:${build_tag}
 
 # Tagging for easier use within the docker command below
@@ -20,8 +18,6 @@ docker tag ${hub}:${build_tag} mithril-testing:${build_tag}
 
 # Creating kubernetes config to use kubectl inside the container
 mkdir -p $HOME/.kube && touch $HOME/.kube/config
-
-ls && cd .. && ls
 
 # Creating kind cluster
 docker run -i --rm \

@@ -57,12 +57,12 @@ pipeline {
               aws ecr get-login-password --region ${ECR_REGION} | \
                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
               
-              docker build -t mithril \
+              docker build -t mithril-deps:latest \
                 --build-arg http_proxy=${PROXY} \
                 --build-arg https_proxy=${PROXY} \
                 -f ./docker/Dockerfile .
-              docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
-              docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
+              docker tag mithril-deps:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest
+              docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest
             """
           }
         }
@@ -194,10 +194,8 @@ pipeline {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
-
-              cd terraform/workload-to-ingress-upstream-disk
-              terraform init
-              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
+              cd terraform
+              for FOLDER in *; do cd ${FOLDER} && terraform init && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} && cd .. ;
 
               BUCKET_EXISTS=false
               num_tries=0
@@ -218,28 +216,7 @@ pipeline {
 
               terraform destroy -auto-approve
 
-              cd terraform/simple-mithril
-              terraform init
-              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
-
-              BUCKET_EXISTS=false
-              num_tries=0
-
-              while [ $num_tries -lt 500 ]; 
-              do 
-                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}.txt" --no-cli-pager
-                if [ $? -eq 0 ];
-                  then 
-                    BUCKET_EXISTS=true
-                    break
-
-                  else
-                      ((num_tries++))
-                      sleep 1; 
-                fi
               done
-
-              terraform destroy -auto-approve
 
               if $BUCKET_EXISTS; 
                 then 

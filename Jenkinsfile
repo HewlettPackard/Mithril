@@ -195,7 +195,7 @@ pipeline {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
               cd terraform
-              for FOLDER in *; do cd ${FOLDER} && terraform init && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} && cd .. ;
+              for FOLDER in *; do cd ${FOLDER} && terraform init && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} ;
 
               BUCKET_EXISTS=false
               num_tries=0
@@ -215,6 +215,7 @@ pipeline {
               done
 
               terraform destroy -auto-approve
+              cd ..
 
               done
 

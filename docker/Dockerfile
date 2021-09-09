@@ -61,11 +61,11 @@ WORKDIR /mithril
 #    && apt-get update && apt-get install terraform
 
 # Cloning istio source code
-RUN git clone --single-branch --branch $ISTIO_VERSION https://github.com/istio/istio.git ./istio-source
+#RUN git clone --single-branch --branch $ISTIO_VERSION https://github.com/istio/istio.git ./istio-source
 
 COPY . .
 
-WORKDIR /mithril/istio-source
+#WORKDIR /mithril/istio-source
 
 # Applying POC patch
 # RUN git apply /mithril/POC/patches/poc.$PATCH_VERSION.patch /mithril/POC/patches/fetch-istiod-certs.$PATCH_VERSION.patch

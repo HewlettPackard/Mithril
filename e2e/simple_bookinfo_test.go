@@ -2,7 +2,7 @@ package e2e
 
 import (
 	"bytes"
-	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"testing"
@@ -18,7 +18,6 @@ func TestSimpleBookinfo(t *testing.T) {
 }
 
 func Version(t *testing.T) {
-
 	cmd := exec.Command("istioctl", "version")
 
 	buf := new(bytes.Buffer)
@@ -28,21 +27,13 @@ func Version(t *testing.T) {
 	cmd.Run()
 
 	actual := buf.String()
-	assert.Contains(t, actual, "client")
-	fmt.Println(actual)
+	assert.Contains(t, actual, "1.9.1")
 }
 
 func requestProductpageWorkload(t *testing.T) {
-
-	cmd := exec.Command("curl", "localhost:8000/productpage")
-
-	buf := new(bytes.Buffer)
-	cmd.Stdout = buf
-	cmd.Stderr = os.Stderr
-
-	cmd.Run()
-
-	actual := buf.String()
-	assert.Contains(t, actual, "client")
-	fmt.Println(actual)
+	resp, err := http.Get("http:localhost:8080/productpage")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
 }

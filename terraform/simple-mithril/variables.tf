@@ -1,10 +1,10 @@
 variable "TAG" {
-  default     = "latest"
+  default     = "ISTIOSPIRE-85_0a3cdce"
   description = "TAG used to download the images from ECR repository"
 }
 
 variable "BUILD_TAG" {
-  default     = "latest"
+  default     = "ISTIOSPIRE-85_0a3cdce"
   description = "Build TAG from Jenkins Pipeline"
 }
 

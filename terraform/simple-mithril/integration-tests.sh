@@ -9,7 +9,7 @@ aws configure set aws_secret_access_key ${secret_access_key}
 
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${hub}
 
-echo "===== " ${PWD} " ====="
+echo "===== " $${PWD} " ====="
 
 docker pull ${hub}:${tag}
 
@@ -70,6 +70,6 @@ bash -c 'cd e2e && go test simple_bookinfo_test.go'
 
 # Generate log files
 cp /var/log/user-data.log ${build_tag}_log.txt
-echo "===== " ${PWD} " =====" >> ${build_tag}.txt
+echo "===== " $${PWD} " =====" >> ${build_tag}.txt
 # Copying log to S3 bucket
 aws s3 cp /${build_tag}_log.txt s3://mithril-artifacts/ --region us-east-1

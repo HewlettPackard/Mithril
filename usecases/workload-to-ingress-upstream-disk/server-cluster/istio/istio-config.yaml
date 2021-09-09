@@ -28,8 +28,8 @@ spec:
             containers:
             - name: istio-proxy
               env:
-              - name: PILOT_CERT_PROVIDER
-                value: "SPIRE"
+              - name: CA_PROVIDER
+                value: "spiffe"
               - name: SPIFFE_ENDPOINT_SOCKET
                 value: "unix:///run/spire/sockets/agent.sock"
               volumeMounts:
@@ -61,7 +61,7 @@ spec:
           - name: SPIFFE_ENDPOINT_SOCKET
             value: "unix:///run/spire/sockets/agent.sock"
           - name: PILOT_CERT_PROVIDER
-            value: "spire"
+            value: "spiffe"
         overlays:
           - apiVersion: apps/v1
             kind: Deployment
@@ -120,7 +120,7 @@ spec:
                     readOnly: true
 
           env:
-            - name: PILOT_CERT_PROVIDER
-              value: "spire"
+            - name: CA_PROVIDER
+              value: "spiffe"
             - name: SPIFFE_ENDPOINT_SOCKET
               value: "unix:///run/spire/sockets/agent.sock"

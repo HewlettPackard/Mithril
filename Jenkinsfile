@@ -81,10 +81,7 @@ pipeline {
         // Apply Mithril patches
         sh """
           cd istio
-          git apply \
-            ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch \
-            ${WORKSPACE}/POC/patches/fetch-istiod-certs.${LATEST_BRANCH}.patch \
-            ${WORKSPACE}/POC/patches/unit-tests.${LATEST_BRANCH}.patch
+          git apply ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch
         """
       }
     }
@@ -249,8 +246,8 @@ pipeline {
                 doc/poc-instructions.md demo/demo-script.sh demo/README.md
               aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
 
+              tar -zcvf mithril-poc-patchset.tar.gz patches/poc.1.10.patch
 
-              tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch patches/poc-patchset-master.patch
               aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
             """
           }

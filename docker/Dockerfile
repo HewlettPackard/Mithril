@@ -68,6 +68,6 @@ COPY . .
 WORKDIR /mithril/istio-source
 
 # Applying POC patch
-RUN git apply /mithril/POC/patches/poc.$PATCH_VERSION.patch /mithril/POC/patches/fetch-istiod-certs.$PATCH_VERSION.patch
+RUN git apply /mithril/POC/patches/poc.$PATCH_VERSION.patch
 
 WORKDIR /mithril

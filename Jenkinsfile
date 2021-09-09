@@ -163,8 +163,8 @@ pipeline {
               
               docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
                 pieces=(\$line)
-                docker tag "\${pieces[0]}" "\${pieces[1]}":${env.BUILD_TAG}
-                docker push "\${pieces[1]}":${env.BUILD_TAG}
+                docker tag "\${pieces[0]}" "\${pieces[1]}":latest
+                docker push "\${pieces[1]}":latest
               done
             """
           }

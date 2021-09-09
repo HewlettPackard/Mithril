@@ -13,7 +13,6 @@ import (
 func TestSimpleBookinfo(t *testing.T) {
 	t.Run("version", version)
 	t.Run("create_kind_cluster", createKindCluster)
-	// t.Run("deploy_poc", deployPOC)
 	t.Run("request_productpage_workload", requestProductpageWorkload)
 }
 
@@ -44,7 +43,7 @@ func createKindCluster(t *testing.T) {
 }
 
 func requestProductpageWorkload(t *testing.T) {
-	resp, err := http.Get("http:localhost:8080/productpage")
+	resp, err := http.Get("http://localhost:8000/productpage")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -29,7 +29,7 @@ HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access
 cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && TAG=${build_tag} HUB=${hub} ./deploy-all.sh &&
 INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") &&
 kubectl port-forward "$INGRESS_POD"  8000:8080 -n istio-system &&
-kubectl rollout status deployment productpage-v1'
+kubectl rollout status deployment productpage-v1 && kubectl get pods -A'
 
 ## Creating Docker secrets for ECR images
 #docker run -i --rm \

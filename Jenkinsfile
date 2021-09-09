@@ -57,12 +57,12 @@ pipeline {
               aws ecr get-login-password --region ${ECR_REGION} | \
                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
               
-              docker build -t mithril-deps:latest \
+              docker build -t mithril:${BUILD_TAG} \
                 --build-arg http_proxy=${PROXY} \
                 --build-arg https_proxy=${PROXY} \
                 -f ./docker/Dockerfile .
-              docker tag mithril-deps:latest 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest
-              docker push 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest
+              docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
+              docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
             """
           }
         }
@@ -82,7 +82,10 @@ pipeline {
         // Apply Mithril patches
         sh """
           cd istio
-          git apply ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch
+          git apply \
+            ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch \
+            ${WORKSPACE}/POC/patches/fetch-istiod-certs.${LATEST_BRANCH}.patch \
+            ${WORKSPACE}/POC/patches/unit-tests.${LATEST_BRANCH}.patch
         """
       }
     }
@@ -97,8 +100,8 @@ pipeline {
         sh """
           set -x
           export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
-          
-          cd istio         
+
+          cd istio
           make clean
           make init
           make test
@@ -120,7 +123,7 @@ pipeline {
         script {
           def secrets = vaultGetSecrets()
 
-          def passwordMask = [ 
+          def passwordMask = [
             $class: 'MaskPasswordsBuildWrapper',
             varPasswordPairs: [ [ password: secrets.dockerHubToken ] ]
           ]
@@ -170,7 +173,7 @@ pipeline {
               set -x
               aws ecr get-login-password --region ${ECR_REGION} | \
                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
-              
+
               docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
                 pieces=(\$line)
                 docker tag "\${pieces[0]}" "\${pieces[1]}":${env.BUILD_TAG}
@@ -181,12 +184,12 @@ pipeline {
         }
       }
     }
-    
+
     stage("run-integration-tests") {
       // when {
       //   branch MAIN_BRANCH
       // }
-      
+
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
@@ -197,17 +200,17 @@ pipeline {
               BUCKET_EXISTS=false
               num_tries=0
 
-              while [ $num_tries -lt 500 ]; 
-              do 
+              while [ $num_tries -lt 500 ];
+              do
                 aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}.txt" --no-cli-pager
                 if [ $? -eq 0 ];
-                  then 
+                  then
                     BUCKET_EXISTS=true
                     break
 
                   else
                       ((num_tries++))
-                      sleep 1; 
+                      sleep 1;
                 fi
               done
 
@@ -215,24 +218,24 @@ pipeline {
 
               done
 
-              if $BUCKET_EXISTS; 
-                then 
-                  echo "Artifact object exists" 
+              if $BUCKET_EXISTS;
+                then
+                  echo "Artifact object exists"
                   aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}.txt" .
 
-                else 
-                  echo "Artifact object does not exist" 
+                else
+                  echo "Artifact object does not exist"
                   exit 1
               fi
 
               if grep -q "no healthy upstream" "${BUILD_TAG}.txt";
                 then
                   cat "${BUILD_TAG}.txt"
-                  echo "Test failed" 
+                  echo "Test failed"
                   exit 1
 
-                else 
-                  echo "Test successful" 
+                else
+                  echo "Test successful"
               fi
           '''
           }
@@ -245,20 +248,20 @@ pipeline {
       when {
         branch MAIN_BRANCH
       }
-      
+
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh """
               cd ./POC
-              
+
               tar -zcvf mithril.tar.gz bookinfo spire istio \
                 deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
                 doc/poc-instructions.md demo/demo-script.sh demo/README.md
               aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
 
-              tar -zcvf mithril-poc-patchset.tar.gz patches/poc.1.10.patch
 
+              tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch
               aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
             """
           }

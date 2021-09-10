@@ -1,13 +1,13 @@
 FROM 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG ISTIO_VERSION=release-1.10
-ARG ISTIO_CTL_VERSION=1.10.1
+#ARG ISTIO_VERSION=release-1.10
+#ARG ISTIO_CTL_VERSION=1.10.1
 ARG PATCH_VERSION=1.10
 
-ENV TAG=my-build 
-ENV HUB=localhost:5000 
-ENV BUILD_WITH_CONTAINER=0
+#ENV TAG=my-build
+#ENV HUB=localhost:5000
+#ENV BUILD_WITH_CONTAINER=0
    
 WORKDIR /mithril
 

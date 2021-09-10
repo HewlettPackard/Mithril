@@ -9,8 +9,6 @@ aws configure set aws_secret_access_key ${secret_access_key}
 
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${hub}
 
-echo "===== " $${PWD} " ====="
-
 docker pull ${hub}:${build_tag}
 
 # Tagging for easier use within the docker command below
@@ -56,10 +54,10 @@ docker run -i --rm \
 bash -c 'kubectl rollout status deployment productpage-v1'
 
 # Request to productpage workload
-curl localhost:8000/productpage > ${build_tag}.txt
+curl localhost:8000/productpage > simple_mithril_${build_tag}.txt
 
 # Copying response to S3 bucket
-aws s3 cp /${build_tag}.txt s3://mithril-artifacts/ --region us-east-1
+aws s3 cp /simple_mithril_${build_tag}.txt s3://mithril-artifacts/ --region us-east-1
 
 # Test simple_bookinfo_test
 docker run -i --rm \
@@ -69,7 +67,7 @@ docker run -i --rm \
 bash -c 'cd e2e && go test simple_bookinfo_test.go'
 
 # Generate log files
-cp /var/log/user-data.log ${build_tag}_log.txt
-echo "===== " $${PWD} " =====" >> ${build_tag}.txt
+cat /var/log/user-data.log >> simple_mithril_${build_tag}_log.txt
+
 # Copying log to S3 bucket
 aws s3 cp /${build_tag}_log.txt s3://mithril-artifacts/ --region us-east-1

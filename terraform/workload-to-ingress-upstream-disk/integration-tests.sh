@@ -17,7 +17,16 @@ docker tag ${hub}:${build_tag} mithril-testing:${build_tag}
 # Creating kubernetes config to use kubectl inside the container
 mkdir -p $HOME/.kube && touch $HOME/.kube/config
 
-echo "===== workload-to-ingress-upstream-disk =====" >> workload-to-ingress-upstream-disk_${build_tag}.txt
+aws s3api head-object --bucket mithril-artifacts --key "${build_tag}_log.txt" --no-cli-pager
+if [ $? -eq 0 ];
+  then
+    aws s3 cp "s3://mithril-artifacts/${build_tag}_log.txt" .
+    echo "===== workload-to-ingress-upstream-disk =====" >> ${build_tag}_log.txt
+  else
+    echo "===== workload-to-ingress-upstream-disk =====" >> ${build_tag}_log.txt
+fi
+
+#echo "===== workload-to-ingress-upstream-disk =====" >> workload-to-ingress-upstream-disk_${build_tag}.txt
 
 # Creating kind cluster for the server
 docker run -i --rm \
@@ -133,7 +142,8 @@ bash -c 'kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk -
 #bash -c 'cd e2e && go test workload_to_ingress_upstream_disk_test.go'
 
 # Generate log files
-cat /var/log/user-data.log >> workload-to-ingress-upstream-disk_${build_tag}.txt
+#cat /var/log/user-data.log >> workload-to-ingress-upstream-disk_${build_tag}.txt
+cat /var/log/user-data.log >> ${build_tag}_log.txt
 
 # Copying log to S3 bucket
-aws s3 cp /workload-to-ingress-upstream-disk_${build_tag}.txt s3://mithril-artifacts/ --region us-east-1
+aws s3 cp /workload-to-ingress-upstream-disk_${build_tag}_log.txt s3://mithril-artifacts/ --region us-east-1

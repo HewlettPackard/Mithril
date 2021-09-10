@@ -64,10 +64,14 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c 'cd e2e && go test simple_bookinfo_test.go'
+bash -c "cd /mithril/e2e && go test -v simple_bookinfo_test.go > ${build_tag}_simple_bookinfo_test.txt"
+
+# Copying response to S3 bucket
+aws s3 cp ${build_tag}_simple_bookinfo_test.txt s3://mithril-artifacts/ --region us-east-1
 
 # Generate log files
 cat /var/log/user-data.log >> simple_mithril_${build_tag}_log.txt
+cp /var/log/user-data.log ${build_tag}_log.txt
 
 # Copying log to S3 bucket
 aws s3 cp /${build_tag}_log.txt s3://mithril-artifacts/ --region us-east-1

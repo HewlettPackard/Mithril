@@ -28,45 +28,54 @@ fi
 
 #echo "===== workload-to-ingress-upstream-disk =====" >> workload-to-ingress-upstream-disk_${build_tag}.txt
 
+HOST_IP=$(hostname -I | awk '{print $1}')
+echo $$HOST_IP
+
 # Creating kind cluster for the server
 docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && ./create-kind-cluster.sh &&
-HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ./create-docker-registry-secret.sh &&
-TAG=stable_20210909 HUB=${hub} ./deploy-all.sh &&
-INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") &&
-kubectl port-forward "$INGRESS_POD"  8000:8080 -n istio-system &&
-kubectl rollout status deployment productpage-v1 && kubectl get pods -A'
+bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && . ./start.sh &&
+cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && . ./start.sh &&
+kubectl get pods -A' >> ${build_tag}_log.txt
 
-# Creating kind cluster for the client
-docker run -i --rm \
--v "/var/run/docker.sock:/var/run/docker.sock:rw" \
--v "/.kube/config:/root/.kube/config:rw" \
---network host mithril-testing:${build_tag} \
-bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && ./create-kind-cluster.sh &&
-HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ./create-docker-registry-secret.sh &&
-TAG=stable_20210909 HUB=${hub} ./deploy-all.sh &&
-kubectl rollout status deployment sleep && kubectl get pods -A'
-
-# Creating kind cluster for the client
-CLIENT_POD=$(docker run -i --rm \
--v "/var/run/docker.sock:/var/run/docker.sock:rw" \
--v "/.kube/config:/root/.kube/config:rw" \
---network host mithril-testing:${build_tag} \
-bash -c 'kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}"')
-
-echo $$CLIENT_POD
-
-HOST_IP=$(hostname -I | awk '{print $1}')
-echo $$HOST_IP
-
-docker run -i --rm \
--v "/var/run/docker.sock:/var/run/docker.sock:rw" \
--v "/.kube/config:/root/.kube/config:rw" \
---network host mithril-testing:${build_tag} \
-bash -c 'kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://$${HOST_IP}:8000/productpage"'
+## Creating kind cluster for the server
+#docker run -i --rm \
+#-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+#-v "/.kube/config:/root/.kube/config:rw" \
+#--network host mithril-testing:${build_tag} \
+#bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && ./create-kind-cluster.sh &&
+#HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ./create-docker-registry-secret.sh &&
+#TAG=stable_20210909 HUB=${hub} ./deploy-all.sh &&
+#INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") &&
+#kubectl port-forward "$INGRESS_POD" 8000:8080 -n istio-system &&
+#kubectl rollout status deployment productpage-v1 && kubectl get pods -A' >> ${build_tag}_log.txt
+#
+## Creating kind cluster for the client
+#docker run -i --rm \
+#-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+#-v "/.kube/config:/root/.kube/config:rw" \
+#--network host mithril-testing:${build_tag} \
+#bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && ./create-kind-cluster.sh &&
+#HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ./create-docker-registry-secret.sh &&
+#TAG=stable_20210909 HUB=${hub} ./deploy-all.sh &&
+#kubectl rollout status deployment sleep && kubectl get pods -A'
+#
+## Creating kind cluster for the client
+#CLIENT_POD=$(docker run -i --rm \
+#-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+#-v "/.kube/config:/root/.kube/config:rw" \
+#--network host mithril-testing:${build_tag} \
+#bash -c 'kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}"')
+#
+#echo $$CLIENT_POD
+#
+#docker run -i --rm \
+#-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+#-v "/.kube/config:/root/.kube/config:rw" \
+#--network host mithril-testing:${build_tag} \
+#bash -c 'kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://$${HOST_IP}:8000/productpage"'
 
 ## Creating Docker secrets for ECR images
 #docker run -i --rm \
@@ -146,4 +155,4 @@ bash -c 'kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk -
 cat /var/log/user-data.log >> ${build_tag}_log.txt
 
 # Copying log to S3 bucket
-aws s3 cp /workload-to-ingress-upstream-disk_${build_tag}_log.txt s3://mithril-artifacts/ --region us-east-1
+aws s3 cp /${build_tag}_log.txt s3://mithril-artifacts/ --region us-east-1

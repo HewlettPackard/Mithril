@@ -63,7 +63,7 @@ docker run -i --rm \
 bash -c "cd /mithril/e2e && go test -v simple_bookinfo_test.go > ${build_tag}_simple_bookinfo_test.txt"
 
 # Copying response to S3 bucket
-aws s3 cp /${build_tag}_simple_bookinfo_test.txt s3://mithril-artifacts/ --region us-east-1
+aws s3 cp ${build_tag}_simple_bookinfo_test.txt s3://mithril-artifacts/ --region us-east-1
 
 # Generate log files
 cp /var/log/user-data.log ${build_tag}_log.txt

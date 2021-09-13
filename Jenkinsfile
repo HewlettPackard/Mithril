@@ -202,7 +202,7 @@ pipeline {
 
               while [ $num_tries -lt 500 ];
               do
-                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}_log.txt" --no-cli-pager > /dev/null
+                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}_end.txt" --no-cli-pager > /dev/null
                 if [ $? -eq 0 ];
                   then
                     BUCKET_EXISTS=true

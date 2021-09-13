@@ -200,9 +200,9 @@ pipeline {
               BUCKET_EXISTS=false
               num_tries=0
 
-              while [ $num_tries -lt 1000 ];
+              while [ $num_tries -lt 500 ];
               do
-                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}.txt" --no-cli-pager > /dev/null
+                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}_log.txt" --no-cli-pager > /dev/null
                 if [ $? -eq 0 ];
                   then
                     BUCKET_EXISTS=true
@@ -222,16 +222,16 @@ pipeline {
               if $BUCKET_EXISTS;
                 then
                   echo "Artifact object exists"
-                  aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}.txt" .
+                  aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}_log.txt" .
 
                 else
                   echo "Artifact object does not exist"
                   exit 1
               fi
 
-              if grep -q "no healthy upstream" "${BUILD_TAG}.txt";
+              if grep -q "no healthy upstream" "${BUILD_TAG}_log.txt";
                 then
-                  cat "${BUILD_TAG}.txt"
+                  cat "${BUILD_TAG}_log.txt"
                   echo "Test failed"
                   exit 1
 

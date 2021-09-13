@@ -38,7 +38,7 @@ docker run -i --rm \
 --network host mithril-testing:${build_tag} \
 bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && . ./start.sh &&
 cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && . ./start.sh &&
-kubectl get pods -A' >> ${build_tag}_log.txt
+kubectl get pods -A'
 
 ## Creating kind cluster for the server
 #docker run -i --rm \

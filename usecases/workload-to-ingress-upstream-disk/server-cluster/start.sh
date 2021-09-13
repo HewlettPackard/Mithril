@@ -10,6 +10,8 @@ echo "TAG=$TAG HUB=$HUB"
 
 INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}")
 
+echo $INGRESS_POD
+
 kubectl port-forward "$INGRESS_POD"  8000:8080 -n istio-system
 
 kubectl rollout status deployment productpage-v1 && kubectl get pods -A

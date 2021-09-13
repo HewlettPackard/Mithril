@@ -148,7 +148,7 @@ kubectl get pods -A'
 #-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 #-v "/.kube/config:/root/.kube/config:rw" \
 #--network host mithril-testing:${build_tag} \
-#bash -c 'cd e2e && go test workload_to_ingress_upstream_disk_test.go'
+#bash -c 'cd /mithril/e2e && go test -v workload_to_ingress_upstream_disk_test.go > > ${build_tag}_workload_to_ingress_upstream_disk_test.txt'
 
 # Generate log files
 #cat /var/log/user-data.log >> workload-to-ingress-upstream-disk_${build_tag}.txt

@@ -8,10 +8,12 @@ TAG=stable_20210909 HUB=${hub} ./deploy-all.sh
 
 echo "TAG=$TAG HUB=$HUB"
 
+kubectl wait pod --for=condition=Ready -l app=productpage
+
+kubectl rollout status deployment productpage-v1
+
 INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}")
 
 echo $INGRESS_POD
 
 kubectl port-forward "$INGRESS_POD"  8000:8080 -n istio-system
-
-kubectl rollout status deployment productpage-v1 && kubectl get pods -A

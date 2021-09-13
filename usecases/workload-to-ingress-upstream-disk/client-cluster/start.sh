@@ -8,7 +8,9 @@ TAG=stable_20210909 HUB=${hub} ./deploy-all.sh
 
 echo "TAG=$TAG HUB=$HUB"
 
-kubectl rollout status deployment sleep && kubectl get pods -A
+kubectl wait pod --for=condition=Ready -l app=sleep
+
+kubectl rollout status deployment sleep
 
 CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}")
 

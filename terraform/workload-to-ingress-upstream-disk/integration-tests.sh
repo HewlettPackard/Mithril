@@ -154,8 +154,9 @@ kubectl get pods -A'
 #cat /var/log/user-data.log >> workload-to-ingress-upstream-disk_${build_tag}.txt
 cat /var/log/user-data.log >> ${build_tag}_log.txt
 
-cat /var/log/user-data.log >> ${build_tag}_end.txt
-aws s3 cp /${build_tag}_end.txt s3://mithril-artifacts/ --region us-east-1
+cat /var/log/user-data.log >> ${build_tag}_end_workload-to-ingress-upstream-disk.txt
 
 # Copying log to S3 bucket
 aws s3 cp /${build_tag}_log.txt s3://mithril-artifacts/ --region us-east-1
+
+aws s3 cp /${build_tag}_end_workload-to-ingress-upstream-disk.txt s3://mithril-artifacts/ --region us-east-1

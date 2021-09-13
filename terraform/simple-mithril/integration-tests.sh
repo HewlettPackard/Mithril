@@ -82,8 +82,9 @@ aws s3 cp ${build_tag}_simple_bookinfo_test.txt s3://mithril-artifacts/ --region
 cat /var/log/user-data.log >> ${build_tag}_log.txt
 #cp /var/log/user-data.log ${build_tag}_log.txt
 
-cat /var/log/user-data.log >> ${build_tag}_end.txt
-aws s3 cp /${build_tag}_end.txt s3://mithril-artifacts/ --region us-east-1
+cat /var/log/user-data.log >> ${build_tag}_end_simple-mithril.txt
 
 # Copying log to S3 bucket
 aws s3 cp /${build_tag}_log.txt s3://mithril-artifacts/ --region us-east-1
+
+aws s3 cp /${build_tag}_end_simple-mithril.txt s3://mithril-artifacts/ --region us-east-1

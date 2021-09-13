@@ -2,47 +2,29 @@ package e2e
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
-	"k8s.io/client-go/util/homedir"
 	"k8s.io/kubectl/pkg/scheme"
 )
 
 func TestWorkloadToIngressUpstreamDisk(t *testing.T) {
-	// t.Run("getClientPodName", getClientPodName)
-	// t.Run("deploy_poc", deployPOC)
+	t.Run("getClientPodName", getClientPodName)
+	t.Run("deploy_poc", deployPOC)
 	t.Run("exec", execInsideCluster)
-	// t.Run("request_productpage_workload_from_sleep_pod", requestProductpageWorkloadFromSleepPod)
+	t.Run("request_productpage_workload_from_sleep_pod", requestProductpageWorkloadFromSleepPod)
 }
 
 func execInsideCluster(t *testing.T) {
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	clientset, config, err := CreateClientGo()
 	if err != nil {
-		panic(err.Error())
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
+		t.Error(err)
 	}
 
 	podName := "details-v1-fd855b89b-jmvt6"
@@ -82,22 +64,9 @@ func execInsideCluster(t *testing.T) {
 }
 
 func getClientPodName(t *testing.T) {
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	clientset, _, err := CreateClientGo()
 	if err != nil {
-		panic(err.Error())
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
+		t.Error(err)
 	}
 
 	labelSelector := "app=sleep"
@@ -127,22 +96,9 @@ func requestProductpageWorkloadFromSleepPod(t *testing.T) {
 }
 
 func deployPOC(t *testing.T) {
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	clientset, _, err := CreateClientGo()
 	if err != nil {
-		panic(err.Error())
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
+		t.Error(err)
 	}
 
 	pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})

@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"gotest.tools/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -31,30 +32,41 @@ func TestWorkloadToIngressUpstreamDisk(t *testing.T) {
 }
 
 func requestProductpageWorkloadFromSleepPod(t *testing.T) {
+	labelSelector := "app=sleep"
+	listOptions := metav1.ListOptions{
+		LabelSelector: labelSelector,
+	}
 
-	podName := getClientPodName()
-	command := "ls"
+	pods, err := getPodByOptions(listOptions, clientset)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(pods) == 0 {
+		t.Fatal("Sleep pod not found")
+	}
+	sleepPod := pods[0]
 
 	hostname := getHostname()
-	fmt.Printf(hostname)
+	command := fmt.Sprintf("echo %v\n", hostname)
 
 	cmd := []string{
 		"sh",
 		"-c",
 		command,
 	}
-	req := clientset.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
-		Namespace("default").SubResource("exec")
-	option := &v1.PodExecOptions{
+	req := clientset.CoreV1().RESTClient().Post().Resource("pods").Name(sleepPod.Name).
+		Namespace(defaultNamespace).SubResource("exec")
+	execOptions := &v1.PodExecOptions{
 		Command: cmd,
 		Stdin:   true,
 		Stdout:  true,
 		Stderr:  true,
 		TTY:     true,
 	}
-	option.Stdin = false
+	execOptions.Stdin = false
 	req.VersionedParams(
-		option,
+		execOptions,
 		scheme.ParameterCodec,
 	)
 	exec, err := remotecommand.NewSPDYExecutor(kubeConfig, "POST", req.URL())
@@ -71,33 +83,11 @@ func requestProductpageWorkloadFromSleepPod(t *testing.T) {
 	}
 }
 
-func getClientPodName() string {
-	labelSelector := "app=sleep"
-
-	options := metav1.ListOptions{
-		LabelSelector: labelSelector,
-	}
-	podList, _ := clientset.CoreV1().Pods("default").List(context.TODO(), options)
-	for _, podInfo := range (*podList).Items {
-		clientPod := fmt.Sprintf("pods-name=%v\n", podInfo.Name)
-		fmt.Printf("pods-status=%v\n", podInfo.Status.Phase)
-		fmt.Printf("pods-condition=%v\n", podInfo.Status.Conditions)
-
-		fmt.Printf(clientPod)
-	}
-
-	return "details-v1-6c54b96547-tptlm"
-}
-
 func deployPOC(t *testing.T) {
 	pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	for i, podItem := range pods.Items {
-		fmt.Println(i, podItem.Name)
-	}
-
-	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
+	assert.Equal(t, len(pods.Items), 20)
 }

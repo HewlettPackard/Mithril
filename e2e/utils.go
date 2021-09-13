@@ -1,17 +1,23 @@
 package e2e
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	rest "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 )
+
+var istioctlVersion = "1.10"
+var defaultNamespace = "default"
 
 func getHostname() string {
 	out, err := exec.Command("hostname", "-I").Output()
@@ -45,4 +51,13 @@ func createClientGo() (*kubernetes.Clientset, *rest.Config, error) {
 	}
 
 	return clientset, config, err
+}
+
+func getPodByOptions(listOptions metav1.ListOptions, clientset *kubernetes.Clientset) ([]v1.Pod, error) {
+	podList, err := clientset.CoreV1().Pods(defaultNamespace).List(context.TODO(), listOptions)
+	if err == nil {
+		return nil, err
+	}
+
+	return podList.Items, nil
 }

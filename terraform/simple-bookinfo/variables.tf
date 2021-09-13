@@ -1,10 +1,10 @@
 variable "TAG" {
-  default     = "stable"
+  default     = "stable_20210909"
   description = "TAG used to download the images from ECR repository"
 }
 
 variable "BUILD_TAG" {
-  default     = "stable"
+  default     = "latest"
   description = "Build TAG from Jenkins Pipeline"
 }
 
@@ -46,4 +46,9 @@ variable "EC2_KEY_PAIR" {
 variable "VOLUME_SIZE" {
   default     = 50
   description = "Root block device volume size used by EC2 instance"
+}
+
+variable "USECASE" {
+  default     = "simple-bookinfo"
+  description = "Initial usecase"
 }

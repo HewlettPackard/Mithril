@@ -199,7 +199,7 @@ pipeline {
                 do cd ${FOLDER} \
                   && echo "** Begin test ${FOLDER} **" \
                   && terraform init \
-                  && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
+                  && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "FOLDER"=${FOLDER}
 
                 BUCKET_EXISTS=false
                 num_tries=0

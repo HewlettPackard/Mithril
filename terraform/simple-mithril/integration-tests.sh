@@ -17,15 +17,6 @@ docker tag ${hub}:${build_tag} mithril-testing:${build_tag}
 # Creating kubernetes config to use kubectl inside the container
 mkdir -p $HOME/.kube && touch $HOME/.kube/config
 
-aws s3api head-object --bucket mithril-artifacts --key "${build_tag}.txt" --no-cli-pager
-if [ $? -eq 0 ];
-  then
-    aws s3 cp "s3://mithril-artifacts/${build_tag}.txt" .
-    echo "===== simple_mithril =====" >> ${build_tag}.txt
-  else
-    echo "===== simple_mithril =====" >> ${build_tag}.txt
-fi
-
 # Creating kind cluster
 docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
@@ -73,18 +64,16 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c "cd /mithril/e2e && go test -v simple_bookinfo_test.go > ${build_tag}_simple_bookinfo_test.txt"
+bash -c "cd /mithril/e2e && go test -v simple_bookinfo_test.go > ${build_tag}_${folder}_result.txt"
 
 # Copying response to S3 bucket
-aws s3 cp ${build_tag}_simple_bookinfo_test.txt s3://mithril-artifacts/ --region us-east-1
+aws s3 cp ${build_tag}_${folder}_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
 
 # Generate log files
-cat /var/log/user-data.log >> ${build_tag}_log.txt
+cat /var/log/user-data.log >> ${build_tag}_${folder}_result.txt
 #cp /var/log/user-data.log ${build_tag}_log.txt
 
 cat /var/log/user-data.log >> ${build_tag}_end_simple-mithril.txt
 
 # Copying log to S3 bucket
-aws s3 cp /${build_tag}_log.txt s3://mithril-artifacts/ --region us-east-1
-
-aws s3 cp /${build_tag}_end_simple-mithril.txt s3://mithril-artifacts/ --region us-east-1
+aws s3 cp /${build_tag}_${folder}_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1

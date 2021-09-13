@@ -26,7 +26,7 @@ func version(t *testing.T) {
 	cmd.Run()
 
 	actual := buf.String()
-	assert.Contains(t, actual, "1.10.1")
+	assert.Contains(t, actual, "1.10")
 }
 
 func createKindCluster(t *testing.T) {

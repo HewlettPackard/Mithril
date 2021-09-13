@@ -2,7 +2,10 @@ package e2e
 
 import (
 	"flag"
+	"fmt"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"k8s.io/client-go/kubernetes"
 	rest "k8s.io/client-go/rest"
@@ -10,7 +13,19 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-func CreateClientGo() (*kubernetes.Clientset, *rest.Config, error) {
+func getHostname() string {
+	out, err := exec.Command("hostname", "-I").Output()
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	ipList := string(out)
+	hostname := ipList[:strings.IndexByte(ipList, ' ')]
+
+	return hostname
+}
+
+func createClientGo() (*kubernetes.Clientset, *rest.Config, error) {
 	var kubeconfig *string
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")

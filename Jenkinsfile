@@ -195,27 +195,31 @@ pipeline {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
               cd terraform
-              for FOLDER in *; do cd ${FOLDER} && echo "** Begin test ${FOLDER} **" && terraform init && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} ;
+              for FOLDER in *; 
+                do cd ${FOLDER} \
+                  && echo "** Begin test ${FOLDER} **" \
+                  && terraform init \
+                  && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
 
-              BUCKET_EXISTS=false
-              num_tries=0
+                BUCKET_EXISTS=false
+                num_tries=0
 
-              while [ $num_tries -lt 800 ];
-              do
-                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}_end_${FOLDER}.txt" --no-cli-pager > /dev/null
-                if [ $? -eq 0 ];
-                  then
-                    BUCKET_EXISTS=true
-                    break
+                while [ $num_tries -lt 800 ];
+                do
+                  aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}_end_${FOLDER}.txt" --no-cli-pager > /dev/null
+                  if [ $? -eq 0 ];
+                    then
+                      BUCKET_EXISTS=true
+                      break
 
-                  else
-                      ((num_tries++))
-                      sleep 1;
-                fi
-              done
+                    else
+                        ((num_tries++))
+                        sleep 1;
+                  fi
+                done
 
-              terraform destroy -auto-approve
-              cd ..
+                terraform destroy -auto-approve
+                cd ..
 
               done
 

@@ -1,10 +1,10 @@
 variable "TAG" {
-  default     = "latest"
+  default     = "stable"
   description = "TAG used to download the images from ECR repository"
 }
 
 variable "BUILD_TAG" {
-  default     = "latest"
+  default     = "stable"
   description = "Build TAG from Jenkins Pipeline"
 }
 

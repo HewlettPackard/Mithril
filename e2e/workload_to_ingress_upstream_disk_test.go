@@ -4,31 +4,39 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	rest "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/kubectl/pkg/scheme"
 )
 
+var clientset *kubernetes.Clientset
+var kubeConfig *rest.Config
+
 func TestWorkloadToIngressUpstreamDisk(t *testing.T) {
-	t.Run("getClientPodName", getClientPodName)
+	client, config, err := createClientGo()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	clientset = client
+	kubeConfig = config
+
 	t.Run("deploy_poc", deployPOC)
-	t.Run("exec", execInsideCluster)
 	t.Run("request_productpage_workload_from_sleep_pod", requestProductpageWorkloadFromSleepPod)
 }
 
-func execInsideCluster(t *testing.T) {
-	clientset, config, err := CreateClientGo()
-	if err != nil {
-		t.Error(err)
-	}
+func requestProductpageWorkloadFromSleepPod(t *testing.T) {
 
-	podName := "details-v1-fd855b89b-jmvt6"
+	podName := getClientPodName()
 	command := "ls"
+
+	hostname := getHostname()
+	fmt.Printf(hostname)
 
 	cmd := []string{
 		"sh",
@@ -49,7 +57,7 @@ func execInsideCluster(t *testing.T) {
 		option,
 		scheme.ParameterCodec,
 	)
-	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	exec, err := remotecommand.NewSPDYExecutor(kubeConfig, "POST", req.URL())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,13 +71,9 @@ func execInsideCluster(t *testing.T) {
 	}
 }
 
-func getClientPodName(t *testing.T) {
-	clientset, _, err := CreateClientGo()
-	if err != nil {
-		t.Error(err)
-	}
-
+func getClientPodName() string {
 	labelSelector := "app=sleep"
+
 	options := metav1.ListOptions{
 		LabelSelector: labelSelector,
 	}
@@ -81,29 +85,18 @@ func getClientPodName(t *testing.T) {
 
 		fmt.Printf(clientPod)
 	}
-}
 
-func requestProductpageWorkloadFromSleepPod(t *testing.T) {
-	out, err := exec.Command("hostname", "-I").Output()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ipList := string(out)
-	hostname := ipList[:strings.IndexByte(ipList, ' ')]
-
-	fmt.Println(hostname)
+	return "details-v1-6c54b96547-tptlm"
 }
 
 func deployPOC(t *testing.T) {
-	clientset, _, err := CreateClientGo()
+	pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		t.Fatal(err)
+	for i, podItem := range pods.Items {
+		fmt.Println(i, podItem.Name)
 	}
 
 	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))

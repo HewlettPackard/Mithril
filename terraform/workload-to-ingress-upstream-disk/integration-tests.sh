@@ -4,8 +4,15 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 apt update -y
 apt install docker.io awscli -y
 
-aws configure set aws_access_key_id ${access_key}
-aws configure set aws_secret_access_key ${secret_access_key}
+echo "===== workload-to-ingress-upstream-disk ====="
+
+echo "aws_access_key_id" ${aws_access_key_id}
+echo "aws_secret_access_key" ${aws_secret_access_key}
+echo "hub" ${hub}
+echo "build_tag" ${build_tag}
+
+aws configure set aws_access_key_id ${aws_access_key_id}
+aws configure set aws_secret_access_key ${aws_secret_access_key}
 
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${hub}
 
@@ -36,9 +43,8 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && . ./start.sh &&
-cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && . ./start.sh &&
-kubectl get pods -A'
+bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && echo DEPLOYING CLIENT CLUSTER && . ./start.sh &&
+echo DEPLOYING CLIENT CLUSTER && cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && . ./start.sh'
 
 ## Creating kind cluster for the server
 #docker run -i --rm \

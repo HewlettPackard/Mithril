@@ -139,5 +139,6 @@ data "template_file" "init" {
     tag               = var.TAG,
     hub               = var.HUB,
     build_tag         = var.BUILD_TAG
+    usecase           = var.USECASE
   }
 }

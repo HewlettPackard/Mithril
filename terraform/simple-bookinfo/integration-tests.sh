@@ -53,27 +53,18 @@ docker run -i --rm \
 --network host mithril-testing:${build_tag} \
 bash -c 'kubectl rollout status deployment productpage-v1'
 
-# Request to productpage workload
-curl localhost:8000/productpage > simple_mithril_${build_tag}.txt
-
-# Copying response to S3 bucket
-aws s3 cp /simple_mithril_${build_tag}.txt s3://mithril-artifacts/ --region us-east-1
-
 # Test simple_bookinfo_test
 docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c "cd /mithril/e2e && go test -v simple_bookinfo_test.go > ${build_tag}_${folder}_result.txt"
+bash -c "cd /mithril/e2e && go test -v simple_bookinfo_test.go > ${build_tag}_${usecase}_result.txt"
 
 # Copying response to S3 bucket
-aws s3 cp ${build_tag}_${folder}_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
+aws s3 cp ${build_tag}_${usecase}_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
 
 # Generate log files
-cat /var/log/user-data.log >> ${build_tag}_${folder}_result.txt
-#cp /var/log/user-data.log ${build_tag}_log.txt
-
-cat /var/log/user-data.log >> ${build_tag}_end_simple-mithril.txt
+cat /var/log/user-data.log >> ${build_tag}_${usecase}_log.txt
 
 # Copying log to S3 bucket
-aws s3 cp /${build_tag}_${folder}_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
+aws s3 cp /${build_tag}_${usecase}_log.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1

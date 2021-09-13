@@ -64,16 +64,18 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c "cd /mithril/e2e && go test -v simple_bookinfo_test.go > ${build_tag}_${folder}_result.txt"
+bash -c "cd /mithril/e2e && go test -v simple_bookinfo_test.go > ${build_tag}_simple-mithril_result.txt"
 
 # Copying response to S3 bucket
-aws s3 cp ${build_tag}_${folder}_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
+aws s3 cp ${build_tag}_simple-mithril_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
 
 # Generate log files
-cat /var/log/user-data.log >> ${build_tag}_${folder}_result.txt
+cat /var/log/user-data.log >> ${build_tag}_simple-mithril_result.txt
 #cp /var/log/user-data.log ${build_tag}_log.txt
 
-cat /var/log/user-data.log >> ${build_tag}_end_simple-mithril.txt
+cat /var/log/user-data.log >> ${build_tag}_simple-mithril_log.txt
+
+aws s3 cp /${build_tag}_simple-mithril_log.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
 
 # Copying log to S3 bucket
-aws s3 cp /${build_tag}_${folder}_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
+aws s3 cp /${build_tag}_simple-mithril_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1

@@ -27,7 +27,7 @@ This POC requires at least 20GB of disk space and 2 CPUs, keep that in mind when
 
 [Install the kubernetes client for your operating system](https://kubernetes.io/docs/tasks/tools/#kubectl)
 
-### Install istioctl:
+### Install istioctl
 
 ```
 curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.10.1 sh -
@@ -178,7 +178,7 @@ The output is an HTML page that should not have any error sections.
 Forward host port 8000 to port 8080 (ingressgateway pod port) inside the cluster:
 
 ```bash
-./forward-port
+./forward-port.sh
 
 Forwarding from 127.0.0.1:8000 -> 8080
 Forwarding from [::1]:8000 -> 8080
@@ -196,17 +196,19 @@ The output is an HTML page that should not have any error sections.
 
 ## Deploying the POC to Amazon EKS
 
-1. Install [eksctl](https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html) and [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html).
+1. Install [kubectl](#install-kubectl-client) and [istioctl](#install-istioctl).
 
-2. Set up the credentials for AWS.
+2. Install [eksctl](https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html) and [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html).
+
+3. Set up the credentials for AWS.
 ```bash
 aws configure
 ```
 
-3. Create an EKS cluster. Name the cluster at will, choose a region, and configure an AWS Key Pair or an SSH key (optional). This may take a while.
+4. Create an EKS cluster. Name the cluster at will, choose a region, and configure an AWS Key Pair or an SSH key (optional). This may take a while.
 ```bash
 eksctl create cluster \
-    --name poc-cluster \
+    --name <your-cluster-name> \
     --region us-east-1 \
     --with-oidc \
     --ssh-access \
@@ -214,7 +216,7 @@ eksctl create cluster \
     --managed
 ```
 
-4. Deploy the latest (master) tag using the images from the ECR repository.
+5. Deploy the latest (master) tag using the images from the ECR repository.
 ```bash
 TAG=latest \
 HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril \
@@ -228,7 +230,7 @@ eksctl delete cluster --region us-east-1 --name poc-cluster
 # Clean up
 
 ```bash
-./cleanup.sh
+./cleanup-all.sh
 ```
 
 ## Running Istio Agent

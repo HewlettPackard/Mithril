@@ -158,11 +158,11 @@ echo DEPLOYING CLIENT CLUSTER && cd /mithril/usecases/workload-to-ingress-upstre
 
 # Generate log files
 #cat /var/log/user-data.log >> workload-to-ingress-upstream-disk_${build_tag}.txt
-cat /var/log/user-data.log >> ${build_tag}_workload-to-ingress-upstream-disk_log.txt
+cat /var/log/user-data.log >> ${build_tag}_${usecase}_log.txt
 
-cat /var/log/user-data.log >> ${build_tag}_workload-to-ingress-upstream-disk_result.txt
+cat /var/log/user-data.log >> ${build_tag}_${usecase}_result.txt
 
 # Copying log to S3 bucket
-aws s3 cp /${build_tag}_workload-to-ingress-upstream-disk_log.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
+aws s3 cp /${build_tag}_${usecase}_log.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
 
-aws s3 cp /${build_tag}_workload-to-ingress-upstream-disk_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
+aws s3 cp /${build_tag}_${usecase}_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1

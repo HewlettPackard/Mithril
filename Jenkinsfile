@@ -109,9 +109,9 @@ pipeline {
 
     stage("build-and-push-poc-images") {
       //remove
-      when {
-        branch MAIN_BRANCH
-      }
+      // when {
+      //   branch MAIN_BRANCH
+      // }
 
       environment {
         BUILD_WITH_CONTAINER = 0

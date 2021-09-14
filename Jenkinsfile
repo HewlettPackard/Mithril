@@ -276,10 +276,12 @@ pipeline {
               
               cd terraform
 
-              for FOLDER in *; 
+              for FOLDER in *;
+                HAS_MISSING_ARTIFACTS=false 
+                
                 do
                   BUCKET_EXISTS=false
-                  aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}_${FOLDER}_result./txt" --no-cli-pager
+                  aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result./txt" --no-cli-pager
                   if [ $? -eq 0 ];
                     then 
                       BUCKET_EXISTS=true
@@ -289,23 +291,30 @@ pipeline {
                   if $BUCKET_EXISTS;
                     then
                       echo "Artifact object exists"
-                      aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}_${FOLDER}_result.txt" .
+                      aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt" .
 
-                      RESULT=$(tail -n 1 "${BUILD_TAG}_${FOLDER}_result.txt")
+                      RESULT=$(tail -n 1 "${BUILD_TAG}-${FOLDER}-result.txt"  grep -oE '^..')
                       RESULT_LIST+=RESULT
 
                     else
                       echo "Artifact object for usecase ${FOLDER} does not exist"
+                      HAS_MISSING_ARTIFACTS=true
                   fi
               done
+
+              if [ "$HAS_MISSING_ARTIFACTS" ];
+                then
+                  echo "One or more artifacts doesn't exist"
+                  exit 1
+              fi
 
               HAS_FAILED_TEST = false
               for RESULT in "${RESULT_LIST[@]}";
                 do
-                  if [ "$RESULT" = "FAIL"];
+                  if [ "$RESULT" != "ok"];
                     then
                       echo "Test for usecase ${FOLDER} failed"
-                      cat "${BUILD_TAG}_${FOLDER}_result.txt"
+                      cat "${BUILD_TAG}-${FOLDER}-result.txt"
                       HAS_FAILED_TEST = true
                     else
                       echo "Test for usecase ${FOLDER} successful"
@@ -314,6 +323,7 @@ pipeline {
 
               if [ "$HAS_FAILED_TEST" ];
                 then
+                  echo "One or more tests have failed"
                   exit 1
               fi
             '''

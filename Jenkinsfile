@@ -37,6 +37,19 @@ pipeline {
     stage("notify-slack") {
       steps {
         script {
+        timeout(time: 15, unit: 'SECONDS') {
+        def reg = input(
+            message: 'What is the test value?',
+            parameters: [
+                [$class: 'ChoiceParameterDefinition',
+                    choices: 'Choice workload-to-ingress-upstream-disk\nChoice simple-bookinfo',
+                    name: 'input',
+                    description: 'A select box option']
+            ])
+        USECASE = userInput['input']
+        echo "Reg is ${reg}"
+        echo $USECASE
+        }
           slackSend (
             channel: CHANNEL_NAME,
             message: "Hello. The pipeline ${currentBuild.fullDisplayName} started. (<${env.BUILD_URL}|See Job>)")
@@ -191,18 +204,22 @@ pipeline {
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-              def reg = input(
-                  message: 'What is the test value?',
-                  parameters: [
-                      [$class: 'ChoiceParameterDefinition',
-                          choices: 'Choice workload-to-ingress-upstream-disk\nChoice simple-bookinfo',
-                          name: 'input',
-                          description: 'A select box option']
-                  ])
-              echo "Reg is ${reg}"
-
+            timeout(time: 15, unit: 'SECONDS') {
+            def reg = input(
+                message: 'What is the test value?',
+                parameters: [
+                    [$class: 'ChoiceParameterDefinition',
+                        choices: 'Choice workload-to-ingress-upstream-disk\nChoice simple-bookinfo',
+                        name: 'input',
+                        description: 'A select box option']
+                ])
+            USECASE = userInput['input']
+            echo "Reg is ${reg}"
+            echo $USECASE
+            }
             sh '''#!/bin/bash
               cd terraform
+              echo ${USECASE}
               export USECASE="workload-to-ingress-upstream-disk"
               for FOLDER in *; 
                 do if [[ ${USECASE} != "" ]]; then

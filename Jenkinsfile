@@ -206,7 +206,7 @@ pipeline {
 
                 while [ $num_tries -lt 1000 ];
                 do
-                  aws s3api head-object --bucket mithril-artifacts --key "/${BUILD_TAG}/${BUILD_TAG}_${FOLDER}_result.txt" --no-cli-pager > /dev/null
+                  aws s3api head-object --bucket mithril-artifacts --key "/${BUILD_TAG}/${BUILD_TAG}_${FOLDER}_log.txt" --no-cli-pager > /dev/null
                   if [ $? -eq 0 ];
                     then
                       BUCKET_EXISTS=true
@@ -222,30 +222,68 @@ pipeline {
                 cd ..
 
               done
-
-              if $BUCKET_EXISTS;
-                then
-                  echo "Artifact object exists"
-                  aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}_${FOLDER}_result.txt" .
-
-                else
-                  echo "Artifact object for usecase ${FOLDER} does not exist"
-                  exit 1
-              fi
-
-              if grep -q "no healthy upstream" "${BUILD_TAG}_${FOLDER}_result.txt";
-                then
-                  cat "${BUILD_TAG}_${FOLDER}_result.txt"
-                  echo "Test failed"
-                  exit 1
-
-                else
-                  echo "Test successful"
-              fi
           '''
           }
         }
       }
+    }
+
+    stage("analyze-integration-tests") {
+      // when {
+      //   branch MAIN_BRANCH
+      // }
+
+      steps {
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh '''#!/bin/bash
+              RESULT_LIST=()
+              
+              cd terraform
+
+              for FOLDER in *; 
+                do
+                  BUCKET_EXISTS=false
+                  aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}_${FOLDER}_result./txt" --no-cli-pager
+                  if [ $? -eq 0 ];
+                    then 
+                      BUCKET_EXISTS=true
+                      break
+                  fi
+
+                  if $BUCKET_EXISTS;
+                    then
+                      echo "Artifact object exists"
+                      aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}_${FOLDER}_result.txt" .
+
+                      RESULT=$(tail -n 1 "${BUILD_TAG}_${FOLDER}_result.txt")
+                      RESULT_LIST+=RESULT
+
+                    else
+                      echo "Artifact object for usecase ${FOLDER} does not exist"
+                  fi
+              done
+
+              HAS_FAILED_TEST = false
+              for RESULT in "${RESULT_LIST[@]}";
+                do
+                  if [ "$RESULT" = "FAIL"];
+                    then
+                      echo "Test for usecase ${FOLDER} failed"
+                      cat "${BUILD_TAG}_${FOLDER}_result.txt"
+                      HAS_FAILED_TEST = true
+                    else
+                      echo "Test for usecase ${FOLDER} successful"
+                  fi
+                done
+
+              if [ "$HAS_FAILED_TEST"];
+                then
+                  exit 1
+            '''
+          }
+        }
+      }           
     }
 
     stage("distribute-poc") {
@@ -264,7 +302,6 @@ pipeline {
                 deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
                 doc/poc-instructions.md demo/demo-script.sh demo/README.md
               aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
-
 
               tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch
               aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}

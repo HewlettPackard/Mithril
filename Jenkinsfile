@@ -109,9 +109,9 @@ pipeline {
 
     stage("build-and-push-poc-images") {
       //remove
-      // when {
-      //   branch MAIN_BRANCH
-      // }
+      when {
+        branch MAIN_BRANCH
+      }
 
       environment {
         BUILD_WITH_CONTAINER = 0
@@ -208,7 +208,7 @@ pipeline {
             sh '''#!/bin/bash
               cd terraform
 
-              export USECASE="simple-bookinfo"
+              export USECASE="workload-to-ingress-upstream-disk"
 
               for FOLDER in *;
                 do if [[ ${USECASE} != "" ]]; then

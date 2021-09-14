@@ -71,9 +71,9 @@ pipeline {
 
     stage("make-poc-codebase") {
       //remove
-      when {
-        branch MAIN_BRANCH
-      }
+      // when {
+      //   branch MAIN_BRANCH
+      // }
 
       steps {
         // Istio clone from the latest branch
@@ -111,9 +111,9 @@ pipeline {
 
     stage("build-and-push-poc-images") {
       //remove
-      when {
-        branch MAIN_BRANCH
-      }
+      // when {
+      //   branch MAIN_BRANCH
+      // }
 
       environment {
         BUILD_WITH_CONTAINER = 0

@@ -195,7 +195,7 @@ pipeline {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
               cd terraform
-              export USECASE="simple-bookinfo"
+              export USECASE="workload-to-ingress-upstream-disk"
               for FOLDER in *; 
                 do if [[ ${USECASE} != "" ]]; then
                  if [[ ${FOLDER} != ${USECASE} ]]; then
@@ -224,6 +224,29 @@ pipeline {
                   terraform destroy -auto-approve
                   cd ..
                  fi
+                else cd ${FOLDER} \
+                   && echo "** Begin test ${FOLDER} **" \
+                   && terraform init \
+                   && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
+
+                   BUCKET_EXISTS=false
+                   num_tries=0
+
+                   while [ $num_tries -lt 1000 ];
+                   do
+                     aws s3api head-object --bucket mithril-artifacts --key "/${BUILD_TAG}/${BUILD_TAG}_${FOLDER}_result.txt" --no-cli-pager > /dev/null
+                     if [ $? -eq 0 ];
+                       then
+                         BUCKET_EXISTS=true
+                         break
+                         else
+                           ((num_tries++))
+                           sleep 1;
+                     fi
+                   done
+
+                   terraform destroy -auto-approve
+                   cd ..
                 fi
               done
           '''

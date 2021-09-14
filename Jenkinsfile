@@ -203,7 +203,7 @@ pipeline {
 //             USECASE = userInput['input']
 //             echo "Reg is ${reg}"
 //             echo $USECASE
-            }
+//             }
             sh '''#!/bin/bash
               cd terraform
               echo ${USECASE}

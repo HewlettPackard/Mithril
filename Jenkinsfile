@@ -206,7 +206,7 @@ pipeline {
 //             }
             sh '''#!/bin/bash
               cd terraform
-              echo ${USECASE}
+
               export USECASE="workload-to-ingress-upstream-disk"
 
               for FOLDER in *;

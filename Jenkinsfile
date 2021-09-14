@@ -69,120 +69,120 @@ pipeline {
       }
     }
 
-    stage("make-poc-codebase") {
-//       remove
-      when {
-        branch MAIN_BRANCH
-      }
+//     stage("make-poc-codebase") {
+// //       remove
+//       when {
+//         branch MAIN_BRANCH
+//       }
+//
+//       steps {
+//         // Istio clone from the latest branch
+//         sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
+//
+//         // Apply Mithril patches
+//         sh """
+//           cd istio
+//           git apply \
+//             ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch
+//         """
+//       }
+//     }
 
-      steps {
-        // Istio clone from the latest branch
-        sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
+//     stage("unit-test") {
+//       //remove
+//       when {
+//         branch MAIN_BRANCH
+//       }
+//
+//       steps {
+//         sh """
+//           set -x
+//           export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
+//
+//           cd istio
+//           make clean
+//           make init
+//           make test
+//         """
+//       }
+//     }
 
-        // Apply Mithril patches
-        sh """
-          cd istio
-          git apply \
-            ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch 
-        """
-      }
-    }
-
-    stage("unit-test") {
-      //remove
-      when {
-        branch MAIN_BRANCH
-      }
-
-      steps {
-        sh """
-          set -x
-          export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
-
-          cd istio
-          make clean
-          make init
-          make test
-        """
-      }
-    }
-
-    stage("build-and-push-poc-images") {
-      //remove
-      when {
-        branch MAIN_BRANCH
-      }
-
-      environment {
-        BUILD_WITH_CONTAINER = 0
-      }
-      steps {
-        // Fetch secrets from Vault and use the mask token plugin
-        script {
-          def secrets = vaultGetSecrets()
-
-          def passwordMask = [
-            $class: 'MaskPasswordsBuildWrapper',
-            varPasswordPairs: [ [ password: secrets.dockerHubToken ] ]
-          ]
-
-          // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
-          // and build tag, building Istio and pushing images to the Dockerhub of HPE
-          wrap(passwordMask) {
-            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-              // Build and push to HPE registry
-              sh """
-                export HUB=${HPE_REGISTRY}
-                echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
-                cd istio && make push
-              """
-
-              // Build and push to ECR registry
-              def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-              def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
-
-              sh """
-                export HUB=${ECR_HUB}
-                export TAG=${BUILD_TAG} 
-                aws ecr get-login-password --region ${ECR_REGION} | \
-                  docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                cd istio && make push
-              """
-            }
-          }
-        }
-      }
-    }
+//     stage("build-and-push-poc-images") {
+//       //remove
+//       when {
+//         branch MAIN_BRANCH
+//       }
+//
+//       environment {
+//         BUILD_WITH_CONTAINER = 0
+//       }
+//       steps {
+//         // Fetch secrets from Vault and use the mask token plugin
+//         script {
+//           def secrets = vaultGetSecrets()
+//
+//           def passwordMask = [
+//             $class: 'MaskPasswordsBuildWrapper',
+//             varPasswordPairs: [ [ password: secrets.dockerHubToken ] ]
+//           ]
+//
+//           // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
+//           // and build tag, building Istio and pushing images to the Dockerhub of HPE
+//           wrap(passwordMask) {
+//             docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+//               // Build and push to HPE registry
+//               sh """
+//                 export HUB=${HPE_REGISTRY}
+//                 echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
+//                 cd istio && make push
+//               """
+//
+//               // Build and push to ECR registry
+//               def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+//               def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+//
+//               sh """
+//                 export HUB=${ECR_HUB}
+//                 export TAG=${BUILD_TAG}
+//                 aws ecr get-login-password --region ${ECR_REGION} | \
+//                   docker login --username AWS --password-stdin ${ECR_REGISTRY}
+//                 cd istio && make push
+//               """
+//             }
+//           }
+//         }
+//       }
+//     }
 
     // Tag the current build as "latest" whenever a new commit
     // comes into master and pushes the tag to the ECR repository
-    stage("tag-latest-images") {
-      when {
-        branch MAIN_BRANCH
-      }
-      steps {
-        script {
-          def secrets = vaultGetSecrets()
-
-          def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
-          def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX
-
-          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh """#!/bin/bash
-              set -x
-              aws ecr get-login-password --region ${ECR_REGION} | \
-                docker login --username AWS --password-stdin ${ECR_REGISTRY}
-
-              docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
-                pieces=(\$line)
-                docker tag "\${pieces[0]}" "\${pieces[1]}":latest
-                docker push "\${pieces[1]}":latest
-              done
-            """
-          }
-        }
-      }
-    }
+//     stage("tag-latest-images") {
+//       when {
+//         branch MAIN_BRANCH
+//       }
+//       steps {
+//         script {
+//           def secrets = vaultGetSecrets()
+//
+//           def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
+//           def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX
+//
+//           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+//             sh """#!/bin/bash
+//               set -x
+//               aws ecr get-login-password --region ${ECR_REGION} | \
+//                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
+//
+//               docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
+//                 pieces=(\$line)
+//                 docker tag "\${pieces[0]}" "\${pieces[1]}":latest
+//                 docker push "\${pieces[1]}":latest
+//               done
+//             """
+//           }
+//         }
+//       }
+//     }
 
     stage("run-integration-tests") {
       // when {
@@ -247,99 +247,99 @@ pipeline {
       }
     }
 
-    stage("analyze-integration-tests") {
-      // when {
-      //   branch MAIN_BRANCH
-      // }
+//     stage("analyze-integration-tests") {
+//       // when {
+//       //   branch MAIN_BRANCH
+//       // }
+//
+//       steps {
+//         script {
+//           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+//             sh '''#!/bin/bash
+//               RESULT_LIST=()
+//
+//               cd terraform
+//
+//               for FOLDER in *;
+//                 HAS_MISSING_ARTIFACTS=false
+//
+//                 do
+//                   BUCKET_EXISTS=false
+//                   aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result./txt" --no-cli-pager
+//                   if [ $? -eq 0 ];
+//                     then
+//                       BUCKET_EXISTS=true
+//                       break
+//                   fi
+//
+//                   if $BUCKET_EXISTS;
+//                     then
+//                       echo "Artifact object exists"
+//                       aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt" .
+//
+//                       RESULT=$(tail -n 1 "${BUILD_TAG}-${FOLDER}-result.txt"  grep -oE '^..')
+//                       RESULT_LIST+=RESULT
+//
+//                     else
+//                       echo "Artifact object for usecase ${FOLDER} does not exist"
+//                       HAS_MISSING_ARTIFACTS=true
+//                   fi
+//               done
+//
+//               if [ "$HAS_MISSING_ARTIFACTS" ];
+//                 then
+//                   echo "One or more artifacts doesn't exist"
+//                   exit 1
+//               fi
+//
+//               HAS_FAILED_TEST=false
+//               for RESULT in "${RESULT_LIST[@]}";
+//                 do
+//                   if [ "$RESULT" != "ok"];
+//                     then
+//                       echo "Test for usecase ${FOLDER} failed"
+//                       cat "${BUILD_TAG}-${FOLDER}-result.txt"
+//                       HAS_FAILED_TEST=true
+//                     else
+//                       echo "Test for usecase ${FOLDER} successful"
+//                   fi
+//                 done
+//
+//               if [ "$HAS_FAILED_TEST" ];
+//                 then
+//                   echo "One or more tests have failed"
+//                   exit 1
+//               fi
+//             '''
+//           }
+//         }
+//       }
+//     }
 
-      steps {
-        script {
-          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh '''#!/bin/bash
-              RESULT_LIST=()
-              
-              cd terraform
-
-              for FOLDER in *;
-                HAS_MISSING_ARTIFACTS=false 
-                
-                do
-                  BUCKET_EXISTS=false
-                  aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result./txt" --no-cli-pager
-                  if [ $? -eq 0 ];
-                    then 
-                      BUCKET_EXISTS=true
-                      break
-                  fi
-
-                  if $BUCKET_EXISTS;
-                    then
-                      echo "Artifact object exists"
-                      aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt" .
-
-                      RESULT=$(tail -n 1 "${BUILD_TAG}-${FOLDER}-result.txt"  grep -oE '^..')
-                      RESULT_LIST+=RESULT
-
-                    else
-                      echo "Artifact object for usecase ${FOLDER} does not exist"
-                      HAS_MISSING_ARTIFACTS=true
-                  fi
-              done
-
-              if [ "$HAS_MISSING_ARTIFACTS" ];
-                then
-                  echo "One or more artifacts doesn't exist"
-                  exit 1
-              fi
-
-              HAS_FAILED_TEST=false
-              for RESULT in "${RESULT_LIST[@]}";
-                do
-                  if [ "$RESULT" != "ok"];
-                    then
-                      echo "Test for usecase ${FOLDER} failed"
-                      cat "${BUILD_TAG}-${FOLDER}-result.txt"
-                      HAS_FAILED_TEST=true
-                    else
-                      echo "Test for usecase ${FOLDER} successful"
-                  fi
-                done
-
-              if [ "$HAS_FAILED_TEST" ];
-                then
-                  echo "One or more tests have failed"
-                  exit 1
-              fi
-            '''
-          }
-        }
-      }           
-    }
-
-    stage("distribute-poc") {
-      //remove
-      when {
-        branch MAIN_BRANCH
-      }
-
-      steps {
-        script {
-          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh """
-              cd ./POC
-
-              tar -zcvf mithril.tar.gz bookinfo spire istio \
-                deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
-                doc/poc-instructions.md demo/demo-script.sh demo/README.md
-              aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
-
-              tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch
-              aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
-            """
-          }
-        }
-      }
-    }
+//     stage("distribute-poc") {
+//       //remove
+//       when {
+//         branch MAIN_BRANCH
+//       }
+//
+//       steps {
+//         script {
+//           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+//             sh """
+//               cd ./POC
+//
+//               tar -zcvf mithril.tar.gz bookinfo spire istio \
+//                 deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
+//                 doc/poc-instructions.md demo/demo-script.sh demo/README.md
+//               aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
+//
+//               tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch
+//               aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
+//             """
+//           }
+//         }
+//       }
+//     }
   }
 
   post {

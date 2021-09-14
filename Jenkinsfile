@@ -143,6 +143,7 @@ pipeline {
 
               sh """
                 export HUB=${ECR_HUB}
+                export TAG=${BUILD_TAG} 
                 aws ecr get-login-password --region ${ECR_REGION} | \
                   docker login --username AWS --password-stdin ${ECR_REGISTRY}
                 cd istio && make push
@@ -207,7 +208,7 @@ pipeline {
             sh '''#!/bin/bash
               cd terraform
               echo ${USECASE}
-              export USECASE="workload-to-ingress-upstream-disk"
+              export USECASE="simple-bookinfo"
 
               for FOLDER in *;
                 do if [[ ${USECASE} != "" ]]; then
@@ -291,14 +292,14 @@ pipeline {
                   exit 1
               fi
 
-              HAS_FAILED_TEST = false
+              HAS_FAILED_TEST=false
               for RESULT in "${RESULT_LIST[@]}";
                 do
                   if [ "$RESULT" != "ok"];
                     then
                       echo "Test for usecase ${FOLDER} failed"
                       cat "${BUILD_TAG}-${FOLDER}-result.txt"
-                      HAS_FAILED_TEST = true
+                      HAS_FAILED_TEST=true
                     else
                       echo "Test for usecase ${FOLDER} successful"
                   fi

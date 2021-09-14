@@ -1,8 +1,15 @@
 #!/bin/bash
 
+find . -type f -iname "*.sh" -exec chmod +x {} \;
+
 ./create-kind-cluster.sh
 
-HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ./create-docker-registry-secret.sh
+HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key}
+
+echo ${hub} ${access_key} ${secret_access_key}
+echo ${HUB} ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY}
+
+./create-docker-registry-secret.sh
 
 TAG=${build_tag} HUB=${hub} ./deploy-all.sh
 

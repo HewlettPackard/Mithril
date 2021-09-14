@@ -233,6 +233,7 @@ pipeline {
                           sleep 1;
                     fi
                   done
+                  echo ${num_tries}
 
                   terraform destroy -auto-approve
                   cd ..

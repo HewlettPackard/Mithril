@@ -193,6 +193,16 @@ pipeline {
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+              def reg = input(
+                  message: 'What is the test value?',
+                  parameters: [
+                      [$class: 'ChoiceParameterDefinition',
+                          choices: 'Choice workload-to-ingress-upstream-disk\nChoice simple-bookinfo',
+                          name: 'input',
+                          description: 'A select box option']
+                  ])
+              echo "Reg is ${reg}"
+
             sh '''#!/bin/bash
               cd terraform
               export USECASE="workload-to-ingress-upstream-disk"

@@ -304,7 +304,7 @@ pipeline {
                   fi
                 done
 
-              if [ "$HAS_FAILED_TEST"];
+              if [ "$HAS_FAILED_TEST" ];
                 then
                   exit 1
               fi

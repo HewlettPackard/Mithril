@@ -37,19 +37,6 @@ pipeline {
     stage("notify-slack") {
       steps {
         script {
-        timeout(time: 15, unit: 'SECONDS') {
-        def reg = input(
-            message: 'What is the test value?',
-            parameters: [
-                [$class: 'ChoiceParameterDefinition',
-                    choices: 'Choice workload-to-ingress-upstream-disk\nChoice simple-bookinfo',
-                    name: 'input',
-                    description: 'A select box option']
-            ])
-        USECASE = userInput['input']
-        echo "Reg is ${reg}"
-        echo $USECASE
-        }
           slackSend (
             channel: CHANNEL_NAME,
             message: "Hello. The pipeline ${currentBuild.fullDisplayName} started. (<${env.BUILD_URL}|See Job>)")
@@ -204,7 +191,7 @@ pipeline {
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            timeout(time: 15, unit: 'SECONDS') {
+            timeout(time: 60, unit: 'SECONDS') {
             def reg = input(
                 message: 'What is the test value?',
                 parameters: [
@@ -221,7 +208,8 @@ pipeline {
               cd terraform
               echo ${USECASE}
               export USECASE="workload-to-ingress-upstream-disk"
-              for FOLDER in *; 
+
+              for FOLDER in *;
                 do if [[ ${USECASE} != "" ]]; then
                  if [[ ${FOLDER} != ${USECASE} ]]; then
                   continue
@@ -249,29 +237,6 @@ pipeline {
                   terraform destroy -auto-approve
                   cd ..
                  fi
-                else cd ${FOLDER} \
-                   && echo "** Begin test ${FOLDER} **" \
-                   && terraform init \
-                   && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
-
-                   BUCKET_EXISTS=false
-                   num_tries=0
-
-                   while [ $num_tries -lt 1000 ];
-                   do
-                     aws s3api head-object --bucket mithril-artifacts --key "/${BUILD_TAG}/${BUILD_TAG}_${FOLDER}_result.txt" --no-cli-pager > /dev/null
-                     if [ $? -eq 0 ];
-                       then
-                         BUCKET_EXISTS=true
-                         break
-                         else
-                           ((num_tries++))
-                           sleep 1;
-                     fi
-                   done
-
-                   terraform destroy -auto-approve
-                   cd ..
                 fi
               done
           '''

@@ -195,7 +195,7 @@ pipeline {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
               cd terraform
-              export USECASE="simple-bookinfo"
+              export USECASE="workload-to-ingress-upstream-disk"
               for FOLDER in *; 
                 do if [[ ${USECASE} != "" ]]; then
                  if [[ ${FOLDER} != ${USECASE} ]]; then

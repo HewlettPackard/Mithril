@@ -83,9 +83,7 @@ pipeline {
         sh """
           cd istio
           git apply \
-            ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch \
-            ${WORKSPACE}/POC/patches/fetch-istiod-certs.${LATEST_BRANCH}.patch \
-            ${WORKSPACE}/POC/patches/unit-tests.${LATEST_BRANCH}.patch
+            ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch 
         """
       }
     }

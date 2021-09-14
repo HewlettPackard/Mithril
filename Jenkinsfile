@@ -284,6 +284,7 @@ pipeline {
               if [ "$HAS_FAILED_TEST"];
                 then
                   exit 1
+              fi
             '''
           }
         }

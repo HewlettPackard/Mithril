@@ -44,7 +44,7 @@ docker run -i --rm \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
 bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster &&
-chmod +x start.sh && ./start.sh'
+find . -type f -iname "*.sh" -exec chmod +x {} \; && ./start.sh'
 
 ## Creating kind cluster for the server
 #docker run -i --rm \

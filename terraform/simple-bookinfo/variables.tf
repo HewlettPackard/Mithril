@@ -1,5 +1,5 @@
 variable "TAG" {
-  default     = "stable_20210909"
+  default     = "latest"
   description = "TAG used to download the images from ECR repository"
 }
 

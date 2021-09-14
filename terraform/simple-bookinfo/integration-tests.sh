@@ -36,7 +36,7 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c "cd /mithril/POC && TAG=${build_tag} HUB=${hub} ./deploy-all.sh"
+bash -c "cd /mithril/POC && TAG=stable_20210909 HUB=${hub} ./deploy-all.sh"
 
 # Port Forwarding the POD
 docker run -i -d --rm \
@@ -58,13 +58,12 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c "cd /mithril/e2e && touch ${build_tag}_${usecase}_result.txt && go test -v e2e -run TestSimpleBookinfo > ${build_tag}_${usecase}_result.txt"
-
-# Copying response to S3 bucket
-aws s3 cp ${build_tag}_${usecase}_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
+bash -c "cd /mithril/e2e && touch ${build_tag}-${usecase}-result.txt \
+    && go test -v e2e -run TestSimpleBookinfo > ${build_tag}-${usecase}-result.txt\
+    &&  AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} aws s3 cp ${build_tag}_${usecase}_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1"
 
 # Generate log files
-cat /var/log/user-data.log >> ${build_tag}_${usecase}_log.txt
+cat /var/log/user-data.log >> ${build_tag}-${usecase}-log.txt
 
 # Copying log to S3 bucket
-aws s3 cp /${build_tag}_${usecase}_log.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
+aws s3 cp /${build_tag}-${usecase}-log.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1

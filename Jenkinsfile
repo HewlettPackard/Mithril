@@ -229,7 +229,7 @@ pipeline {
                   aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}_${FOLDER}_result.txt" .
 
                 else
-                  echo "Artifact object does not exist"
+                  echo "Artifact object for usecase ${FOLDER} does not exist"
                   exit 1
               fi
 

@@ -1,5 +1,10 @@
 #!/bin/bash
 
+aws configure set aws_access_key_id AKIAXWLCWD5JU7PMBB4M
+aws configure set aws_secret_access_key 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
+
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
+
 ./create-kind-cluster.sh
 
 HUB="529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril" AWS_ACCESS_KEY_ID="AKIAXWLCWD5JU7PMBB4M" AWS_SECRET_ACCESS_KEY="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"

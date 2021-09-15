@@ -39,10 +39,6 @@ kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sl
 cd /mithril/e2e && go test -v e2e -run TestWorkloadToIngressUpstreamDisk > ${build_tag}-${usecase}-result.txt &&
 AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} aws s3 cp ${build_tag}-${usecase}-result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1'
 
-cat /var/log/user-data.log >> ${build_tag}-${usecase}-result.txt
-
-aws s3 cp /${build_tag}-${usecase}-result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
-
 cat /var/log/user-data.log >> ${build_tag}-${usecase}-log.txt
 
 aws s3 cp /${build_tag}-${usecase}-log.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1

@@ -2,9 +2,10 @@
 
 ./create-kind-cluster.sh
 
-HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ./create-docker-registry-secret.sh
+#HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ./create-docker-registry-secret.sh
 
-TAG=stable_20210909 HUB=${hub} ./deploy-all.sh
+TAG=stable_20210909 HUB=${hub}
+./deploy-all.sh
 
 echo "TAG=$TAG HUB=$HUB"
 
@@ -16,4 +17,4 @@ CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].met
 
 echo $CLIENT_POD
 
-kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://${HOST_IP}:8000/productpage"
+kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://10.0.1.50:8000/productpage"

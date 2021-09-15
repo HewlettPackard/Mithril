@@ -45,7 +45,7 @@ func TestWorkloadToIngressUpstreamDisk(t *testing.T) {
 }
 
 func requestProductpageWorkloadFromSleepPod(t *testing.T) {
-	labelSelector := "app=details"
+	labelSelector := "app=sleep"
 	listOptions := metav1.ListOptions{
 		LabelSelector: labelSelector,
 	}
@@ -60,10 +60,11 @@ func requestProductpageWorkloadFromSleepPod(t *testing.T) {
 	}
 	sleepPod := podList.Items[0]
 
+	command := "cat /response_productpage.txt"
 	cmd := []string{
 		"sh",
 		"-c",
-		"cat response_productpage.txt",
+		command,
 	}
 
 	req := clientset.CoreV1().RESTClient().Post().
@@ -71,7 +72,7 @@ func requestProductpageWorkloadFromSleepPod(t *testing.T) {
 		Resource("pods").
 		Name(sleepPod.Name).
 		SubResource("exec").
-		Param("container", "details")
+		Param("container", "sleep")
 
 	option := &v1.PodExecOptions{
 		Command: cmd,

@@ -17,4 +17,4 @@ CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].met
 
 echo $CLIENT_POD
 
-kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://10.0.1.50:8000/productpage > response_productpage.txt"
+kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://10.0.1.50:8000/productpage > /response_productpage.txt"

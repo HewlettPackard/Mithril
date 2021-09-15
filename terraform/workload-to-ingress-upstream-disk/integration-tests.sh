@@ -26,25 +26,29 @@ mkdir -p $HOME/.kube && touch $HOME/.kube/config
 
 hostname -I | awk '{print $1}'
 
-# Creating kind cluster for the server
-docker run -i --rm \
--v "/var/run/docker.sock:/var/run/docker.sock:rw" \
--v "/.kube/config:/root/.kube/config:rw" \
---network host mithril-testing:${build_tag} \
-bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && find . -type f -iname "*.sh" -exec chmod +x {} \; && ./start.sh'
-
 ## Creating kind cluster for the server
 #docker run -i --rm \
 #-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 #-v "/.kube/config:/root/.kube/config:rw" \
 #--network host mithril-testing:${build_tag} \
-#bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && ./create-kind-cluster.sh &&
-#HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ./create-docker-registry-secret.sh &&
-#TAG=stable_20210909 HUB=${hub} ./deploy-all.sh &&
-#INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") &&
-#kubectl port-forward "$INGRESS_POD" 8000:8080 -n istio-system &&
-#kubectl rollout status deployment productpage-v1 && kubectl get pods -A' >> ${build_tag}_log.txt
-#
+#bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && find . -type f -iname "*.sh" -exec chmod +x {} \; && ./start.sh'
+
+# Creating kind cluster for the server
+docker run -i --rm \
+-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+-v "/.kube/config:/root/.kube/config:rw" \
+--network host mithril-testing:${build_tag} \
+bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && ./create-kind-cluster.sh &&
+HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ./create-docker-registry-secret.sh &&
+TAG=stable_20210909 HUB=${hub} ./deploy-all.sh &&
+kubectl wait pod --for=condition=Ready -l app=istio-ingressgateway -n istio-system &&
+kubectl wait pod --for=condition=Ready -l app=productpage &&
+kubectl rollout status deployment productpage-v1 -n default &&
+kubectl rollout status deployment istio-ingressgateway -n istio-system &&
+INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") &&
+kubectl port-forward "$INGRESS_POD" 8000:8080 -n istio-system &&
+kubectl get pods -A'
+
 
 
 

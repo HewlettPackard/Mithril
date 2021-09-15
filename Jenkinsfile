@@ -224,7 +224,7 @@ pipeline {
 
                   while [ $num_tries -lt 500 ];
                   do
-                    aws s3api head-object --bucket mithril-artifacts --key "/${BUILD_TAG}/${BUILD_TAG}_${FOLDER}_log.txt" --no-cli-pager
+                    aws s3api head-object --bucket mithril-artifacts --key "/${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-log.txt" --no-cli-pager
                     if [[ $? -eq 0 ]];
                       then
                         echo $?

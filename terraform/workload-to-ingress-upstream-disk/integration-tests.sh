@@ -59,13 +59,10 @@ kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sl
 #CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}") &&
 #kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://10.0.1.50:8000/productpage"'
 
+cat /var/log/user-data.log >> ${build_tag}-${usecase}-result.txt
 
+aws s3 cp /${build_tag}-${usecase}-result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
 
-cat /var/log/user-data.log >> ${build_tag}_${usecase}_log.txt
+cat /var/log/user-data.log >> ${build_tag}-${usecase}-log.txt
 
-cat /var/log/user-data.log >> ${build_tag}_${usecase}_result.txt
-
-# Copying log to S3 bucket
-aws s3 cp /${build_tag}_${usecase}_log.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
-
-aws s3 cp /${build_tag}_${usecase}_result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1
+aws s3 cp /${build_tag}-${usecase}-log.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1

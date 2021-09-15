@@ -35,7 +35,6 @@ mkdir -p $HOME/.kube && touch $HOME/.kube/config
 
 #echo "===== workload-to-ingress-upstream-disk =====" >> workload-to-ingress-upstream-disk_${build_tag}.txt
 hostname -I | awk '{print $1}'
-export HOST_IP=$(hostname -I | awk '{print $1}')
 
 
 ## Creating kind cluster for the server

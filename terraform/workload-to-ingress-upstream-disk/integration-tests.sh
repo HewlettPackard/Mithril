@@ -38,23 +38,24 @@ hostname -I | awk '{print $1}'
 export HOST_IP=$(hostname -I | awk '{print $1}')
 echo ${HOST_IP}
 
-# Creating kind cluster for the server
-docker run -i --rm \
--v "/var/run/docker.sock:/var/run/docker.sock:rw" \
--v "/.kube/config:/root/.kube/config:rw" \
---network host mithril-testing:${build_tag} \
--e AWS_ACCESS_KEY_ID=${access_key} -e AWS_SECRET_ACCESS_KEY=${secret_access_key} -e hub=${hub} -e HOST_IP=${HOST_IP}
-bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster &&
-find . -type f -iname "*.sh" -exec chmod +x {} \; && ./start.sh &&
-cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && ./start.sh'
-
 ## Creating kind cluster for the server
 #docker run -i --rm \
 #-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 #-v "/.kube/config:/root/.kube/config:rw" \
 #--network host mithril-testing:${build_tag} \
-#bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && echo DEPLOYING CLIENT CLUSTER && . ./start.sh &&
-#echo DEPLOYING CLIENT CLUSTER && cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && . ./start.sh'
+#-e AWS_ACCESS_KEY_ID=${access_key} -e AWS_SECRET_ACCESS_KEY=${secret_access_key} -e hub=${hub} -e HOST_IP=${HOST_IP} \
+#bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster &&
+#find . -type f -iname "*.sh" -exec chmod +x {} \; && ./start.sh &&
+#cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && ./start.sh'
+
+# Creating kind cluster for the server
+docker run -i --rm \
+-v "/var/run/docker.sock:/var/run/docker.sock:rw" \
+-v "/.kube/config:/root/.kube/config:rw" \
+--network host mithril-testing:${build_tag} \
+-e AWS_ACCESS_KEY_ID=${access_key} -e AWS_SECRET_ACCESS_KEY=${secret_access_key} -e hub=${hub} -e HOST_IP=${HOST_IP} \
+bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster &&
+find . -type f -iname "*.sh" -exec chmod +x {} \; && ./start.sh'
 
 ## Creating kind cluster for the server
 #docker run -i --rm \

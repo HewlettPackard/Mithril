@@ -261,9 +261,8 @@ pipeline {
               cd terraform
 
               for FOLDER in *;
-                HAS_MISSING_ARTIFACTS=false 
-                
                 do
+                  HAS_MISSING_ARTIFACTS=false 
                   BUCKET_EXISTS=false
                   aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result./txt" --no-cli-pager
                   if [ $? -eq 0 ];
@@ -284,7 +283,7 @@ pipeline {
                       echo "Artifact object for usecase ${FOLDER} does not exist"
                       HAS_MISSING_ARTIFACTS=true
                   fi
-              done
+                done
 
               if [ "$HAS_MISSING_ARTIFACTS" ];
                 then

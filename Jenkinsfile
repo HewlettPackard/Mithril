@@ -71,9 +71,9 @@ pipeline {
 
     stage("make-poc-codebase") {
 //       remove
-      when {
-        branch MAIN_BRANCH
-      }
+      // when {
+      //   branch MAIN_BRANCH
+      // }
 
       steps {
         // Istio clone from the latest branch

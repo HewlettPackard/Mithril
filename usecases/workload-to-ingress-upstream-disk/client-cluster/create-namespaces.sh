@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+#set -e
 
 kubectl create ns istio-system
 kubectl create ns spire

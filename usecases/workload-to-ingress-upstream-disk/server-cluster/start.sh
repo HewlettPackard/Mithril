@@ -2,7 +2,7 @@
 
 ./create-kind-cluster.sh
 
-HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key}
+#HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key}
 
 echo "HUB=${HUB}" "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
 

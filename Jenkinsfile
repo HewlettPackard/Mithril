@@ -208,7 +208,7 @@ pipeline {
             sh '''#!/bin/bash
               cd terraform
 
-              export USECASE="simple-bookinfo"
+              export USECASE="workload-to-ingress-upstream-disk"
               aws s3api head-object --bucket mithril-artifacts --key ISTIOSPIRE-85_3a444e3/ISTIOSPIRE-85_3a444e3_workload-to-ingress-upstream-disk_log.txt --no-cli-pager
               for FOLDER in *;
                 do if [[ ${USECASE} != "" ]]; then

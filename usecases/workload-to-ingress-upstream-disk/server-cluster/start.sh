@@ -2,15 +2,13 @@
 
 ./create-kind-cluster.sh
 
-#HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key}
-
-echo "HUB=${hub}" "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
+HUB="529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril" AWS_ACCESS_KEY_ID="AKIAXWLCWD5JU7PMBB4M" AWS_SECRET_ACCESS_KEY="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"
 
 ./create-docker-registry-secret.sh
 
 ./create-namespaces.sh
 
-TAG="stable_20210909" HUB=${hub} ./deploy-all.sh
+TAG="stable_20210909" ./deploy-all.sh
 #
 echo "TAG=$TAG HUB=$HUB"
 #

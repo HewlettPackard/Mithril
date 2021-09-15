@@ -31,7 +31,6 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
--e AWS_ACCESS_KEY_ID=${access_key} -e AWS_SECRET_ACCESS_KEY=${secret_access_key} -e hub=${hub} \
 bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && ./start.sh'
 
 ## Creating kind cluster for the server

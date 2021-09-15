@@ -43,7 +43,7 @@ HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access
 kubectl create ns spire && TAG=stable_20210909 HUB=${hub} ./deploy-all.sh &&
 INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") &&
 kubectl port-forward "$INGRESS_POD" 8000:8080 -n istio-system &&
-cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && find . -type f -iname "*.sh" -exec chmod +x {} \; && ./create-kind-cluster.sh &&'
+cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && find . -type f -iname "*.sh" -exec chmod +x {} \; && ./create-kind-cluster.sh'
 
 #kubectl create ns spire && TAG=stable_20210909 HUB=${hub} ./deploy-all.sh &&
 #kubectl wait pod --for=condition=Ready -l app=sleep &&

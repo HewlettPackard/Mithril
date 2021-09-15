@@ -70,10 +70,6 @@ pipeline {
     }
 
     stage("make-poc-codebase") {
-//       remove
-      // when {
-      //   branch MAIN_BRANCH
-      // }
 
       steps {
         // Istio clone from the latest branch
@@ -88,30 +84,21 @@ pipeline {
       }
     }
 
-//     stage("unit-test") {
-//       //remove
-//       when {
-//         branch MAIN_BRANCH
-//       }
-//
-//       steps {
-//         sh """
-//           set -x
-//           export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
-//
-//           cd istio
-//           make clean
-//           make init
-//           make test
-//         """
-//       }
-//     }
+    stage("unit-test") {
+      steps {
+        sh """
+          set -x
+          export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
+
+          cd istio
+          make clean
+          make init
+          make test
+        """
+      }
+    }
 
     stage("build-and-push-poc-images") {
-      //remove
-      // when {
-      //   branch MAIN_BRANCH
-      // }
 
       environment {
         BUILD_WITH_CONTAINER = 0
@@ -156,55 +143,43 @@ pipeline {
 
     // Tag the current build as "latest" whenever a new commit
     // comes into master and pushes the tag to the ECR repository
-//     stage("tag-latest-images") {
-//       when {
-//         branch MAIN_BRANCH
-//       }
-//       steps {
-//         script {
-//           def secrets = vaultGetSecrets()
-//
-//           def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
-//           def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX
-//
-//           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-//             sh """#!/bin/bash
-//               set -x
-//               aws ecr get-login-password --region ${ECR_REGION} | \
-//                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
-//
-//               docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
-//                 pieces=(\$line)
-//                 docker tag "\${pieces[0]}" "\${pieces[1]}":latest
-//                 docker push "\${pieces[1]}":latest
-//               done
-//             """
-//           }
-//         }
-//       }
-//     }
+    stage("tag-latest-images") {
+      when {
+        branch MAIN_BRANCH
+      }
+      steps {
+        script {
+          def secrets = vaultGetSecrets()
+
+          def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
+          def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX
+
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh """#!/bin/bash
+              set -x
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
+              docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
+                pieces=(\$line)
+                docker tag "\${pieces[0]}" "\${pieces[1]}":latest
+                docker push "\${pieces[1]}":latest
+              done
+            """
+          }
+        }
+      }
+    }
 
     stage("run-integration-tests") {
-      // when {
-      //   branch MAIN_BRANCH
-      // }
+
+      when {
+        branch MAIN_BRANCH
+      }
 
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-//             timeout(time: 60, unit: 'SECONDS') {
-//             def reg = input(
-//                 message: 'What is the test value?',
-//                 parameters: [
-//                     [$class: 'ChoiceParameterDefinition',
-//                         choices: 'Choice workload-to-ingress-upstream-disk\nChoice simple-bookinfo',
-//                         name: 'input',
-//                         description: 'A select box option']
-//                 ])
-//             USECASE = userInput['input']
-//             echo "Reg is ${reg}"
-//             echo $USECASE
-//             }
             sh '''#!/bin/bash
               cd terraform
 
@@ -318,7 +293,7 @@ pipeline {
     }
 
     stage("distribute-poc") {
-      //remove
+
       when {
         branch MAIN_BRANCH
       }

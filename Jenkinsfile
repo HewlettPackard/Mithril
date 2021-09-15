@@ -209,7 +209,7 @@ pipeline {
               cd terraform
 
               export USECASE="workload-to-ingress-upstream-disk"
-              aws s3api head-object --bucket mithril-artifacts --key ISTIOSPIRE-85_3a444e3/ISTIOSPIRE-85_3a444e3_workload-to-ingress-upstream-disk_log.txt --no-cli-pager
+
               for FOLDER in *;
                 do if [[ ${USECASE} != "" ]]; then
                  if [[ ${FOLDER} != ${USECASE} ]]; then
@@ -225,7 +225,7 @@ pipeline {
                   while [ $num_tries -lt 500 ];
                   do
                     aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-log.txt" --no-cli-pager
-                    if [[ $? -eq 0 ]];
+                    if [ $? -eq 0 ];
                       then
                         echo $?
                         BUCKET_EXISTS=true

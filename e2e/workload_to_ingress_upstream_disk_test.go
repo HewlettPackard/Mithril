@@ -60,7 +60,7 @@ func requestProductpageWorkloadFromSleepPod(t *testing.T) {
 	}
 	sleepPod := podList.Items[0]
 
-	command := "cat /response_productpage.txt"
+	command := "cat /tmp/response_productpage.txt"
 	cmd := []string{
 		"sh",
 		"-c",

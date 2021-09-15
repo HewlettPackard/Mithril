@@ -19,7 +19,7 @@ docker tag ${hub}:${build_tag} mithril-testing:${build_tag}
 # Creating kubernetes config to use kubectl inside the container
 mkdir -p $HOME/.kube && touch $HOME/.kube/config
 
-HOST_IP=$(hostname -I | awk '{print $1}')
+export HOST_IP=$(hostname -I | awk '{print $1}')
 
 # Creating kind cluster for the server
 docker run -i --rm \

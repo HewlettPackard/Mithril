@@ -38,7 +38,7 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && ./create-kind-cluster.sh &&
+bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && find . -type f -iname "*.sh" -exec chmod +x {} \; && ./create-kind-cluster.sh &&
 HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ./create-docker-registry-secret.sh &&
 TAG=stable_20210909 HUB=${hub} ./deploy-all.sh &&
 kubectl wait pod --for=condition=Ready -l app=istio-ingressgateway -n istio-system &&

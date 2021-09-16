@@ -17,9 +17,7 @@ docker tag ${hub}:${build_tag} mithril-testing:${build_tag}
 # Creating kubernetes config to use kubectl inside the container
 mkdir -p $HOME/.kube && touch $HOME/.kube/config
 
-echo "===== workload-to-ingress-upstream-disk ====="
-
-# Creating kind cluster for the server
+# Running usecase and testing it
 docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \

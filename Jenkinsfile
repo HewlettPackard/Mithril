@@ -241,7 +241,6 @@ pipeline {
                   if [ $? -eq 0 ];
                     then 
                       BUCKET_EXISTS=true
-                      break
                   fi
 
                   if $BUCKET_EXISTS;

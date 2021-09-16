@@ -80,36 +80,17 @@ resource "aws_security_group" "allow_web" {
   }
 }
 
-# 7. Create a network interface with an ip in the subnet that was created in step 4
-resource "aws_network_interface" "mithril-nic" {
-  subnet_id       = aws_subnet.subnet-1.id
-  private_ips     = ["10.0.1.50"]
-  security_groups = [aws_security_group.allow_web.id]
-}
-
-# 8. Assign an elastic IP to the network interface created in step 7
-resource "aws_eip" "one" {
-  vpc                       = true
-  network_interface         = aws_network_interface.mithril-nic.id
-  associate_with_private_ip = "10.0.1.50"
-  depends_on                = [aws_internet_gateway.gw]
-}
-
-output "server_public_ip" {
-  value = aws_eip.one.public_ip
-}
-
 # 9. Create Ubuntu server
 resource "aws_instance" "mithril_instance" {
   ami               = var.EC2_AMI
   instance_type     = var.EC2_INSTANCE_TYPE
   availability_zone = "us-east-1a"
   key_name          = var.EC2_KEY_PAIR
-
-  network_interface {
-    device_index         = 0
-    network_interface_id = aws_network_interface.mithril-nic.id
-  }
+  private_ip = "10.0.1.50"
+  vpc_security_group_ids = [ "${aws_security_group.allow_web.id}" ]
+  subnet_id = aws_subnet.subnet-1.id
+  associate_public_ip_address = true
+  user_data = data.template_file.init.rendered
 
   root_block_device {
     volume_size = var.VOLUME_SIZE
@@ -117,8 +98,11 @@ resource "aws_instance" "mithril_instance" {
 
   tags = {
     Name = "mithril-testing"
-  }
-  user_data = data.template_file.init.rendered
+  } 
+}
+
+output "EC2-PUBLIC-IP" {
+  value = aws_instance.mithril_instance.public_ip
 }
 
 data "aws_secretsmanager_secret" "secrets" {

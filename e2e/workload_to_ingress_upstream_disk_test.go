@@ -110,5 +110,5 @@ func requestProductpageWorkloadFromSleepPod(t *testing.T) {
 		t.Error(err)
 	}
 
-	assert.Equal(t, stdOut.Str[0], string(fileContent))
+	assert.Contains(t, stdOut.Str[0], string(fileContent))
 }

@@ -187,7 +187,7 @@ pipeline {
               cd terraform
 
               for FOLDER in *;
-                cd ${FOLDER} \
+                do cd ${FOLDER} \
                   && echo "** Begin test ${FOLDER} **" \
                   && terraform init \
                   && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}

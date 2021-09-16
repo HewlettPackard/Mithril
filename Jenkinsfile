@@ -186,7 +186,7 @@ pipeline {
             sh '''#!/bin/bash
               cd terraform
 
-              export USECASE="workload-to-ingress-upstream-disk"
+              export USECASE=""
 
               for FOLDER in *;
                 do if [[ ${USECASE} != "" ]]; then
@@ -260,7 +260,7 @@ pipeline {
                       RESULT_LIST+=RESULT
 
                     else
-                      echo "Artifact object for usecase ${FOLDER} does not exist"
+                      echo "Artifact ${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt object for usecase ${FOLDER} does not exist"
                       HAS_MISSING_ARTIFACTS=true
                   fi
                 done

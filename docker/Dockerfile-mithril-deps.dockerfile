@@ -60,14 +60,4 @@ RUN apt-get install -y gnupg software-properties-common curl \
     && apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
     && apt-get update && apt-get install terraform
 
-## Cloning istio source code
-#RUN git clone --single-branch --branch $ISTIO_VERSION https://github.com/istio/istio.git ./istio-source
-#
-#COPY . .
-#
-#WORKDIR /mithril/istio-source
-#
-## Applying POC patch
-## RUN git apply /mithril/POC/patches/poc.$PATCH_VERSION.patch /mithril/POC/patches/fetch-istiod-certs.$PATCH_VERSION.patch
-#
-#WORKDIR /mithril
+WORKDIR /mithril

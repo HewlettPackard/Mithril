@@ -183,7 +183,7 @@ pipeline {
             sh '''#!/bin/bash
               cd terraform
 
-              export USECASE=""
+              export USECASE="workload-to-ingress-upstream-disk"
 
               for FOLDER in *;
                 do if [[ ${USECASE} != "" ]]; then

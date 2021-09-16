@@ -36,7 +36,7 @@ TAG=${build_tag} HUB=${hub} && ./deploy-all.sh &&
 kubectl rollout status deployment sleep &&
 CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}") &&
 kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://10.0.1.50:8000/productpage > /tmp/response_productpage.txt" &&
-cd /mithril/e2e && go test -v e2e -run TestWorkloadToIngressUpstreamDisk > ${build_tag}-${usecase}-result.txt &&
+cd /mithril/e2e && touch ${build_tag}-${usecase}-result.txt && go test -v e2e -run TestWorkloadToIngressUpstreamDisk > ${build_tag}-${usecase}-result.txt &&
 AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} aws s3 cp ${build_tag}-${usecase}-result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1'
 
 cat /var/log/user-data.log >> ${build_tag}-${usecase}-log.txt

@@ -85,6 +85,9 @@ pipeline {
     }
 
     stage("unit-test") {
+      when {
+        branch MAIN_BRANCH
+      }
       steps {
         sh """
           set -x

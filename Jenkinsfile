@@ -173,9 +173,9 @@ pipeline {
 
     stage("run-integration-tests") {
 
-      when {
-        branch MAIN_BRANCH
-      }
+//       when {
+//         branch MAIN_BRANCH
+//       }
 
       steps {
         script {

@@ -186,13 +186,8 @@ pipeline {
             sh '''#!/bin/bash
               cd terraform
 
-              export USECASE=""
-
               for FOLDER in *;
-                do if [[ ${USECASE} != "" ]]; then
-                 if [[ ${FOLDER} != ${USECASE} ]]; then
-                  continue
-                  else cd ${FOLDER} \
+                cd ${FOLDER} \
                   && echo "** Begin test ${FOLDER} **" \
                   && terraform init \
                   && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
@@ -218,8 +213,6 @@ pipeline {
 
                   terraform destroy -auto-approve
                   cd ..
-                 fi
-                fi
               done
           '''
           }

@@ -1,7 +1,7 @@
 AWS_PROFILE = "mithril-jenkins"
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:pipeline"
 DEVELOPMENT_IMAGE = "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril"
-CHANNEL_NAME = "@U021L6LHSHM"
+CHANNEL_NAME = "#notify-project-mithril"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
@@ -201,11 +201,9 @@ pipeline {
                     aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-log.txt" --no-cli-pager
                     if [ $? -eq 0 ];
                       then
-                        echo $?
                         BUCKET_EXISTS=true
                         break;
                       else
-                        echo $?
                         ((num_tries++))
                         sleep 1;
                     fi

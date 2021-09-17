@@ -246,7 +246,7 @@ pipeline {
                       echo "Artifact object exists"
                       aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt" .
 
-                      RESULT=$(tail -n 1 "${BUILD_TAG}-${FOLDER}-result.txt"  grep -oE '^..')
+                      RESULT=$(tail -n 1 "${BUILD_TAG}-${FOLDER}-result.txt" | grep -oE '^..')
                       RESULT_LIST+=RESULT
 
                     else
@@ -255,7 +255,7 @@ pipeline {
                   fi
                 done
 
-              if [ "$HAS_MISSING_ARTIFACTS" ];
+              if $HAS_MISSING_ARTIFACTS;
                 then
                   echo "One or more artifacts doesn't exist"
                   exit 1
@@ -274,7 +274,7 @@ pipeline {
                   fi
                 done
 
-              if [ "$HAS_FAILED_TEST" ];
+              if $HAS_FAILED_TEST;
                 then
                   echo "One or more tests have failed"
                   exit 1

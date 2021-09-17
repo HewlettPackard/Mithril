@@ -259,12 +259,14 @@ pipeline {
                 then
                   echo "One or more artifacts doesn't exist"
                   exit 1
+                else
+                  echo "All artifacts found"
               fi
 
               HAS_FAILED_TEST=false
               for RESULT in "${RESULT_LIST[@]}";
                 do
-                  if [ "$RESULT" != "ok"];
+                  if [ "$RESULT" != "ok" ];
                     then
                       echo "Test for usecase ${FOLDER} failed"
                       cat "${BUILD_TAG}-${FOLDER}-result.txt"

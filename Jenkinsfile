@@ -45,6 +45,9 @@ pipeline {
     }
 
     stage("build-and-push-dev-images"){
+      when {
+        branch MAIN_BRANCH
+      }
       steps {
         script {
           def secrets = vaultGetSecrets()
@@ -175,11 +178,9 @@ pipeline {
     }
 
     stage("run-integration-tests") {
-
-//       when {
-//         branch MAIN_BRANCH
-//       }
-
+      when {
+        branch MAIN_BRANCH
+      }
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
@@ -221,10 +222,9 @@ pipeline {
     }
 
     stage("analyze-integration-tests") {
-      // when {
-      //   branch MAIN_BRANCH
-      // }
-
+      when {
+        branch MAIN_BRANCH
+      }
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
@@ -288,11 +288,9 @@ pipeline {
     }
 
     stage("distribute-poc") {
-
       when {
         branch MAIN_BRANCH
       }
-
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {

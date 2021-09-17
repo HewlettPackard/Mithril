@@ -80,7 +80,7 @@ resource "aws_security_group" "allow_web" {
   }
 }
 
-# 9. Create Ubuntu server
+# 7. Create Ubuntu server
 resource "aws_instance" "mithril_instance" {
   ami               = var.EC2_AMI
   instance_type     = var.EC2_INSTANCE_TYPE

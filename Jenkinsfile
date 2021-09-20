@@ -69,107 +69,107 @@ pipeline {
       }
     }
 
-//     stage("make-poc-codebase") {
-//
-//       steps {
-//         // Istio clone from the latest branch
-//         sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
-//
-//         // Apply Mithril patches
-//         sh """
-//           cd istio
-//           git apply \
-//             ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch
-//         """
-//       }
-//     }
-//
-//     stage("unit-test") {
-//       steps {
-//         sh """
-//           set -x
-//           export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
-//
-//           cd istio
-//           make clean
-//           make init
-//           make test
-//         """
-//       }
-//     }
-//
-//     stage("build-and-push-poc-images") {
-//
-//       environment {
-//         BUILD_WITH_CONTAINER = 0
-//       }
-//       steps {
-//         // Fetch secrets from Vault and use the mask token plugin
-//         script {
-//           def secrets = vaultGetSecrets()
-//
-//           def passwordMask = [
-//             $class: 'MaskPasswordsBuildWrapper',
-//             varPasswordPairs: [ [ password: secrets.dockerHubToken ] ]
-//           ]
-//
-//           // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
-//           // and build tag, building Istio and pushing images to the Dockerhub of HPE
-//           wrap(passwordMask) {
-//             docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-//               // Build and push to HPE registry
-//               sh """
-//                 export HUB=${HPE_REGISTRY}
-//                 echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
-//                 cd istio && make push
-//               """
-//
-//               // Build and push to ECR registry
-//               def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-//               def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
-//
-//               sh """
-//                 export HUB=${ECR_HUB}
-//                 export TAG=${BUILD_TAG}
-//                 aws ecr get-login-password --region ${ECR_REGION} | \
-//                   docker login --username AWS --password-stdin ${ECR_REGISTRY}
-//                 cd istio && make push
-//               """
-//             }
-//           }
-//         }
-//       }
-//     }
-//
-//     // Tag the current build as "latest" whenever a new commit
-//     // comes into master and pushes the tag to the ECR repository
-//     stage("tag-latest-images") {
-//       when {
-//         branch MAIN_BRANCH
-//       }
-//       steps {
-//         script {
-//           def secrets = vaultGetSecrets()
-//
-//           def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
-//           def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX
-//
-//           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-//             sh """#!/bin/bash
-//               set -x
-//               aws ecr get-login-password --region ${ECR_REGION} | \
-//                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
-//
-//               docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
-//                 pieces=(\$line)
-//                 docker tag "\${pieces[0]}" "\${pieces[1]}":latest
-//                 docker push "\${pieces[1]}":latest
-//               done
-//             """
-//           }
-//         }
-//       }
-//     }
+    stage("make-poc-codebase") {
+
+      steps {
+        // Istio clone from the latest branch
+        sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
+
+        // Apply Mithril patches
+        sh """
+          cd istio
+          git apply \
+            ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch
+        """
+      }
+    }
+
+    stage("unit-test") {
+      steps {
+        sh """
+          set -x
+          export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
+
+          cd istio
+          make clean
+          make init
+          make test
+        """
+      }
+    }
+
+    stage("build-and-push-poc-images") {
+
+      environment {
+        BUILD_WITH_CONTAINER = 0
+      }
+      steps {
+        // Fetch secrets from Vault and use the mask token plugin
+        script {
+          def secrets = vaultGetSecrets()
+
+          def passwordMask = [
+            $class: 'MaskPasswordsBuildWrapper',
+            varPasswordPairs: [ [ password: secrets.dockerHubToken ] ]
+          ]
+
+          // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
+          // and build tag, building Istio and pushing images to the Dockerhub of HPE
+          wrap(passwordMask) {
+            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+              // Build and push to HPE registry
+              sh """
+                export HUB=${HPE_REGISTRY}
+                echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
+                cd istio && make push
+              """
+
+              // Build and push to ECR registry
+              def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+              def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+
+              sh """
+                export HUB=${ECR_HUB}
+                export TAG=${BUILD_TAG}
+                aws ecr get-login-password --region ${ECR_REGION} | \
+                  docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                cd istio && make push
+              """
+            }
+          }
+        }
+      }
+    }
+
+    // Tag the current build as "latest" whenever a new commit
+    // comes into master and pushes the tag to the ECR repository
+    stage("tag-latest-images") {
+      when {
+        branch MAIN_BRANCH
+      }
+      steps {
+        script {
+          def secrets = vaultGetSecrets()
+
+          def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
+          def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX
+
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh """#!/bin/bash
+              set -x
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
+              docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
+                pieces=(\$line)
+                docker tag "\${pieces[0]}" "\${pieces[1]}":latest
+                docker push "\${pieces[1]}":latest
+              done
+            """
+          }
+        }
+      }
+    }
 
     stage("run-integration-tests") {
       steps {

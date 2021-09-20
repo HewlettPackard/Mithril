@@ -43,7 +43,7 @@ Follow [aws cli install and configure instructions](https://aws.amazon.com/cli/?
 In order to run the POC locally,
 
 ```bash
-TAG=stable \
+TAG=stable_20210920 \
 HUB=public.ecr.aws/e4m8j0n8/mithril \
 ./deploy-all.sh
 ```

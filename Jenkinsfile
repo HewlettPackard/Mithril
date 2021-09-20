@@ -45,9 +45,6 @@ pipeline {
     }
 
     stage("build-and-push-dev-images"){
-      when {
-        branch MAIN_BRANCH
-      }
       steps {
         script {
           def secrets = vaultGetSecrets()
@@ -88,9 +85,6 @@ pipeline {
     }
 
     stage("unit-test") {
-      when {
-        branch MAIN_BRANCH
-      }
       steps {
         sh """
           set -x
@@ -178,9 +172,6 @@ pipeline {
     }
 
     stage("run-integration-tests") {
-      when {
-        branch MAIN_BRANCH
-      }
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
@@ -220,9 +211,6 @@ pipeline {
     }
 
     stage("analyze-integration-tests") {
-      when {
-        branch MAIN_BRANCH
-      }
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
@@ -257,7 +245,7 @@ pipeline {
 
               if $HAS_MISSING_ARTIFACTS;
                 then
-                  echo "One or more artifacts doesn't exist"
+                  echo "One or more artifacts don't. exist"
                   exit 1
                 else
                   echo "All artifacts found"

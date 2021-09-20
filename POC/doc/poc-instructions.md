@@ -39,20 +39,12 @@ Follow [aws cli install and configure instructions](https://aws.amazon.com/cli/?
 ./create-kind-cluster.sh
 ```
 
-## Create a secret for docker registry
-
-
-```bash
-HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril \
-./create-docker-registry-secret.sh
-```
-
 ## Running the POC locally
 In order to run the POC locally,
 
 ```bash
 TAG=stable \
-HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril \
+HUB=public.ecr.aws/e4m8j0n8/mithril \
 ./deploy-all.sh
 ```
 

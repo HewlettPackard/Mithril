@@ -219,7 +219,7 @@ eksctl create cluster \
 5. Deploy the latest (master) tag using the images from the ECR repository.
 ```bash
 TAG=latest \
-HUB=529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril \
+HUB=public.ecr.aws/e4m8j0n8/mithril \
 ./deploy-all.sh
 ```
 When you are done, you can [clean up your istio deployment](#clean-up), and then delete the EKS cluster.

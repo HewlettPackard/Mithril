@@ -4,12 +4,7 @@
       {
         "Sid": "MithrilPOC",
         "Effect": "Allow",
-        "Principal": {
-          "AWS": [
-            "arn:aws:iam::532440004545:root", 
-            "arn:aws:iam::537868109139:root"
-          ]
-        },
+        "Principal": "*",
         "Action": [
           "ecr:BatchGetImage",
           "ecr:GetDownloadUrlForLayer"

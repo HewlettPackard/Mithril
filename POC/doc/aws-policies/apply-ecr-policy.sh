@@ -11,3 +11,5 @@ for image_name in "${image_names[@]}"
 do
   aws ecr set-repository-policy --repository-name mithril/$image_name --policy-text file://ecr-policy.json 
 done
+
+  

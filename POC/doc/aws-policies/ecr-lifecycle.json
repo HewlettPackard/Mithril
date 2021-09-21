@@ -1,0 +1,47 @@
+{
+    "rules": [
+        {
+            "rulePriority": 10,
+            "description": "Keep latest image",
+            "selection": {
+                "tagStatus": "tagged",
+                "tagPrefixList": [
+                    "latest"
+                ],
+                "countType": "imageCountMoreThan",
+                "countNumber": 9999
+            },
+            "action": {
+                "type": "expire"
+            }
+        },
+        {
+            "rulePriority": 14,
+            "description": "Keep stable images",
+            "selection": {
+                "tagStatus": "tagged",
+                "tagPrefixList": [
+                    "stable"
+                ],
+                "countType": "imageCountMoreThan",
+                "countNumber": 9999
+            },
+            "action": {
+                "type": "expire"
+            }
+        },
+        {
+            "rulePriority": 20,
+            "description": "Expire images older than 1 day",
+            "selection": {
+                "tagStatus": "any",
+                "countType": "sinceImagePushed",
+                "countUnit": "days",
+                "countNumber": 1
+            },
+            "action": {
+                "type": "expire"
+            }
+        }
+    ]
+}

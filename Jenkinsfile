@@ -88,9 +88,9 @@ pipeline {
       steps {
         sh """
           set -x
-          export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
-
-          cd istio
+          export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
+          
+          cd istio         
           make clean
           make init
           make test

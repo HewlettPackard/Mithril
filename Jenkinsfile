@@ -91,7 +91,7 @@ pipeline {
       steps {
         sh """
           set -x
-          export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
+          export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
           
           cd istio         
           make clean

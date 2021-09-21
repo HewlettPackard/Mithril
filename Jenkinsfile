@@ -235,7 +235,7 @@ pipeline {
                       aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt" .
 
                       RESULT=$(tail -n 1 "${BUILD_TAG}-${FOLDER}-result.txt" | grep -oE '^..')
-                      RESULT_LIST+=$RESULT
+                      RESULT_LIST+=($RESULT)
 
                     else
                       echo "Artifact ${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt object for usecase ${FOLDER} does not exist"

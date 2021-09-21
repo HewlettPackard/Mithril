@@ -218,7 +218,7 @@ eksctl create cluster \
 
 5. Deploy the latest (master) tag using the images from the ECR repository.
 ```bash
-TAG=latest \
+TAG=stable_20210920 \
 HUB=public.ecr.aws/e4m8j0n8/mithril \
 ./deploy-all.sh
 ```

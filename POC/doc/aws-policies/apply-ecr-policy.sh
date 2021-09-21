@@ -9,11 +9,7 @@ declare -a image_names=("install-cni" "operator"
 
 for image_name in "${image_names[@]}"
 do
-  aws ecr set-repository-policy --repository-name mithril/$image_name --policy-text file://ecr-policy.json --profile scytale
+  aws ecr set-repository-policy --repository-name mithril/$image_name --policy-text file://ecr-policy.json 
 done
 
-# for image_name in "${image_names[@]}"
-# do
-#   aws ecr-public create-repository --repository-name mithril/$image_name --profile scytale
-# done
   

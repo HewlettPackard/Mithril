@@ -60,7 +60,7 @@ func requestProductpageWorkloadFromSleepPod(t *testing.T) {
 	}
 	sleepPod := podList.Items[0]
 
-	command := "cat -e /tmp/response_productpage.txt"
+	command := "cat -e /tmp/workload_to_ingress_upstream_disk_test_response.txt"
 	cmd := []string{
 		"sh",
 		"-c",
@@ -105,7 +105,7 @@ func requestProductpageWorkloadFromSleepPod(t *testing.T) {
 		t.Error(err)
 	}
 
-	fileContent, err := ioutil.ReadFile("response_productpage.txt")
+	fileContent, err := ioutil.ReadFile("workload_to_ingress_upstream_disk_test_response.txt")
 	if err != nil {
 		t.Error(err)
 	}

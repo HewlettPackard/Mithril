@@ -2,7 +2,6 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -52,7 +51,7 @@ func requestProductpageWorkloadFromSleepPod(t *testing.T) {
 
 	podList, err := clientset.CoreV1().Pods(defaultNamespace).List(context.TODO(), listOptions)
 	if err != nil {
-		fmt.Println(err)
+		t.Error("Error when listing pods")
 	}
 
 	if len(podList.Items) == 0 {

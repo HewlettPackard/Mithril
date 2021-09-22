@@ -16,16 +16,17 @@ import (
 var istioctlVersion = "1.10"
 var defaultNamespace = "default"
 
-func getHostname() string {
+func getHostname() (string, error) {
 	out, err := exec.Command("hostname", "-I").Output()
 	if err != nil {
 		fmt.Print(err)
+		return "", err
 	}
 
 	ipList := string(out)
 	hostname := ipList[:strings.IndexByte(ipList, ' ')]
 
-	return hostname
+	return hostname, nil
 }
 
 func createClientGo() (*kubernetes.Clientset, *rest.Config, error) {

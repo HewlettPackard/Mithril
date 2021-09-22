@@ -274,7 +274,7 @@ pipeline {
         SLACK_ERROR_MESSAGE = "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
         SLACK_ERROR_COLOR = "bad"
         if (BRANCH_NAME == MAIN_BRANCH) {
-          SLACK_ERROR_MESSAGE = "@here The pipeline ${currentBuild.fullDisplayName} failed on `${MAIN_BRANCH}`"
+          SLACK_ERROR_MESSAGE = "@channel The pipeline ${currentBuild.fullDisplayName} failed on `${MAIN_BRANCH}`"
           SLACK_ERROR_COLOR = "danger"
         }
       }

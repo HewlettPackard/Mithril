@@ -1,7 +1,7 @@
 #!/bin/bash
 
-kubectl apply -f /mithril/POC/secrets.yaml
+kubectl apply -f /mithril/POC/bookinfo/secrets.yaml
 
-istioctl kube-inject --filename /mithril/POC/bookinfo.yaml | kubectl apply -f -
+istioctl kube-inject --filename /mithril/POC/bookinfo/bookinfo.yaml | kubectl apply -f -
 
-kubectl apply -f /mithril/POC/gateway.yaml
+kubectl apply -f /mithril/POC/bookinfo/gateway.yaml

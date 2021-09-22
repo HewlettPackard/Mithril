@@ -54,11 +54,9 @@ spec:
             - name: dummy-crt
               mountPath: /run/spire/data/dummy_upstream_ca.crt
               subPath: dummy_upstream_ca.crt
-#              readOnly: true
             - name: dummy-key
               mountPath: /run/spire/data/dummy_upstream_ca.key
               subPath: dummy_upstream_ca.key
-#              readOnly: true
         - name: k8s-workload-registrar
           image: gcr.io/spiffe-io/k8s-workload-registrar:1.0.0
           args:
@@ -92,14 +90,6 @@ spec:
         - name: dummy-key
           configMap:
             name: "dummy-ca-key"
-#        - name: dummy-upstream-ca-crt
-#          hostPath:
-#            path: /home/alexandre/GolandProjects/spire/conf/server/dummy_upstream_ca.crt
-#            type: DirectoryOrCreate
-#        - name: dummy-upstream-ca-key
-#          hostPath:
-#            path: /home/alexandre/GolandProjects/spire/conf/server/dummy_upstream_ca.key
-#            type: DirectoryOrCreate
   volumeClaimTemplates:
     - metadata:
         name: spire-data

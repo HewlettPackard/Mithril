@@ -18,6 +18,6 @@ fi
 
 kubectl create ns istio-system
 sleep 2
-kubectl apply -f secrets.yaml
+kubectl apply -f /mithril/POC/secrets.yaml
 istioctl install -f istio-config.yaml --skip-confirmation $args
-kubectl apply -f auth.yaml
+kubectl apply -f /mithril/POC/auth.yaml

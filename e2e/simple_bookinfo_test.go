@@ -12,7 +12,7 @@ import (
 
 func TestSimpleBookinfo(t *testing.T) {
 	t.Run("version", version)
-	t.Run("create_kind_cluster", createKindCluster)
+	t.Run("get_cluster", getCluster)
 	t.Run("request_productpage_workload", requestProductpageWorkload)
 }
 
@@ -29,7 +29,7 @@ func version(t *testing.T) {
 	assert.Contains(t, actual, istioctlVersion)
 }
 
-func createKindCluster(t *testing.T) {
+func getCluster(t *testing.T) {
 	cmd := exec.Command("kind", "get clusters")
 
 	buf := new(bytes.Buffer)

@@ -6,8 +6,8 @@ ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
 LATEST_BRANCH = "1.10"
-S3_PATCHSET_BUCKET = "s3://mithril-poc-patchset"
-S3_CUSTOMER_BUCKET = "s3://mithril-customer-assets"
+PATCHSET_BUCKET = "mithril-poc-patchset"
+CUSTOMER_BUCKET = "mithril-customer-assets"
 MAIN_BRANCH = "master"
 PROXY="http://proxy.houston.hpecorp.net:8080"
 
@@ -88,9 +88,9 @@ pipeline {
       steps {
         sh """
           set -x
-          export no_proxy="\${no_proxy},notpilot,:0,::,[::]"
-
-          cd istio
+          export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
+          
+          cd istio         
           make clean
           make init
           make test
@@ -235,7 +235,7 @@ pipeline {
                       aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt" .
 
                       RESULT=$(tail -n 1 "${BUILD_TAG}-${FOLDER}-result.txt" | grep -oE '^..')
-                      RESULT_LIST+=RESULT
+                      RESULT_LIST+=($RESULT)
 
                     else
                       echo "Artifact ${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt object for usecase ${FOLDER} does not exist"
@@ -281,17 +281,23 @@ pipeline {
       }
       steps {
         script {
+          def S3_CUSTOMER_BUCKET = "s3://" + CUSTOMER_BUCKET 
+          def S3_PATCHSET_BUCKET = "s3://" + PATCHSET_BUCKET
+
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh """
               cd ./POC
 
               tar -zcvf mithril.tar.gz bookinfo spire istio \
-                deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh create-docker-registry-secret.sh \
+                deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh \
                 doc/poc-instructions.md demo/demo-script.sh demo/README.md
               aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
+              aws s3api put-object-acl --bucket ${CUSTOMER_BUCKET} --key mithril.tar.gz --acl public-read
 
-              tar -zcvf mithril-poc-patchset.tar.gz patches/poc-patchset-release-1.10.patch
+              tar -zcvf mithril-poc-patchset.tar.gz patches/poc.1.10.patch
+
               aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
+              aws s3api put-object-acl --bucket ${PATCHSET_BUCKET} --key mithril-poc-patchset.tar.gz --acl public-read
             """
           }
         }

@@ -44,31 +44,6 @@ pipeline {
       }
     }
 
-    stage("build-and-push-dev-images"){
-      steps {
-        script {
-          def secrets = vaultGetSecrets()
-          
-          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-            def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
-
-            sh """
-              aws ecr get-login-password --region ${ECR_REGION} | \
-                docker login --username AWS --password-stdin ${ECR_REGISTRY}
-              
-              docker build -t mithril:${BUILD_TAG} \
-                --build-arg http_proxy=${PROXY} \
-                --build-arg https_proxy=${PROXY} \
-                -f ./docker/Dockerfile .
-              docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
-              docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
-            """
-          }
-        }
-      }
-    }
-
     stage("make-poc-codebase") {
 
       steps {
@@ -95,6 +70,31 @@ pipeline {
           make init
           make test
         """
+      }
+    }
+
+    stage("build-and-push-dev-images"){
+      steps {
+        script {
+          def secrets = vaultGetSecrets()
+          
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+            def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+
+            sh """
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
+              
+              docker build -t mithril:${BUILD_TAG} \
+                --build-arg http_proxy=${PROXY} \
+                --build-arg https_proxy=${PROXY} \
+                -f ./docker/Dockerfile .
+              docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
+              docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
+            """
+          }
+        }
       }
     }
 

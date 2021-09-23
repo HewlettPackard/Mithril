@@ -47,3 +47,8 @@ variable "VOLUME_SIZE" {
   default     = 50
   description = "Root block device volume size used by EC2 instance"
 }
+
+variable "USECASE" {
+  default     = "simple-bookinfo"
+  description = "Initial usecase"
+}

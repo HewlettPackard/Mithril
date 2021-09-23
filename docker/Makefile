@@ -17,7 +17,7 @@ endif
 ifdef PATCH_VERSION
 CMD_BUILD += " --build-arg PATCH_VERSION=$(PATCH_VERSION)"
 endif
-CMD_BUILD += " -f ./Dockerfile .."
+CMD_BUILD += " -f ./Dockerfile-mithril-deps.dockerfile .."
 
 ## Build the container.
 build:

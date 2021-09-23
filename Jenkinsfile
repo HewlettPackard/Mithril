@@ -1,6 +1,6 @@
 AWS_PROFILE = "mithril-jenkins"
 BUILD_IMAGE = "hub.docker.hpecorp.net/sec-eng/ubuntu:pipeline"
-DEVELOPMENT_IMAGE = "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:latest"
+DEVELOPMENT_IMAGE = "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril"
 CHANNEL_NAME = "#notify-project-mithril"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
@@ -44,11 +44,36 @@ pipeline {
       }
     }
 
-    stage("build-and-push-dev-images"){
-      when {
-        branch MAIN_BRANCH
-      }
+    stage("make-poc-codebase") {
 
+      steps {
+        // Istio clone from the latest branch
+        sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
+
+        // Apply Mithril patches
+        sh """
+          cd istio
+          git apply \
+            ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch
+        """
+      }
+    }
+
+    stage("unit-test") {
+      steps {
+        sh """
+          set -x
+          export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
+
+          cd istio
+          make clean
+          make init
+          make test
+        """
+      }
+    }
+
+    stage("build-and-push-dev-images"){
       steps {
         script {
           def secrets = vaultGetSecrets()
@@ -61,47 +86,20 @@ pipeline {
               aws ecr get-login-password --region ${ECR_REGION} | \
                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
               
-              docker build -t mithril \
+              docker build -t mithril:${BUILD_TAG} \
                 --build-arg http_proxy=${PROXY} \
                 --build-arg https_proxy=${PROXY} \
                 -f ./docker/Dockerfile .
-              docker tag mithril:latest ${DEVELOPMENT_IMAGE}
-              docker push ${DEVELOPMENT_IMAGE}
+              docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
+              docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
             """
           }
         }
       }
     }
 
-    stage("make-poc-codebase") {
-      steps {
-        // Istio clone from the latest branch
-        sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
-
-        // Apply Mithril patches
-        sh """
-          cd istio
-          git apply ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch
-        """
-      }
-    }
-
-    stage("unit-test") {
-
-      steps {
-        sh """
-          set -x
-          export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
-          
-          cd istio         
-          make clean
-          make init
-          make test
-        """
-      }
-    }
-
     stage("build-and-push-poc-images") {
+
       environment {
         BUILD_WITH_CONTAINER = 0
       }
@@ -110,7 +108,7 @@ pipeline {
         script {
           def secrets = vaultGetSecrets()
 
-          def passwordMask = [ 
+          def passwordMask = [
             $class: 'MaskPasswordsBuildWrapper',
             varPasswordPairs: [ [ password: secrets.dockerHubToken ] ]
           ]
@@ -132,6 +130,7 @@ pipeline {
 
               sh """
                 export HUB=${ECR_HUB}
+                export TAG=${BUILD_TAG}
                 aws ecr get-login-password --region ${ECR_REGION} | \
                   docker login --username AWS --password-stdin ${ECR_REGISTRY}
                 cd istio && make push
@@ -160,7 +159,7 @@ pipeline {
               set -x
               aws ecr get-login-password --region ${ECR_REGION} | \
                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
-              
+
               docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
                 pieces=(\$line)
                 docker tag "\${pieces[0]}" "\${pieces[1]}":latest
@@ -171,70 +170,115 @@ pipeline {
         }
       }
     }
-    
+
     stage("run-integration-tests") {
-      when {
-        branch MAIN_BRANCH
-      }
-      
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
-
               cd terraform
-              terraform init
-              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
 
-              BUCKET_EXISTS=false
-              num_tries=0
+              for FOLDER in *;
+                do cd ${FOLDER} \
+                  && echo "** Begin test ${FOLDER} **" \
+                  && terraform init \
+                  && terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
 
-              while [ $num_tries -lt 500 ]; 
-              do 
-                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}.txt" --no-cli-pager
-                if [ $? -eq 0 ];
-                  then 
-                    BUCKET_EXISTS=true
-                    break
+                  BUCKET_EXISTS=false
+                  num_tries=0
 
-                  else
-                      ((num_tries++))
-                      sleep 1; 
-                fi
+                  while [ $num_tries -lt 500 ];
+                  do
+                    aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-log.txt" --no-cli-pager 2> /dev/null
+                    if [ $? -eq 0 ];
+                      then
+                        BUCKET_EXISTS=true
+                        break;
+                      else
+                        ((num_tries++))
+                        sleep 1;
+                    fi
+                  done
+                  echo ${num_tries}
+
+                  terraform destroy -auto-approve
+                  cd ..
               done
-
-              terraform destroy -auto-approve
-
-              if $BUCKET_EXISTS; 
-                then 
-                  echo "Artifact object exists" 
-                  aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}.txt" .
-
-                else 
-                  echo "Artifact object does not exist" 
-                  exit 1
-              fi
-
-              if grep -q "no healthy upstream" "${BUILD_TAG}.txt";
-                then
-                  cat "${BUILD_TAG}.txt"
-                  echo "Test failed" 
-                  exit 1
-
-                else 
-                  echo "Test successful" 
-              fi
           '''
           }
         }
       }
     }
 
+    stage("analyze-integration-tests") {
+      steps {
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh '''#!/bin/bash
+              RESULT_LIST=()
+              
+              cd terraform
+
+              for FOLDER in *;
+                do
+                  HAS_MISSING_ARTIFACTS=false 
+                  BUCKET_EXISTS=false
+                  aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt" --no-cli-pager
+                  if [ $? -eq 0 ];
+                    then 
+                      BUCKET_EXISTS=true
+                  fi
+
+                  if $BUCKET_EXISTS;
+                    then
+                      echo "Artifact object exists"
+                      aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt" .
+
+                      RESULT=$(tail -n 1 "${BUILD_TAG}-${FOLDER}-result.txt" | grep -oE '^..')
+                      RESULT_LIST+=($RESULT)
+
+                    else
+                      echo "Artifact ${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt object for usecase ${FOLDER} does not exist"
+                      HAS_MISSING_ARTIFACTS=true
+                  fi
+                done
+
+              if $HAS_MISSING_ARTIFACTS;
+                then
+                  echo "One or more artifacts do not exist"
+                  exit 1
+                else
+                  echo "All artifacts found"
+              fi
+
+              HAS_FAILED_TEST=false
+              for RESULT in "${RESULT_LIST[@]}";
+                do
+                  if [ "$RESULT" != "ok" ];
+                    then
+                      echo "Test for usecase ${FOLDER} failed"
+                      cat "${BUILD_TAG}-${FOLDER}-result.txt"
+                      HAS_FAILED_TEST=true
+                    else
+                      echo "Test for usecase ${FOLDER} successful"
+                  fi
+                done
+
+              if $HAS_FAILED_TEST;
+                then
+                  echo "One or more tests have failed"
+                  exit 1
+              fi
+            '''
+          }
+        }
+      }           
+    }
+
     stage("distribute-poc") {
       when {
         branch MAIN_BRANCH
       }
-      
       steps {
         script {
           def S3_CUSTOMER_BUCKET = "s3://" + CUSTOMER_BUCKET 
@@ -243,7 +287,7 @@ pipeline {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh """
               cd ./POC
-              
+
               tar -zcvf mithril.tar.gz bookinfo spire istio \
                 deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh \
                 doc/poc-instructions.md demo/demo-script.sh demo/README.md
@@ -251,6 +295,7 @@ pipeline {
               aws s3api put-object-acl --bucket ${CUSTOMER_BUCKET} --key mithril.tar.gz --acl public-read
 
               tar -zcvf mithril-poc-patchset.tar.gz patches/poc.1.10.patch
+
               aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
               aws s3api put-object-acl --bucket ${PATCHSET_BUCKET} --key mithril-poc-patchset.tar.gz --acl public-read
             """

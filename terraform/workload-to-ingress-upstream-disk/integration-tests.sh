@@ -24,7 +24,7 @@ docker run -i --rm \
 --network host mithril-testing:${build_tag} \
 bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && find . -type f -iname "*.sh" -exec chmod +x {} \; && ./create-kind-cluster.sh &&
 HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} /mithril/POC/create-docker-registry-secret.sh &&
-kubectl create ns spire && TAG=${build_tag} HUB=${hub} ./deploy-all.sh &&
+TAG=${build_tag} HUB=${hub} ./deploy-all.sh &&
 kubectl rollout status deployment productpage-v1 &&
 INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") &&
 ./forward-port.sh &&

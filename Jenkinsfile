@@ -245,7 +245,7 @@ pipeline {
 
               if $HAS_MISSING_ARTIFACTS;
                 then
-                  echo "One or more artifacts don't. exist"
+                  echo "One or more artifacts do not exist"
                   exit 1
                 else
                   echo "All artifacts found"

@@ -73,74 +73,78 @@ pipeline {
       }
     }
 
-    stage("build-and-push-dev-images"){
-      steps {
-        script {
-          def secrets = vaultGetSecrets()
-          
-          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-            def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
 
-            sh """
-              aws ecr get-login-password --region ${ECR_REGION} | \
-                docker login --username AWS --password-stdin ${ECR_REGISTRY}
+    stage("Build images") {
+      failFast true
+      parallel {
+        stage("build-and-push-dev-images"){
+          agent {
+            label 'docker-v19.03'
+          }
+          steps {
+            script {
+              def secrets = vaultGetSecrets()
               
-              docker build -t mithril:${BUILD_TAG} \
-                --build-arg http_proxy=${PROXY} \
-                --build-arg https_proxy=${PROXY} \
-                -f ./docker/Dockerfile .
-              docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
-              docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
-            """
+              docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+                def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+                def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+
+                sh """
+                  aws ecr get-login-password --region ${ECR_REGION} | \
+                    docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                  
+                  docker build -t mithril:${BUILD_TAG} \
+                    --build-arg http_proxy=${PROXY} \
+                    --build-arg https_proxy=${PROXY} \
+                    -f ./docker/Dockerfile .
+                  docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
+                  docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
+                """
+              }
+            }
           }
         }
-      }
-    }
 
-    stage("build-and-push-poc-images") {
+        stage("build-and-push-poc-images") {
+          agent {
+            label 'docker-v20.10'
+          }
+          environment {
+            BUILD_WITH_CONTAINER = 0
+          }
+          steps {
+            // Fetch secrets from Vault and use the mask token plugin
+            script {
+              def secrets = vaultGetSecrets()
 
-      environment {
-        BUILD_WITH_CONTAINER = 0
-      }
-      steps {
-        // Fetch secrets from Vault and use the mask token plugin
-        script {
-          def secrets = vaultGetSecrets()
+              def passwordMask = [
+                $class: 'MaskPasswordsBuildWrapper',
+                varPasswordPairs: [ [ password: secrets.dockerHubToken ] ]
+              ]
 
-          def passwordMask = [
-            $class: 'MaskPasswordsBuildWrapper',
-            varPasswordPairs: [ [ password: secrets.dockerHubToken ] ]
-          ]
+              // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
+              // and build tag, building Istio and pushing images to the Dockerhub of HPE
+              wrap(passwordMask) {
+                docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+                  // Build and push to ECR registry
+                  def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+                  def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
 
-          // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
-          // and build tag, building Istio and pushing images to the Dockerhub of HPE
-          wrap(passwordMask) {
-            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-              // Build and push to HPE registry
-              sh """
-                export HUB=${HPE_REGISTRY}
-                echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
-                cd istio && make push
-              """
-
-              // Build and push to ECR registry
-              def ECR_REGISTRY = secrets.awsAccountID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-              def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
-
-              sh """
-                export HUB=${ECR_HUB}
-                export TAG=${BUILD_TAG}
-                aws ecr get-login-password --region ${ECR_REGION} | \
-                  docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                cd istio && make push
-              """
+                  sh """
+                    export HUB=${ECR_HUB}
+                    export TAG=${BUILD_TAG}
+                    aws ecr get-login-password --region ${ECR_REGION} | \
+                      docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                    cd istio && make push
+                  """
+                }
+              }
             }
           }
         }
       }
     }
-
+    
     // Tag the current build as "latest" whenever a new commit
     // comes into master and pushes the tag to the ECR repository
     stage("tag-latest-images") {

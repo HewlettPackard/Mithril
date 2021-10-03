@@ -63,8 +63,8 @@ data:
 
       UpstreamAuthority "disk" {
         plugin_data {
-          key_file_path = "/run/spire/data/dummy_upstream_ca.key"
-          cert_file_path = "/run/spire/data/dummy_upstream_ca.crt"
+          key_file_path = "/run/spire/data/upstream-ca.key.pem"
+          cert_file_path = "/run/spire/data/upstream-ca.pem"
         }
       }
 

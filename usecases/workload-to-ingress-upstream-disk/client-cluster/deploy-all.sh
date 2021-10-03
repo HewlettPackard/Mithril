@@ -9,4 +9,4 @@ kubectl create configmap upstream-ca-key --from-file /mithril/usecases/workload-
 (cd spire ; ./deploy-spire.sh)
 sleep 2
 (cd istio ; ./deploy-istio.sh)
-(cd bookinfo ; ./deploy-bookinfo.sh)
+(cd workloads ; ./deploy-workloads.sh)

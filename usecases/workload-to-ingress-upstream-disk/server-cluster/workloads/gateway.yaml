@@ -1,14 +1,14 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: bookinfo-gateway
+  name: httpbin-gateway
 spec:
   selector:
     istio: ingressgateway # use istio default controller
   servers:
     - port:
         number: 8080
-        name: http
+        name: https
         protocol: HTTPS
       tls:
         mode: ISTIO_MUTUAL
@@ -18,29 +18,23 @@ spec:
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: bookinfo-service
+  name: httpbin-service
 spec:
   hosts:
     - "*"
   gateways:
-    - bookinfo-gateway
+    - httpbin-gateway
   http:
     - match:
         - uri:
-            exact: /productpage
+            prefix: /status
         - uri:
-            prefix: /static
-        - uri:
-            exact: /login
-        - uri:
-            exact: /logout
-        - uri:
-            prefix: /api/v1/products
+            prefix: /delay
       route:
         - destination:
-            host: productpage.default.svc.cluster.local
             port:
-              number: 9080
+              number: 8000
+            host: httpbin
 ---
 apiVersion: "networking.istio.io/v1alpha3"
 kind: "DestinationRule"

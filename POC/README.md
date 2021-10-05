@@ -34,7 +34,7 @@ This POC requires at least 20GB of disk space and 2 CPUs, keep that in mind when
 curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.10.1 sh -
 ```
 
-Should work with istio `1.9.1` and `1.10.1`.
+Should work with istio `1.10.x` and `1.11.x`.
 
 ## Install Kind 
 
@@ -56,6 +56,9 @@ Note: You will need to clone the main istio repo to $GOPATH/src/istio.io/istio f
 5. `export HUB=localhost:5000`
 6. `export BUILD_WITH_CONTAINER=0`
 7. `make push`
+
+Note: steps 2 and 3 can be also be done with istio branches `release-1.11` and `master` using the corresponding patches
+`poc.1.11.patch` and `poc-patchset-master.patch`.
 
 This will create the docker images with the tag `my-build`, and push them to the local docker registry (`localhost:5000`).
 

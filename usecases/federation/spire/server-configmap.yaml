@@ -20,6 +20,15 @@ data:
         organization = ["SPIFFE"],
         common_name = "",
       }
+
+      federation {
+        federates_with "domain.test" {
+          bundle_endpoint_url = "https://bundle-endpoint.spire2.svc.cluster.local:8443"
+          bundle_endpoint_profile "https_spiffe" {
+            endpoint_spiffe_id = "spiffe://domain.test/spire/server"
+          }
+        }
+      }
     }
 
     plugins {

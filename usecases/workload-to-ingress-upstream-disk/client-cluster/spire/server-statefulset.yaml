@@ -51,12 +51,12 @@ spec:
             - name: spire-registration-socket
               mountPath: /run/spire/sockets
               readOnly: false
-            - name: dummy-crt
-              mountPath: /run/spire/data/dummy_upstream_ca.crt
-              subPath: dummy_upstream_ca.crt
-            - name: dummy-key
-              mountPath: /run/spire/data/dummy_upstream_ca.key
-              subPath: dummy_upstream_ca.key
+            - name: upstream-crt
+              mountPath: /run/spire/data/upstream-ca.pem
+              subPath: upstream-ca.pem
+            - name: upstream-key
+              mountPath: /run/spire/data/upstream-ca.key.pem
+              subPath: upstream-ca.key.pem
         - name: k8s-workload-registrar
           image: gcr.io/spiffe-io/k8s-workload-registrar:1.0.0
           args:
@@ -84,12 +84,12 @@ spec:
           hostPath:
             path: /run/spire/server-sockets
             type: DirectoryOrCreate
-        - name: dummy-crt
+        - name: upstream-crt
           configMap:
-            name: "dummy-ca-crt"
-        - name: dummy-key
+            name: "upstream-ca-crt"
+        - name: upstream-key
           configMap:
-            name: "dummy-ca-key"
+            name: "upstream-ca-key"
   volumeClaimTemplates:
     - metadata:
         name: spire-data

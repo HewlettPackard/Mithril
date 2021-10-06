@@ -7,6 +7,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+)
+
+var (
+	serverCertPath string = os.Getenv("SERVER_CERT_PATH")
+	serverKeyPath  string = os.Getenv("SERVER_KEY_PATH")
+	caBundlePath   string = os.Getenv("CA_BUNDLE_PATH")
 )
 
 func main() {
@@ -23,13 +30,17 @@ func main() {
 		fmt.Fprintf(w, "%+v", req.TLS)
 	})
 
-	cer, err := tls.LoadX509KeyPair("/your-path/certs/server-cert.pem", "/your-path/certs/server-key.pem")
+	if serverCertPath == "" || serverKeyPath == "" || caBundlePath == "" {
+		panic("SERVER_CERT_PATH, SERVER_KEY_PATH or CA_BUNDLE_PATH not set")
+	}
+
+	cer, err := tls.LoadX509KeyPair(serverCertPath, serverKeyPath)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	root, err := ioutil.ReadFile("/your-path/certs/ca.pem")
+	root, err := ioutil.ReadFile(caBundlePath)
 	if err != nil {
 		panic(fmt.Errorf("Failed to load certificates %v", err))
 	}
@@ -54,5 +65,5 @@ func main() {
 
 	fmt.Println("Starting server...")
 
-	log.Fatal(srv.ListenAndServeTLS("/your-path/certs/server-cert.pem", "/your-path/certs/server-key.pem"))
+	log.Fatal(srv.ListenAndServeTLS(serverCertPath, serverKeyPath))
 }

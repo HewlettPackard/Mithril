@@ -77,4 +77,4 @@ spec:
   resolution: STATIC
   endpoints:
     - address:
-        192.168.15.6
+        10.0.1.50

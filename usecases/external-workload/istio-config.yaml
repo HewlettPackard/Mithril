@@ -173,7 +173,7 @@ spec:
                 #  can be used to replace the ServiceEntry that is required for both (direct/egress) use cases
                 # - path: spec.template.spec.hostAliases
                 #   value:
-                #     - ip: 192.168.15.6
+                #     - ip: 10.0.1.50
                 #       hostnames:
                 #       - "example.org"
 

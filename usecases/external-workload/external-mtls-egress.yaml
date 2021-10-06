@@ -1,0 +1,114 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: istio-egressgateway
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - example.org
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: redirect-80-to-egress
+spec:
+  hosts:
+  - example.org
+  gateways:
+  - istio-egressgateway
+  - mesh
+  http:
+  - match:
+    - gateways:
+      - mesh
+      port: 80
+    route:
+    - destination:
+        host: istio-egressgateway.istio-system.svc.cluster.local
+        subset: external-svc
+        port:
+          number: 80
+      weight: 100
+  - match:
+    - gateways:
+      - istio-egressgateway
+      port: 80
+    route:
+    - destination:
+        host: example.org
+        port:
+          number: 9443
+      weight: 100
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: external-svc
+spec:
+  hosts:
+  - example.org
+  tls:
+  - match:
+    - port: 9443
+      sniHosts:
+      - example.org
+    route:
+    - destination:
+        host: example.org
+        port:
+          number: 9443
+      weight: 100
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: egressgateway-for-external-svc
+spec:
+  host: istio-egressgateway.istio-system.svc.cluster.local
+  subsets:
+  - name: external-svc
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    portLevelSettings:
+    - port:
+        number: 80
+      tls:
+        mode: ISTIO_MUTUAL 
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: originate-mtls-for-external-svc
+spec:
+  host: example.org
+  trafficPolicy:
+    portLevelSettings:
+    - port:
+        number: 9443
+      tls:
+        mode: ISTIO_MUTUAL 
+        sni: spiffe://example.org/my-sni
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: external-mtls-svc
+spec:
+  hosts:
+  - example.org
+  ports:
+  - number: 9443
+    name: https
+    protocol: TLS
+  resolution: STATIC
+  endpoints:
+    - address:
+        10.0.1.50

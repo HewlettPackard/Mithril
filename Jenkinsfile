@@ -42,7 +42,6 @@ pipeline {
   triggers {
     parameterizedCron(
       BRANCH_NAME == MITHRIL_MAIN_BRANCH ? '''
-        H H(0-3) * * * %ISTIO_BRANCH=master
         H H(0-3) * * * %ISTIO_BRANCH=release-1.10
         H H(0-3) * * * %ISTIO_BRANCH=release-1.11
       ''': ''
@@ -77,16 +76,24 @@ pipeline {
       options {
         retry(3)
       }
+      environment {
+        BUILD_WITH_CONTAINER = 1
+      }
       steps {
-        sh """
-          set -x
-          export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh """
+              set -x
+              export no_proxy="\${no_proxy},notpilot,xyz,:0,::,[::],::0,[::0],::1,[::1],::6,[::6]"
 
-          cd istio
-          make clean
-          make init
-          make test
-        """
+              cd istio
+              make clean
+              go mod tidy
+              make init
+              make test
+            """
+          }
+        }
       }
     }
 
@@ -137,7 +144,9 @@ pipeline {
               sh """
                 export HUB=${HPE_REGISTRY}
                 echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
-                cd istio && make push
+                cd istio
+                go mod tidy
+                make push
               """
 
               // Build and push to ECR registry

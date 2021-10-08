@@ -436,5 +436,5 @@ pipeline {
 // Method for creating the build tag
 def makeTag() {
   def today = new Date()
-  return today.format("dd-MM-yyyy") + "-" params.ISTIO_BRANCH + "-" + env.GIT_BRANCH + "-" + env.GIT_COMMIT.substring(0,7)
+  return today.format("dd-MM-yyyy") + "-" + params.ISTIO_BRANCH + "-" + env.GIT_BRANCH + "-" + env.GIT_COMMIT.substring(0,7)
 }

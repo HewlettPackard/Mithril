@@ -24,7 +24,7 @@ pipeline {
 
   // Version of the Jenkins slave
   agent {
-    label 'docker-v19.03'
+    label 'docker-v20.10'
   }
 
   environment {
@@ -65,9 +65,7 @@ pipeline {
           AWS_ACCOUNT_ID = "${secrets.awsAccountID}"
           AWS_ACCESS_KEY_ID = "${secrets.awsAccessKeyID}"
           AWS_SECRET_ACCESS_KEY = "${secrets.awsSecretAccessKeyID}"
-          EC2_SSH_KEY = "${secrets.EC2SSHKey}"
           HPE_DOCKER_HUB_SECRET = "${secrets.dockerHubToken}"
-
         }
       }
     }
@@ -102,10 +100,9 @@ pipeline {
     }
 
     stage("build-ecr-images") {
-
       failFast true
       parallel {
-        stage("build-and-push-dev-images"){
+        stage("build-and-push-dev-images-ecr"){
           steps {
             script {
               docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
@@ -240,9 +237,7 @@ pipeline {
     stage("Run integration tests") {      
       steps {
         script {
-
           def folders = sh(script: 'cd terraform && ls -1', returnStdout: true).split()
-
           def builders = [:]
           
           folders.each{ folder ->
@@ -356,7 +351,7 @@ pipeline {
       }           
     }
 
-    stage("Distribute POC") {
+    stage("distribute-poc") {
       when {
         allOf {
           branch MITHRIL_MAIN_BRANCH

@@ -234,7 +234,7 @@ pipeline {
       }
     }
 
-    stage("Run integration tests") {      
+    stage("run-integration-tests") {      
       steps {
         script {
           def folders = sh(script: 'cd terraform && ls -1', returnStdout: true).split()

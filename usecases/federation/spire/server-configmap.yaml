@@ -12,7 +12,6 @@ data:
       trust_domain = "example.org"
       data_dir = "/run/spire/data"
       log_level = "DEBUG"
-      #AWS requires the use of RSA.  EC cryptography is not supported
       ca_key_type = "rsa-2048"
 
       default_svid_ttl = "1h"
@@ -20,6 +19,15 @@ data:
         country = ["US"],
         organization = ["SPIFFE"],
         common_name = "",
+      }
+
+      federation {
+        federates_with "domain.test" {
+          bundle_endpoint_url = "https://bundle-endpoint.spire2.svc.cluster.local:8443"
+          bundle_endpoint_profile "https_spiffe" {
+            endpoint_spiffe_id = "spiffe://domain.test/spire/server"
+          }
+        }
       }
     }
 
@@ -60,14 +68,6 @@ data:
           config_map_key = "root-cert.pem"
         }
       }
-
-      UpstreamAuthority "disk" {
-        plugin_data {
-          key_file_path = "/run/spire/data/upstream-ca.key.pem"
-          cert_file_path = "/run/spire/data/upstream-ca.pem"
-        }
-      }
-
     }
 
     health_checks {

@@ -5,10 +5,10 @@ CHANNEL_NAME = "@U021L6LHSHM"
 ECR_REGION = "us-east-1"
 ECR_REPOSITORY_PREFIX = "mithril"
 HPE_REGISTRY = "hub.docker.hpecorp.net/sec-eng"
-LATEST_BRANCH = "1.10"
+ISTIO_STABLE_BRANCH = "release-1.10" // the Istio branch to be distributed
 PATCHSET_BUCKET = "mithril-poc-patchset"
 CUSTOMER_BUCKET = "mithril-customer-assets"
-MAIN_BRANCH = "master"
+MITHRIL_MAIN_BRANCH = "master"
 PROXY="http://proxy.houston.hpecorp.net:8080"
 
 def SLACK_ERROR_MESSAGE
@@ -16,6 +16,11 @@ def SLACK_ERROR_COLOR
 
 // Start of the pipeline
 pipeline {
+
+  options {
+    timestamps()
+    ansiColor('xterm')
+  }
 
   // Version of the Jenkins slave
   agent {
@@ -27,8 +32,19 @@ pipeline {
     GOOS = "linux"
   }
   
-  // Nightly builds schedule only for master
-  triggers { cron( BRANCH_NAME == MAIN_BRANCH ?  "00 00 * * *" : "") }
+  parameters {
+    string(name: 'ISTIO_BRANCH', defaultValue: ISTIO_STABLE_BRANCH, description: 'The Istio branch to run against')
+  }
+
+  triggers {
+    parameterizedCron(
+      BRANCH_NAME == MITHRIL_MAIN_BRANCH ? '''
+        H H(0-3) * * * %ISTIO_BRANCH=master
+        H H(0-3) * * * %ISTIO_BRANCH=release-1.10
+        H H(0-3) * * * %ISTIO_BRANCH=release-1.11
+      ''': ''
+    )
+  }
 
   stages {
     stage("notify-slack") {
@@ -58,19 +74,21 @@ pipeline {
 
     stage("make-poc-codebase") {
       steps {
-        // Istio clone from the latest branch
-        sh "git clone --single-branch --branch release-${LATEST_BRANCH} https://github.com/istio/istio.git"
+        // Istio clone from the specified branch
+        sh "git clone --single-branch --branch ${params.ISTIO_BRANCH} https://github.com/istio/istio.git"
 
         // Apply Mithril patches
         sh """
           cd istio
-          git apply \
-            ${WORKSPACE}/POC/patches/poc.${LATEST_BRANCH}.patch
+          git apply ${WORKSPACE}/POC/patches/poc.${params.ISTIO_BRANCH}.patch
         """
       }
     }
 
     stage("unit-test") {
+      options {
+        retry(3)
+      }
       steps {
         sh """
           set -x
@@ -83,7 +101,7 @@ pipeline {
       }
     }
 
-    stage("Build dev images") {
+    stage("build-ecr-images") {
 
       failFast true
       parallel {
@@ -179,7 +197,10 @@ pipeline {
     // comes into master and pushes the tag to the ECR repository
     stage("tag-latest-images") {
       when {
-        branch MAIN_BRANCH
+        allOf {
+          branch MITHRIL_MAIN_BRANCH
+          equals expected: ISTIO_STABLE_BRANCH, actual: params.ISTIO_BRANCH 
+        }
       }
       
       steps {
@@ -336,6 +357,12 @@ pipeline {
     }
 
     stage("Distribute POC") {
+      when {
+        allOf {
+          branch MITHRIL_MAIN_BRANCH
+          equals expected: ISTIO_STABLE_BRANCH, actual: params.ISTIO_BRANCH 
+        }
+      }
 
       failFast true
       parallel {
@@ -397,8 +424,8 @@ pipeline {
       script {
         SLACK_ERROR_MESSAGE = "Ooops! The pipeline ${currentBuild.fullDisplayName} failed."
         SLACK_ERROR_COLOR = "bad"
-        if (BRANCH_NAME == MAIN_BRANCH) {
-          SLACK_ERROR_MESSAGE = "@channel The pipeline ${currentBuild.fullDisplayName} failed on `${MAIN_BRANCH}`"
+        if (BRANCH_NAME == MITHRIL_MAIN_BRANCH) {
+          SLACK_ERROR_MESSAGE = "@channel The pipeline ${currentBuild.fullDisplayName} failed on `${BRANCH_NAME}`"
           SLACK_ERROR_COLOR = "danger"
         }
       }
@@ -414,5 +441,5 @@ pipeline {
 // Method for creating the build tag
 def makeTag() {
   def today = new Date()
-  return today.format("dd-MM-yyyy") + "-" + env.GIT_BRANCH + "-" + env.GIT_COMMIT.substring(0,7)
+  return today.format("dd-MM-yyyy") + "-" params.ISTIO_BRANCH + "-" + env.GIT_BRANCH + "-" + env.GIT_COMMIT.substring(0,7)
 }

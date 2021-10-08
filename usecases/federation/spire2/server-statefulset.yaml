@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: spire-server
-  namespace: spire
+  namespace: spire2
   labels:
     app: spire-server
 spec:
@@ -13,7 +13,7 @@ spec:
   serviceName: spire-server
   template:
     metadata:
-      namespace: spire
+      namespace: spire2
       labels:
         app: spire-server
     spec:
@@ -48,52 +48,14 @@ spec:
             - name: spire-data
               mountPath: /run/spire/data
               readOnly: false
-            - name: spire-registration-socket
-              mountPath: /run/spire/sockets
-              readOnly: false
-            - name: upstream-crt
-              mountPath: /run/spire/data/upstream-ca.pem
-              subPath: upstream-ca.pem
-            - name: upstream-key
-              mountPath: /run/spire/data/upstream-ca.key.pem
-              subPath: upstream-ca.key.pem
-        - name: k8s-workload-registrar
-          image: gcr.io/spiffe-io/k8s-workload-registrar:1.0.0
-          args:
-            - -config
-            - /run/spire/config/k8s-workload-registrar.conf
-          ports:
-            - containerPort: 9443
-              name: webhook
-              protocol: TCP
-          volumeMounts:
-            - mountPath: /run/spire/config
-              name: k8s-workload-registrar-config
-              readOnly: true
-            - name: spire-registration-socket
-              mountPath: /run/spire/sockets
-              readOnly: true
       volumes:
         - name: spire-config
           configMap:
             name: spire-server
-        - name: k8s-workload-registrar-config
-          configMap:
-            name: k8s-workload-registrar
-        - name: spire-registration-socket
-          hostPath:
-            path: /run/spire/server-sockets
-            type: DirectoryOrCreate
-        - name: upstream-crt
-          configMap:
-            name: "upstream-ca-crt"
-        - name: upstream-key
-          configMap:
-            name: "upstream-ca-key"
   volumeClaimTemplates:
     - metadata:
         name: spire-data
-        namespace: spire
+        namespace: spire2
       spec:
         accessModes:
           - ReadWriteOnce

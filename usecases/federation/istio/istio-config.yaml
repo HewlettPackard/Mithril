@@ -121,6 +121,54 @@ spec:
                     name: xds-root-ca
                     mountPath: "/etc/certs/"
                     readOnly: true
+
+          env:
+            - name: CA_PROVIDER
+              value: "spiffe"
+            - name: SPIFFE_ENDPOINT_SOCKET
+              value: "unix:///run/spire/sockets/agent.sock"
+      - name: istio-ingressgateway-mtls
+        enabled: true
+        label:
+          istio: ingressgateway-mtls
+        k8s:
+          podAnnotations:
+            spiffe.io/federatesWith: "domain.test"
+          overlays:
+            - apiVersion: apps/v1
+              kind: Deployment
+              name: istio-ingressgateway-mtls
+              patches:
+                - path: spec.template.spec.volumes[0]
+                  value:
+                    name: istiod-ca-cert
+                    configMap:
+                      name: trust-bundle
+                - path: spec.template.spec.volumes[8]
+                  value:
+                    name: spire-agent-socket
+                    hostPath:
+                      path: /run/spire/sockets
+                      type: Directory
+
+                - path: spec.template.spec.volumes[9]
+                  value:
+                    name: xds-root-ca
+                    configMap:
+                      name: trust-bundle
+
+                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
+                  value:
+                    name: spire-agent-socket
+                    mountPath: "/run/spire/sockets/"
+                    readOnly: true
+
+                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[9]
+                  value:
+                    name: xds-root-ca
+                    mountPath: "/etc/certs/"
+                    readOnly: true
+
           env:
             - name: CA_PROVIDER
               value: "spiffe"

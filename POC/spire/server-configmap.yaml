@@ -12,7 +12,6 @@ data:
       trust_domain = "example.org"
       data_dir = "/run/spire/data"
       log_level = "DEBUG"
-      #AWS requires the use of RSA.  EC cryptography is not supported
       ca_key_type = "rsa-2048"
 
       default_svid_ttl = "1h"

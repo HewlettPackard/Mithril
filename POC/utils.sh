@@ -29,11 +29,14 @@ cat chain.pem | base64 | pbcopy
 # Log into pod in container istio-proxy
 kubectl exec --stdin --tty $POD -c istio-proxy  -- /bin/bash
 
+kubectl exec --stdin --tty $POD -c istio-proxy  -- curl localhost:15000/config_dump
+
 # Check Envoy proxy secrets:
 curl localhost:15000/certs
 
 # Check Envoy proxy configuration:
 curl localhost:15000/config_dump
+kubectl exec --stdin --tty $POD -c istio-proxy  -- curl localhost:15000/config_dump > config.json
 
 # Change logging config to debug:
 curl -X POST localhost:15000/logging?level=debug
@@ -59,3 +62,16 @@ kubectl run --generator=run-pod/v1 -i --tty busybox-curl --image=radial/busyboxp
 
 # istiod dashboard
 istioctl dashboard controlz deployment/istiod.istio-system
+
+
+# SPIRE bundles
+## show
+kubectl exec --stdin --tty -n spire2 spire-server-0  -- /opt/spire/bin/spire-server bundle show -format spiffe -socketPath /run/spire/sockets/server.sock
+## set
+kubectl exec --stdin --tty -n spire spire-server-0 -c spire-server  -- /opt/spire/bin/spire-server bundle set  -format spiffe -id spiffe://domain.test -socketPath /run/spire/sockets/server.sock
+
+## Mint SVID in domain.test
+kubectl exec --stdin --tty -n spire2 spire-server-0  -- /opt/spire/bin/spire-server x509 mint -spiffeID spiffe://domain.test/myservice -socketPath /run/spire/sockets/server.sock
+
+## curl with TLS
+curl --cert svid.pem --key key.pem -k -I  https://localhost:7000/productpage

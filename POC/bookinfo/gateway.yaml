@@ -4,12 +4,29 @@ metadata:
   name: bookinfo-gateway
 spec:
   selector:
-    istio: ingressgateway # use istio default controller
+    istio: ingressgateway
   servers:
     - port:
         number: 8080
         name: http
         protocol: HTTP
+      hosts:
+        - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: bookinfo-gateway-mtls
+spec:
+  selector:
+    istio: ingressgateway-mtls
+  servers:
+    - port:
+        number: 7080
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: ISTIO_MUTUAL
       hosts:
         - "*"
 ---
@@ -22,6 +39,7 @@ spec:
     - "*"
   gateways:
     - bookinfo-gateway
+    - bookinfo-gateway-mtls
   http:
     - match:
         - uri:

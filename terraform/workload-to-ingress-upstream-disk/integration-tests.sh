@@ -25,7 +25,7 @@ docker run -i --rm \
 bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-disk/server-cluster && find . -type f -iname "*.sh" -exec chmod +x {} \; && ./create-kind-cluster.sh &&
 HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} /mithril/POC/create-docker-registry-secret.sh &&
 kubectl create ns spire && TAG=${build_tag} HUB=${hub} ./deploy-all.sh &&
-kubectl rollout status deployment productpage-v1 &&
+kubectl rollout status deployment httpbin &&
 INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") &&
 ./forward-port.sh &&
 cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && find . -type f -iname "*.sh" -exec chmod +x {} \; && ./create-kind-cluster.sh &&
@@ -33,7 +33,7 @@ HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access
 kubectl create ns spire && TAG=${build_tag} HUB=${hub} && ./deploy-all.sh &&
 kubectl rollout status deployment sleep &&
 CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}") &&
-kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLk --cert /sleep-certs/sleep-svid.pem --key /sleep-certs/sleep-key.pem --cacert /sleep-certs/root-cert.pem https://10.0.1.50:8000/productpage 2>&1 | tee /tmp/workload_to_ingress_upstream_disk_test_response.txt" &&
+kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLkv http://app.example.org:8000/status/200 2>&1 | tee /tmp/workload_to_ingress_upstream_disk_test_response.txt" &&
 cd /mithril/e2e && touch ${build_tag}-${usecase}-result.txt && go test -v e2e -run TestWorkloadToIngressUpstreamDisk 2>&1 | tee ${build_tag}-${usecase}-result.txt &&
 AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} aws s3 cp ${build_tag}-${usecase}-result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1'
 

@@ -105,11 +105,12 @@ pipeline {
         stage("build-and-push-dev-images-ecr"){
           steps {
             script {
+              // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
+              // and build tag, building Istio and pushing images to the ECR
               docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
 
                 def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
                 sh """#!/bin/bash
-                  export ECR_REGISTRY=${ECR_REGISTRY}
                   export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                   export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 
@@ -134,8 +135,6 @@ pipeline {
           }
           steps {
             script {
-              // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
-              // and build tag, building Istio and pushing images to the Dockerhub of HPE
               docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
               
                 // Build and push to ECR registry
@@ -165,7 +164,7 @@ pipeline {
         BUILD_WITH_CONTAINER = 0
       }
       steps {
-        // Fetch secrets from Vault and use the mask token plugin
+        // Use the mask token plugin
         script {
           def passwordMask = [
             $class: 'MaskPasswordsBuildWrapper',

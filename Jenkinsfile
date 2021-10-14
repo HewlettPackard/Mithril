@@ -83,21 +83,21 @@ pipeline {
       }
     }
 
-    stage("unit-test") {
-      options {
-        retry(3)
-      }
-      steps {
-        sh """
-          set -x
-          export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
-          cd istio
-          make clean
-          make init
-          make test
-        """
-      }
-    }
+    // stage("unit-test") {
+    //   options {
+    //     retry(3)
+    //   }
+    //   steps {
+    //     sh """
+    //       set -x
+    //       export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
+    //       cd istio
+    //       make clean
+    //       make init
+    //       make test
+    //     """
+    //   }
+    // }
 
     stage("build-ecr-images") {
       failFast true
@@ -144,13 +144,12 @@ pipeline {
                 sh """#!/bin/bash
                   export HUB=${ECR_HUB}
                   export TAG=${BUILD_TAG}
-                  export ECR_REGISTRY=${ECR_REGISTRY}
                   export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                   export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 
                   aws ecr get-login-password --region ${ECR_REGION} | \
                     docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                  cd istio && make push
+                  cd istio && go mod tidy && make push
                 """
               }
             }
@@ -180,7 +179,7 @@ pipeline {
                 export HUB=${HPE_REGISTRY}
                 export TAG=${BUILD_TAG}
                 echo ${HPE_DOCKER_HUB_SECRET} | docker login hub.docker.hpecorp.net --username ${HPE_DOCKER_HUB_SECRET} --password-stdin
-                cd istio && make push
+                cd istio && go mod tidy && make push
               """
             }
           }
@@ -212,8 +211,6 @@ pipeline {
             docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
               sh """#!/bin/bash
                 set -x
-                  export ECR_REGISTRY=${ECR_REGISTRY}
-                  export ECR_HUB=${ECR_HUB}
                   export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                   export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
                     
@@ -296,9 +293,10 @@ pipeline {
                 RESULT_LIST=()
                 
                 cd terraform
+
+                HAS_MISSING_ARTIFACTS=false 
                 for FOLDER in *;
                   do
-                    HAS_MISSING_ARTIFACTS=false 
                     BUCKET_EXISTS=false
                     aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt" --no-cli-pager
                     if [ $? -eq 0 ];
@@ -316,6 +314,7 @@ pipeline {
                         HAS_MISSING_ARTIFACTS=true
                     fi
                   done
+
                 if $HAS_MISSING_ARTIFACTS;
                   then
                     echo "One or more artifacts do not exist"
@@ -323,9 +322,11 @@ pipeline {
                   else
                     echo "All artifacts found"
                 fi
+
                 HAS_FAILED_TEST=false
-                for RESULT in "${RESULT_LIST[@]}";
+                for FOLDER in *;
                   do
+                    RESULT=$(tail -n 1 "${BUILD_TAG}-${FOLDER}-result.txt" | grep -oE '^..')
                     if [ "$RESULT" != "ok" ];
                       then
                         echo "Test for usecase ${FOLDER} failed"
@@ -335,6 +336,7 @@ pipeline {
                         echo "Test for usecase ${FOLDER} successful"
                     fi
                   done
+
                 if $HAS_FAILED_TEST;
                   then
                     echo "One or more tests have failed"
@@ -360,20 +362,24 @@ pipeline {
         stage("distribute-assets") {
           steps {
             script {
+              def passwordMask = [
+                $class: 'MaskPasswordsBuildWrapper',
+                varPasswordPairs: [ [ password: AWS_ACCESS_KEY_ID ], [ password: AWS_SECRET_ACCESS_KEY ]]
+              ]
+
               def S3_CUSTOMER_BUCKET = "s3://" + CUSTOMER_BUCKET 
-  
-              docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-                sh """
-                  export S3_CUSTOMER_BUCKET=${S3_CUSTOMER_BUCKET}
-                  export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                  export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                  cd ./POC
-                  tar -zcvf mithril.tar.gz bookinfo spire istio \
-                    deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh \
-                    doc/poc-instructions.md demo/demo-script.sh demo/README.md
-                  aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
-                  aws s3api put-object-acl --bucket ${CUSTOMER_BUCKET} --key mithril.tar.gz --acl public-read
-                """
+
+              wrap(passwordMask) {
+                docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY") {
+                  sh """
+                    cd ./POC
+                    tar -zcvf mithril.tar.gz bookinfo spire istio \
+                      deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh \
+                      doc/poc-instructions.md demo/demo-script.sh demo/README.md
+                    aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
+                    aws s3api put-object-acl --bucket ${CUSTOMER_BUCKET} --key mithril.tar.gz --acl public-read
+                  """
+                }
               }
             }
           }
@@ -382,18 +388,22 @@ pipeline {
         stage("distribute-patches") {
           steps {
             script {
+              def passwordMask = [
+                $class: 'MaskPasswordsBuildWrapper',
+                varPasswordPairs: [ [ password: AWS_ACCESS_KEY_ID ], [ password: AWS_SECRET_ACCESS_KEY ]]
+              ]
+
               def S3_PATCHSET_BUCKET = "s3://" + PATCHSET_BUCKET
 
-              docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-                sh """
-                  export S3_PATCHSET_BUCKET=${S3_PATCHSET_BUCKET}
-                  export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                  export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                  cd ./POC
-                  tar -zcvf mithril-poc-patchset.tar.gz patches/poc.1.10.patch
-                  aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
-                  aws s3api put-object-acl --bucket ${PATCHSET_BUCKET} --key mithril-poc-patchset.tar.gz --acl public-read
-                """
+              wrap(passwordMask) {
+                docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY") {
+                  sh """
+                    cd ./POC
+                    tar -zcvf mithril-poc-patchset.tar.gz patches/poc.1.10.patch
+                    aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
+                    aws s3api put-object-acl --bucket ${PATCHSET_BUCKET} --key mithril-poc-patchset.tar.gz --acl public-read
+                  """
+                }
               }
             }
           }

@@ -177,7 +177,6 @@ pipeline {
             docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
               // Build and push to HPE registry
               sh """
-                export HPE_DOCKER_HUB_SECRET=${HPE_DOCKER_HUB_SECRET}
                 export HUB=${HPE_REGISTRY}
                 export TAG=${BUILD_TAG}
                 echo ${HPE_DOCKER_HUB_SECRET} | docker login hub.docker.hpecorp.net --username ${HPE_DOCKER_HUB_SECRET} --password-stdin
@@ -257,14 +256,12 @@ pipeline {
                         echo "** Begin test ${usecase} **" 
                         terraform init 
                         terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
-                        BUCKET_EXISTS=false
                         num_tries=0
                         while [ $num_tries -lt 500 ];
                         do
                           aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${usecase}-log.txt" --no-cli-pager 2> /dev/null
                           if [ $? -eq 0 ];
                             then
-                              BUCKET_EXISTS=true
                               break;
                             else
                               ((num_tries++))

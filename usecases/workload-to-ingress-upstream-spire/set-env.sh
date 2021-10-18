@@ -37,20 +37,20 @@ setup "${DIR}" "${DIR}"
 sleep 5
 
 log "Bootstraping agents"
-./spire-server bundle show -socketPath=/tmp/spire-server/private/api2.sock > "${DIR}"/root-cert.pem
+./spire-server bundle show -socketPath=/tmp/spire-server/private/api.sock > "${DIR}"/root-cert.pem
 
 log "Creating regristration entry for nestedA spire-server"
 ./spire-server entry create \
        -parentID "spiffe://example.org/spire/agent/x509pop/$(fingerprint "${DIR}"/nestedA/agent-nestedA.crt.pem)" \
-       -spiffeID "spiffe://example.org/ns/spire2/sa/spire-server-nestedA" -dns spire-server-0 -dns spire-server.spire.svc \
+       -spiffeID "spiffe://example.org/ns/spire/sa/spire-server-nestedA" -dns spire-server-0 -dns spire-server.spire.svc \
        -selector "unix:uid:0" \
        -downstream \
-       -ttl 3600 -socketPath="/tmp/spire-server/private/api2.sock"
+       -ttl 3600 -socketPath="/tmp/spire-server/private/api.sock"
 
 log "Creating regristration entry for nestedB spire-server"
 ./spire-server entry create \
        -parentID "spiffe://example.org/spire/agent/x509pop/$(fingerprint "${DIR}"/nestedB/agent-nestedB.crt.pem)" \
-       -spiffeID "spiffe://example.org/ns/spire2/sa/spire-server-nestedB" -dns spire-server-0 -dns spire-server.spire.svc \
+       -spiffeID "spiffe://example.org/ns/spire/sa/spire-server-nestedB" -dns spire-server-0 -dns spire-server.spire.svc \
        -selector "unix:uid:0" \
        -downstream \
-       -ttl 3600 -socketPath="/tmp/spire-server/private/api2.sock"
+       -ttl 3600 -socketPath="/tmp/spire-server/private/api.sock"

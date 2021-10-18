@@ -1,4 +1,4 @@
-#Connecting two workloads from different Mithril on a Nested Configuration
+# Connecting two workloads from different Mithril on a Nested Configuration
 
 This section showcases a mTLS between two workloads from different Mithril clusters within the same trust domain and in a Nested SPIRE configuration
 using the [‘spire’ UpstreamAuthority plugin](https://github.com/spiffe/spire/blob/main/doc/plugin_server_upstreamauthority_spire.md).
@@ -7,11 +7,11 @@ bare metal to serve as an Upstream CA to two
 Nested SPIRE Severs running on two separated Mithril clusters.
 
 
-#Nested SPIRE k8s topology
+# Nested SPIRE k8s topology
 
 ![Nested Spire k8s topology](img/nested_spire.png)
 
-#Before you begin
+# Before you begin
 
 For this Nested Mithril setup, first we need to configure and deploy SPIRE in a nested 
 topology in our k8s clusters, to do that we are going to generate certificates and keys
@@ -21,16 +21,16 @@ metal. After generating all the necessary certificates we will bootstrap the Age
 generate entries for the Nested SPIRE Servers. Let's use the current directory as a 
 path for storing the certificates.
 
-#Setting up the environment
+# Setting up the environment
 
 We will execute a script to generate all certs, to run the root server on the
 background, bootstrap the
 agents and create the necessary entries for the downstream servers.
-```
+```bash
 ./set-env.sh
 ```
-###Downstream entries
-```
+### Downstream entries
+```bash
 ./spire-server entry create \
        -parentID "spiffe://example.org/spire/agent/x509pop/$(fingerprint "${DIR}"/nestedA/agent-nestedA.crt.pem)" \
        -spiffeID "spiffe://example.org/ns/spire/sa/spire-server-nestedA" -dns spire-server-0 -dns spire-server.spire.svc \
@@ -46,30 +46,29 @@ agents and create the necessary entries for the downstream servers.
        -ttl 3600 -socketPath="/tmp/spire-server/private/api.sock"
 ```
 
-#Configuring NestedA Mithril Deployment (Server cluster)
+# Configuring NestedA Mithril Deployment (Server cluster)
 
 We will create a [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) to deploy
  our Nested Mithril setup.
 
-```
+```bash
 ./server-cluster/create-kind-cluster.sh
 ```
 
 Then we are going to create configmaps for sharing all necessary certificates and keys 
 for attesting the node.
 
-```
+```bash
 kubectl create configmap spire-bundle-nest --from-file ../root-cert.pem --namespace="spire"
 kubectl create configmap agent-nesteda-cert --from-file ../nestedA/agent-nestedA.crt.pem --namespace="spire"
 kubectl create configmap agent-nesteda-key --from-file ../nestedA/agent-nestedA.key.pem --namespace="spire"
 ```
 
-###Nested Agent configuration
+### Nested Agent configuration
 
 We are going to configure and deploy a SPIRE Agent within the same pod of the NestedA SPIRE Server 
 Let's take a look at the nested agent configuration file:
-```
-$ kubectl apply -f - <<EOF
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -114,13 +113,12 @@ trust_domain = "example.org"
       live_path = "/live"
       ready_path = "/ready"
     }
-EOF
 ```
 The Agent socket `socket_path = "/tmp/agent-nestedA.sock"` is located in an empty
 directory so the NestedA SPIRE Server can access it, that way we can configure the ‘spire’ UpstreamAuthority plugin
 on NestedA.
 
-###NestedA SPIRE Server configuration
+### NestedA SPIRE Server configuration
 
 For the Nested SPIRE Servers we only need to configure the **UpstreamAuthority** plugin
 and add it to the default configuration of the Mithril SPIRE Server.
@@ -135,14 +133,13 @@ and add it to the default configuration of the Mithril SPIRE Server.
  }
 ```
 
-###NestedA SPIRE Server deployment
+### NestedA SPIRE Server deployment
 
 We will add the deployment configuration for the Agent that we will use to attest
 the node to the default deployment CRD of the Mithril SPIRE Server. All the necessary
 certificates that we have generated will be mounted on the Agent container for attestation.
 
-```
-$ kubectl apply -f - <<EOF
+```yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -299,25 +296,23 @@ spec:
         resources:
           requests:
             storage: 1Gi
-EOF
 ```
 
-#Running the Scenario 
+# Running the Scenario 
 
 The NestedB configuration is analogous to the NestedA so will be omitted on this tutorial.
 Use the `./server-cluster/deploy-all.sh` to deploy SPIRE, Istio and the [httpbin](https://github.com/istio/istio/blob/master/samples/httpbin/httpbin.yaml)
 workload that we will use for the server side cluster on this example.
 
-```
+```bash
 ./server-cluster/deploy-all.sh
 ```
 
-###Configuring Istio Ingress Gateway for mTLS
+### Configuring Istio Ingress Gateway for mTLS
 
 To showcase the mTLS communication between the workloads we will need to configure a Gateway, a VirtualService and a DestinationRule on the server-side Ingressgateway for it to require HTTPS on incoming requests from outside the cluster.
 
-```
-$ kubectl apply -f - <<EOF
+```yaml
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
@@ -365,32 +360,30 @@ spec:
   trafficPolicy:
     tls:
       mode: ISTIO_MUTUAL
-EOF
 ```
 
 That way we can route requests from outside of the cluster to internal services like the **httpbin**.
 
-###Exposing the ingress gateway of the server cluster
+### Exposing the ingress gateway of the server cluster
 
-```
+```bash
 INGRESS_POD=$(kubectl get pod -l istio=ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}")
 kubectl port-forward "$INGRESS_POD" --address 0.0.0.0 8000:8080 -n istio-system
 ```
 
-###Deploying client cluster
+### Deploying client cluster
 
 Use the `./server-cluster/deploy-all.sh` to deploy SPIRE, Istio and the [sleep](https://github.com/istio/istio/blob/master/samples/sleep/sleep.yaml) app
 workload that we will use for the server side cluster on this example.
 
-```
+```bash
 ./client-cluster/create-kind-cluster.sh
 ./client-cluster/deploy-all.sh
 ```
 
-###Configuring a service entry for accessing the external httpbin service
+### Configuring a service entry for accessing the external httpbin service
 
-```
-$ kubectl apply -f - <<EOF
+```yaml
 apiVersion: networking.istio.io/v1alpha3
 kind: ServiceEntry
 metadata:
@@ -417,23 +410,22 @@ spec:
         number: 8000
       tls:
         mode: ISTIO_MUTUAL # initiates HTTPS when accessing app.example.org 
-EOF
 ```
 
-###Perform a curl between the workloads using Istio mTLS origination
+### Perform a curl between the workloads using Istio mTLS origination
 
 ![Istio mTLS origination](img/curl.png)
 
 On the client cluster:
 
-```
+```bash
 CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}")
 kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLkv http://app.example.org:8000/status/200"
 ```
 
-###Checking the response from the server:
+### Checking the response from the server:
 
-```
+```bash
 *   Trying 10.0.1.50:8000...
 * Connected to app.example.org (10.0.1.50) port 8000 (#0)
 > GET /status/200 HTTP/1.1
@@ -453,9 +445,9 @@ kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLkv http://ap
 < 
 ```
 
-###Inspecting the credential materials of the workloads
+### Inspecting the credential materials of the workloads
 
-```
+```bash
 $ openssl s_client -showcerts -connect 10.0.1.50:8000
 CONNECTED(00000003)
 Can't use SSL_get_servername

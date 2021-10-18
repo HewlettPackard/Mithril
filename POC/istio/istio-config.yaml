@@ -15,8 +15,8 @@ spec:
 
   values:
     global:
-      hub: 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
-      tag: latest
+      hub: localhost:5000
+      tag: my-build
       imagePullPolicy: "Always"
       imagePullSecrets:
         - secret-registry

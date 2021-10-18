@@ -6,7 +6,10 @@ On this particular use case we will create a scenario with a Root SPIRE Server r
 bare metal to serve as an Upstream CA to two 
 Nested SPIRE Severs running on two separated Mithril clusters.
 
-[img] Two k8s clusters Nested Overview
+
+#Nested SPIRE k8s topology
+
+![Nested Spire k8s topology](img/nested_spire.png)
 
 #Before you begin
 
@@ -380,8 +383,8 @@ Use the `./server-cluster/deploy-all.sh` to deploy SPIRE, Istio and the [sleep](
 workload that we will use for the server side cluster on this example.
 
 ```
-./server-cluster/create-kind-cluster.sh
-./server-cluster/deploy-all.sh
+./client-cluster/create-kind-cluster.sh
+./client-cluster/deploy-all.sh
 ```
 
 ###Configuring a service entry for accessing the external httpbin service
@@ -418,6 +421,8 @@ EOF
 ```
 
 ###Perform a curl between the workloads using Istio mTLS origination
+
+![Istio mTLS origination](img/curl.png)
 
 On the client cluster:
 

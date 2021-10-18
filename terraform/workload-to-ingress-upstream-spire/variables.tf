@@ -49,6 +49,6 @@ variable "VOLUME_SIZE" {
 }
 
 variable "USECASE" {
-  default     = "workload-to-ingress-upstream-disk"
-  description = "Workload to ingress, two clusters with UpstreamAuthority disk plugin"
+  default     = "workload-to-ingress-upstream-spire"
+  description = "Workload to ingress, two clusters with UpstreamAuthority spire plugin"
 }

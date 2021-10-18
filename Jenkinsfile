@@ -84,7 +84,7 @@ pipeline {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh """
               set -x
-              export no_proxy="\${no_proxy},notpilot,xyz,:0,::,[::],::0,[::0],::1,[::1],::6,[::6]"
+              export no_proxy="\${no_proxy},notpilot,xyz,:0,::,[::],::0,[::0],::1,[::1]
 
               cd istio
               make clean

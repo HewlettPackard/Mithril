@@ -1,4 +1,4 @@
-#Connecting two workloads from different Mithril clusters using external disk Spire CA
+#Connecting two workloads from different Mithril on a Nested Configuration
 
 This section showcases a mTLS between two workloads from different Mithril clusters within the same trust domain and in a Nested SPIRE configuration
 using the [‘spire’ UpstreamAuthority plugin](https://github.com/spiffe/spire/blob/main/doc/plugin_server_upstreamauthority_spire.md).

@@ -23,7 +23,7 @@ docker run -i --rm \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
 bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-spire && find . -type f -iname "*.sh" -exec chmod +x {} \; && ./set-env.sh &&
-cd /mithril/usecases/workload-to-ingress-upstream-spire/server-cluster && ./create-kind-cluster.sh &&
+cd /mithril/usecases/workload-to-ingress-upstream-spire/server-cluster && ../../../POC/create-kind-cluster.sh &&
 HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} /mithril/POC/create-docker-registry-secret.sh &&
 TAG=${build_tag} HUB=${hub} ./deploy-all.sh &&
 kubectl rollout status deployment httpbin &&

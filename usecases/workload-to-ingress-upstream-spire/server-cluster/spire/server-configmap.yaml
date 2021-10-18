@@ -62,13 +62,12 @@ data:
       }
 
       UpstreamAuthority "spire" {
-      plugin_data {
-        server_address = "10.0.1.50",
-        server_port = "8081",
-        workload_api_socket = "/tmp/agent-nestedA.sock"
+        plugin_data {
+          server_address = "10.0.1.50",
+          server_port = "8081",
+          workload_api_socket = "/tmp/agent-nestedA.sock"
         }
       }
-
     }
 
     health_checks {

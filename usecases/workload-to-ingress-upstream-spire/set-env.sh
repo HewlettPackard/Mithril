@@ -22,6 +22,8 @@ fingerprint() {
 	openssl x509 -in "$1" -outform DER | openssl sha1 -r | awk '{print $1}'
 }
 
+mkdir nestedA && mkdir nestedB && mkdir -p data/server
+
 wget https://github.com/spiffe/spire/releases/download/v1.0.2/spire-1.0.2-linux-x86_64-glibc.tar.gz
 
 tar zvxf spire-1.0.2-linux-x86_64-glibc.tar.gz

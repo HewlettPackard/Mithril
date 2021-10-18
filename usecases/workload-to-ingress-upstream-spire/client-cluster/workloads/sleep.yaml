@@ -1,0 +1,106 @@
+# Copyright Istio Authors
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+##################################################################################################
+# Sleep service
+##################################################################################################
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sleep
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sleep
+  labels:
+    app: sleep
+    service: sleep
+spec:
+  ports:
+  - port: 80
+    name: http
+  selector:
+    app: sleep
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sleep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sleep
+  template:
+    metadata:
+      labels:
+        app: sleep
+      annotations:
+        inject.istio.io/templates: "sidecar,spire"
+    spec:
+      terminationGracePeriodSeconds: 0
+      serviceAccountName: sleep
+      hostAliases:
+        - ip: "192.168.0.54"
+          hostnames:
+            - "app.example.org"
+      initContainers:
+        - name: fetch-config
+          image: gcr.io/spiffe-io/spire-agent:1.0.0
+          command: [ "/bin/sh" ]
+          args:
+            - "-c"
+            - |
+              /opt/spire/bin/spire-agent api fetch \
+              -socketPath /run/spire/sockets/agent.sock -write . && ls /sleep-certs/ &&
+              mv svid.0.key /sleep-certs/sleep-key.pem && \
+              mv svid.0.pem /sleep-certs/sleep-svid.pem && \
+              mv bundle.0.pem /sleep-certs/root-cert.pem && \
+              chmod 644 /sleep-certs/*
+          volumeMounts:
+            - name: sleep-certs
+              mountPath: /sleep-certs
+            - name: spire-agent-socket
+              mountPath: /run/spire/sockets
+              readOnly: false
+      containers:
+      - name: sleep
+        image: curlimages/curl
+        command: ["/bin/sleep", "3650d"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /etc/sleep/tls
+          name: secret-volume
+        - name: tmp
+          mountPath: /tmp
+        - name: sleep-certs
+          mountPath: /sleep-certs
+        - name: spire-agent-socket
+          mountPath: /run/spire/sockets
+          readOnly: false
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: sleep-secret
+          optional: true
+      - name: tmp
+        emptyDir: {}
+      - name: spire-agent-socket
+        hostPath:
+          path: /run/spire/sockets
+          type: Directory
+      - name: sleep-certs
+        emptyDir: {}
+---

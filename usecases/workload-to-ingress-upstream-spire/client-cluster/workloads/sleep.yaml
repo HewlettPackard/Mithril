@@ -53,7 +53,7 @@ spec:
       terminationGracePeriodSeconds: 0
       serviceAccountName: sleep
       hostAliases:
-        - ip: "192.168.0.54"
+        - ip: "10.0.1.50"
           hostnames:
             - "app.example.org"
       initContainers:

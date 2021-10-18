@@ -63,7 +63,7 @@ data:
 
       UpstreamAuthority "spire" {
       plugin_data {
-        server_address = "192.168.0.54",
+        server_address = "10.0.1.50",
         server_port = "8081",
         workload_api_socket = "/tmp/agent-nestedB.sock"
         }

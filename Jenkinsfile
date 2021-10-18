@@ -137,7 +137,7 @@ pipeline {
               sh """
                 export HUB=${HPE_REGISTRY}
                 echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
-                cd istio && make push
+                cd istio && go mod tidy && make push
               """
 
               // Build and push to ECR registry
@@ -149,7 +149,7 @@ pipeline {
                 export TAG=${BUILD_TAG}
                 aws ecr get-login-password --region ${ECR_REGION} | \
                   docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                cd istio && make push
+                cd istio && go mod tidy && make push
               """
             }
           }

@@ -25,13 +25,13 @@ docker run -i --rm \
 bash -c 'cd /mithril/usecases/workload-to-ingress-upstream-spire && find . -type f -iname "*.sh" -exec chmod +x {} \; && ./set-env.sh &&
 cd /mithril/usecases/workload-to-ingress-upstream-spire/server-cluster && ../../../POC/create-kind-cluster.sh &&
 HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} /mithril/POC/create-docker-registry-secret.sh &&
-TAG=${build_tag} HUB=${hub} ./deploy-all.sh &&
+kubectl create ns spire && TAG=${build_tag} HUB=${hub} ./deploy-all.sh &&
 kubectl rollout status deployment httpbin &&
 INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") &&
 ./forward-port.sh &&
 cd /mithril/usecases/workload-to-ingress-upstream-spire/client-cluster && ./create-kind-cluster.sh &&
 HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} /mithril/POC/create-docker-registry-secret.sh &&
-TAG=${build_tag} HUB=${hub} && ./deploy-all.sh &&
+kubectl create ns spire && TAG=${build_tag} HUB=${hub} && ./deploy-all.sh &&
 kubectl rollout status deployment sleep &&
 CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}") &&
 kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLkv http://app.example.org:8000/status/200 2>&1 | tee /tmp/${usecase}_test_response.txt" &&

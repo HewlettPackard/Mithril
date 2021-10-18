@@ -73,22 +73,22 @@ pipeline {
       }
     }
 
-    stage("unit-test") {
-      options {
-        retry(3)
-      }
-      steps {
-        sh """
-          set -x
-          export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
-
-          cd istio
-          make clean
-          make init
-          make test
-        """
-      }
-    }
+//     stage("unit-test") {
+//       options {
+//         retry(3)
+//       }
+//       steps {
+//         sh """
+//           set -x
+//           export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
+//
+//           cd istio
+//           make clean
+//           make init
+//           make test
+//         """
+//       }
+//     }
 
     stage("build-and-push-dev-images") {
       steps {

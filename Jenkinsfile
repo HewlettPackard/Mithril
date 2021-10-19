@@ -73,22 +73,22 @@ pipeline {
       }
     }
 
-//     stage("unit-test") {
-//       options {
-//         retry(3)
-//       }
-//       steps {
-//         sh """
-//           set -x
-//           export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
-//
-//           cd istio
-//           make clean
-//           make init
-//           make test
-//         """
-//       }
-//     }
+    stage("unit-test") {
+      options {
+        retry(3)
+      }
+      steps {
+        sh """
+          set -x
+          export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
+
+          cd istio
+          make clean
+          make init
+          make test
+        """
+      }
+    }
 
     stage("build-and-push-dev-images") {
       steps {
@@ -137,7 +137,7 @@ pipeline {
               sh """
                 export HUB=${HPE_REGISTRY}
                 echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
-                cd istio && go mod tidy && make push
+                cd istio && make push
               """
 
               // Build and push to ECR registry
@@ -149,7 +149,7 @@ pipeline {
                 export TAG=${BUILD_TAG}
                 aws ecr get-login-password --region ${ECR_REGION} | \
                   docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                cd istio && go mod tidy && make push
+                cd istio && make push
               """
             }
           }

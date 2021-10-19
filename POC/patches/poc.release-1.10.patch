@@ -559,16 +559,3 @@ diff --git a/go.mod b/go.mod
  	github.com/stretchr/testify v1.7.0
  	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
  	github.com/yl2chen/cidranger v1.0.2
-diff --git a/pkg/test/framework/components/echo/cmd/echogen/testdata/golden.yaml b/pkg/test/framework/components/echo/cmd/echogen/testdata/golden.yaml
-index 82b701d165..8999a75169 100644
---- a/pkg/test/framework/components/echo/cmd/echogen/testdata/golden.yaml
-+++ b/pkg/test/framework/components/echo/cmd/echogen/testdata/golden.yaml
-@@ -125,7 +125,7 @@ spec:
-             fieldRef:
-               fieldPath: status.podIP
-         image: testhub/app:testtag
--        imagePullPolicy: IfNotPresent
-+        imagePullPolicy: Always
-         livenessProbe:
-           failureThreshold: 10
-           initialDelaySeconds: 10

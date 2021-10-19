@@ -9,7 +9,7 @@ ISTIO_STABLE_BRANCH = "release-1.10" // the Istio branch to be distributed
 PATCHSET_BUCKET = "mithril-poc-patchset"
 CUSTOMER_BUCKET = "mithril-customer-assets"
 MITHRIL_MAIN_BRANCH = "master"
-PROXY="http://proxy.houston.hpecorp.net:8080"
+PROXY = "http://proxy.houston.hpecorp.net:8080"
 
 def SLACK_ERROR_MESSAGE
 def SLACK_ERROR_COLOR

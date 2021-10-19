@@ -145,7 +145,6 @@ pipeline {
                 export HUB=${HPE_REGISTRY}
                 echo ${secrets.dockerHubToken} | docker login hub.docker.hpecorp.net --username ${secrets.dockerHubToken} --password-stdin
                 cd istio
-                go mod tidy
                 make push
               """
 

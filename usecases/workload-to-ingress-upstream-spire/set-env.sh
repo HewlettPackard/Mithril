@@ -24,11 +24,11 @@ fingerprint() {
 
 mkdir nestedA && mkdir nestedB && mkdir -p data/server
 
-wget https://github.com/spiffe/spire/releases/download/v1.0.2/spire-1.0.2-linux-x86_64-glibc.tar.gz
+wget https://github.com/spiffe/spire/releases/download/v"${LATEST_SPIRE_VERSION}"/spire-"${LATEST_SPIRE_VERSION}"-linux-x86_64-glibc.tar.gz
 
-tar zvxf spire-1.0.2-linux-x86_64-glibc.tar.gz
+tar zvxf spire-"${LATEST_SPIRE_VERSION}"-linux-x86_64-glibc.tar.gz
 
-mv spire-1.0.2/bin/spire-server . && rm -rf spire-1.0.2-linux-x86_64-glibc.tar.gz spire-1.0.2
+mv spire-"${LATEST_SPIRE_VERSION}"/bin/spire-server . && rm -rf spire-"${LATEST_SPIRE_VERSION}"-linux-x86_64-glibc.tar.gz spire-"${LATEST_SPIRE_VERSION}"
 
 # Starts root SPIRE deployment
 log "Generating certificates for root SPIRE deployment and for nested nodes attestation"

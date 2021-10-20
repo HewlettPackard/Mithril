@@ -321,7 +321,7 @@ pipeline {
               aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}
               aws s3api put-object-acl --bucket ${CUSTOMER_BUCKET} --key mithril.tar.gz --acl public-read
 
-              tar -zcvf mithril-poc-patchset.tar.gz patches/poc.1.10.patch
+              tar -zcvf mithril-poc-patchset.tar.gz patches/poc.release-1.10.patch
 
               aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
               aws s3api put-object-acl --bucket ${PATCHSET_BUCKET} --key mithril-poc-patchset.tar.gz --acl public-read

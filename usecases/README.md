@@ -31,7 +31,7 @@ Copy the Private key section of the output to a file `key.pem`.
 ### Test TLS request
 
 ```bash
-> curl --cert svid.pem --key key.pem -k -I https://localhost:8000/productpage
+> curl --cert svid.pem --key key.pem -k -I https://localhost:7000/productpage
 
 HTTP/2 200 
 content-type: text/html; charset=utf-8

@@ -1,18 +1,15 @@
-# apiVersion: install.istio.io/v1alpha1
 apiVersion: operator.istio.io/v1alpha1
 kind: IstioOperator
 metadata:
   namespace: istio-system
 spec:
   profile: default
-
   meshConfig:
     trustDomain: example.org
     defaultConfig:
       proxyMetadata:
         # define the ROOT CA that will be used by all istio-agents to connect with istiod using TLS and a JWT token.
         XDS_ROOT_CA: /etc/certs/root-cert.pem
-
   values:
     global:
       hub: localhost:5000
@@ -20,7 +17,7 @@ spec:
       imagePullPolicy: "Always"
       imagePullSecrets:
         - secret-registry
-
+    # Template to propagate Ingress Gateway deployment configuration to the sidecars
     sidecarInjectorWebhook:
       templates:
         spire: |
@@ -47,7 +44,6 @@ spec:
                 hostPath:
                   path: /run/spire/sockets
                   type: Directory
-
   components:
     pilot:
       k8s:
@@ -79,8 +75,6 @@ spec:
                   hostPath:
                     path: /run/spire/sockets
                     type: Directory
-
-
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
@@ -92,30 +86,22 @@ spec:
               kind: Deployment
               name: istio-ingressgateway
               patches:
-                - path: spec.template.spec.volumes[0]
-                  value:
-                    name: istiod-ca-cert
-                    configMap:
-                      name: trust-bundle
                 - path: spec.template.spec.volumes[8]
                   value:
                     name: spire-agent-socket
                     hostPath:
                       path: /run/spire/sockets
                       type: Directory
-
                 - path: spec.template.spec.volumes[9]
                   value:
                     name: xds-root-ca
                     configMap:
                       name: trust-bundle
-
                 - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
                   value:
                     name: spire-agent-socket
                     mountPath: "/run/spire/sockets/"
                     readOnly: true
-
                 - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[9]
                   value:
                     name: xds-root-ca

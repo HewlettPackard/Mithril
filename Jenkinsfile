@@ -9,7 +9,7 @@ ISTIO_STABLE_BRANCH = "release-1.10" // the Istio branch to be distributed
 PATCHSET_BUCKET = "mithril-poc-patchset"
 CUSTOMER_BUCKET = "mithril-customer-assets"
 MITHRIL_MAIN_BRANCH = "master"
-PROXY="http://proxy.houston.hpecorp.net:8080"
+PROXY = "http://proxy.houston.hpecorp.net:8080"
 
 def SLACK_ERROR_MESSAGE
 def SLACK_ERROR_COLOR
@@ -39,7 +39,6 @@ pipeline {
   triggers {
     parameterizedCron(
       BRANCH_NAME == MITHRIL_MAIN_BRANCH ? '''
-        H H(0-3) * * * %ISTIO_BRANCH=master
         H H(0-3) * * * %ISTIO_BRANCH=release-1.10
         H H(0-3) * * * %ISTIO_BRANCH=release-1.11
       ''': ''
@@ -83,21 +82,27 @@ pipeline {
       }
     }
 
-    // stage("unit-test") {
-    //   options {
-    //     retry(3)
-    //   }
-    //   steps {
-    //     sh """
-    //       set -x
-    //       export no_proxy="\${no_proxy},notpilot,:0,::,[::],xyz"
-    //       cd istio
-    //       make clean
-    //       make init
-    //       make test
-    //     """
-    //   }
-    // }
+    stage("unit-test") {
+      options {
+        retry(3)
+      }
+      steps {
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh """
+              set -x
+              export no_proxy="\${no_proxy},notpilot,xyz,:0,::,[::],::0,[::0],::1,[::1]"
+
+              cd istio
+              make clean
+              go mod tidy
+              make init
+              make test
+            """
+          }
+        }
+      }
+    }
 
     stage("build-ecr-images") {
       environment {

@@ -43,3 +43,4 @@ sleep 2
 kubectl apply \
     -f $DIR/POC/spire/agent-configmap.yaml \
     -f $DIR/POC/spire/agent-daemonset.yaml
+    

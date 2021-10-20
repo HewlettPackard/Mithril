@@ -28,7 +28,7 @@ echo -e "${PURPLE}Deploying Spire...${NC}"
 cd $BASE_DIR/usecases/federation/spire
 ./deploy-spire.sh $BASE_DIR
 
-# Wait SPIRE Agente to be ready
+# Wait SPIRE Agent to be ready
 echo -e "${GREEN}$(kubectl wait pod --for=condition=Ready -l app=spire-agent -n spire)${NC}"
 
 # Call script to deploy Spire 2
@@ -44,7 +44,7 @@ bundle=$(kubectl exec --stdin spire-server-0 -c spire-server -n spire2  -- /opt/
 # Wait SPIRE Server 2 to be ready
 echo -e "${GREEN}$(kubectl wait --for=condition=ready pod spire-server-0 -n spire --timeout=-1s)${NC}"
 
-# Set domain.test bundle to SPIRE
+# Set domain.test bundle to example.org SPIRE bundle endpoint
 kubectl exec --stdin spire-server-0 -c spire-server -n spire -- /opt/spire/bin/spire-server bundle set -format spiffe -id spiffe://domain.test -socketPath /run/spire/sockets/server.sock <<< "$bundle"
 
 # Mint x509 SVID

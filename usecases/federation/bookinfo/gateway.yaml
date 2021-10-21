@@ -19,7 +19,7 @@ metadata:
   name: bookinfo-gateway-mtls
 spec:
   selector:
-    istio: ingressgateway
+    istio: ingressgateway-mtls
   servers:
     - port:
         number: 7080

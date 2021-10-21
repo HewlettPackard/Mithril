@@ -395,7 +395,7 @@ pipeline {
               docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
                 sh """
                   cd ./POC
-                  tar -zcvf mithril-poc-patchset.tar.gz patches/poc.1.10.patch
+                  tar -zcvf mithril-poc-patchset.tar.gz patches
                   aws s3 cp mithril-poc-patchset.tar.gz ${S3_PATCHSET_BUCKET}
                   aws s3api put-object-acl --bucket ${PATCHSET_BUCKET} --key mithril-poc-patchset.tar.gz --acl public-read
                 """

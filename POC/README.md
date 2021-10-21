@@ -51,14 +51,14 @@ Follow [kind install instructions](https://kind.sigs.k8s.io/docs/user/quick-star
 1. Clone https://github.com/istio/istio
 Note: You will need to clone the main istio repo to $GOPATH/src/istio.io/istio for the build commands to work correctly.
 2. `git checkout release-1.10`
-3. Apply patch `POC/patches/poc.1.10.patch`   
+3. Apply patch `POC/patches/poc.release-1.10.patch`
 4. `export TAG=my-build`
 5. `export HUB=localhost:5000`
 6. `export BUILD_WITH_CONTAINER=0`
 7. `make push`
 
 Note: steps 2 and 3 can be also be done with istio branches `release-1.11` and `master` using the corresponding patches
-`poc.1.11.patch` and `poc-patchset-master.patch`.
+`poc.release-1.11.patch` and `poc.master.patch`.
 
 This will create the docker images with the tag `my-build`, and push them to the local docker registry (`localhost:5000`).
 

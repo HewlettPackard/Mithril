@@ -28,7 +28,7 @@ kubectl create ns spire && TAG=${build_tag} HUB=${hub} ./deploy-all.sh &&
 kubectl rollout status deployment httpbin &&
 INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") &&
 ../../../POC/forward-port.sh &&
-cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && ../../common/utils/create-kind-cluster.sh &&
+cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && ../../common/utils/create-kind2-cluster.sh &&
 HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ../../../POC/create-docker-registry-secret.sh &&
 kubectl create ns spire && TAG=${build_tag} HUB=${hub} && ./deploy-all.sh &&
 kubectl rollout status deployment sleep &&

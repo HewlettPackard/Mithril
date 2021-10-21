@@ -308,7 +308,7 @@ The output is an HTML page that should not have any error sections.
 
 #### Make a **HTTPS** request from the host:
 
-Mint SVID in the trust domain `domain.test`:
+Mint SVID in the trust domain `example.org`:
 
 ```bash	
 $ kubectl exec --stdin --tty -n spire spire-server-0  -- /opt/spire/bin/spire-server x509 mint -spiffeID spiffe://example.org/myservice -socketPath /run/spire/sockets/server.sock	
@@ -317,7 +317,7 @@ $ kubectl exec --stdin --tty -n spire spire-server-0  -- /opt/spire/bin/spire-se
 Copy the X509-SVID section of the output to a file `svid.pem`.	
 Copy the Private key section of the output to a file `key.pem`.	
 
-Forward host port 8000 to port 8080 (ingressgateway pod port) inside the cluster:
+Forward host port 7000 to port 7080 (ingressgateway pod port) inside the cluster:
 
 ```bash
 INGRESS_POD=$(kubectl get pod -l istio=ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}")

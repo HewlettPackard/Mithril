@@ -17,7 +17,7 @@ spec:
       imagePullPolicy: "Always"
       imagePullSecrets:
         - secret-registry
-    # Template to propagate Ingress Gateway deployment configuration to the sidecars
+    # This is used to customize the sidecar template
     sidecarInjectorWebhook:
       templates:
         spire: |

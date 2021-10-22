@@ -114,7 +114,7 @@ func requestExternalWorkloadFromSleepPod(t *testing.T) {
 	}
 
 
-	assert.Contains(t, stdOut.Str[0], "This is an example server.")
+	assert.Contains(t, stdOut.Str[0], "HTTP/1.1 200 OK")
 }
 
 func getHostname() (string, error) {

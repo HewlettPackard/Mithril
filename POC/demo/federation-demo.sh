@@ -58,7 +58,7 @@ sleep 10.0
 # Deploying Bookinfo Application
 echo -e "${PURPLE}Deploying Bookinfo application...${NC}"
 
-cd $BASE_DIR/bookinfo
+cd $BASE_DIR/usecases/federation/bookinfo
 ./deploy-bookinfo.sh $BASE_DIR
 
 # Port Forwading Services
@@ -99,6 +99,7 @@ cd $BASE_DIR/usecases/federation
 
 # Mint x509 SVID
 kubectl exec --stdin --tty -n spire2 spire-server-0  -- /opt/spire/bin/spire-server x509 mint -spiffeID spiffe://domain.test/myservice -socketPath /run/spire/sockets/server.sock >> mint-cert.pem
+sleep 3.0
 
 # Extracting key and svid from mintend x509
 openssl pkey -in mint-cert.pem -out key.pem

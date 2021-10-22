@@ -13,10 +13,10 @@ NC='\033[0m' # No Color
 # Get POC from AWS S3
 echo -e "${PURPLE}Downloading POC version from AWS S3...${NC}"
 
-# aws s3 cp s3://mithril-customer-assets/mithril.tar.gz . --profile scytale
+aws s3 cp s3://mithril-customer-assets/mithril.tar.gz . --profile scytale
 mkdir -p $BASE_DIR && tar -xf ./mithril.tar.gz -C $BASE_DIR 
 
-# echo -e "${PURPLE}Creating Docker Secrets for AWS...${NC}"
+echo -e "${PURPLE}Creating Docker Secrets for AWS...${NC}"
 $BASE_DIR/POC/create-docker-registry-secret.sh
 
 echo -e "${PURPLE}Creating namespaces...${NC}"
@@ -96,7 +96,8 @@ kubectl logs $(kubectl get pod -l app=details -o jsonpath='{.items[0].metadata.n
 # SPIRE agent log
 kubectl logs $(kubectl get pod -l app=spire-agent -o jsonpath='{.items[0].metadata.name}' -n spire) -n spire >> spire-agent.log
 
-echo -e "${PURPLE}Log for SPIRE in operation availabe at $PWD${NC}"
+echo -e "${PURPLE}Log for SPIRE in operation availabe at $PWD/spire-agent.log${NC}"
+echo -e "${PURPLE}Log for SPIRE in operation availabe at $PWD/workload.log${NC}"
 
 # Demonstrating Federation
 cd $BASE_DIR/usecases/federation/spire2

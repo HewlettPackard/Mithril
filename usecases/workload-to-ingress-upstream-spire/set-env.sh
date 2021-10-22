@@ -8,7 +8,7 @@ timestamp() {
 
 setup() {
     # Generates certs
-    go run "../utils/gencerts.go" "$@"
+    go run "../common/utils/gencerts.go" "$@"
 }
 
 log() {

@@ -31,7 +31,7 @@ kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- /opt/spire/bin/spire-ag
 kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/svid.pem > svid.pem &&
 kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/svid.key > svid.key &&
 kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/bundle.pem > bundle.pem &&
-go run tls-server.go & &&
+./start-server.sh &&
 CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}") &&
 kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -v example.org 2>&1 | tee /tmp/${usecase}_test_response.txt" &&
 cd /mithril/e2e/${usecase} && touch ${build_tag}-${usecase}-result.txt && go test -v e2e -run TestExternalWorkload 2>&1 | tee ${build_tag}-${usecase}-result.txt &&

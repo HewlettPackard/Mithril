@@ -1,6 +1,6 @@
 #!/bin/bash
 
-kubectl apply -f ../../../POC/secrets.yaml
+kubectl apply -f ../../../../POC/secrets.yaml
 
 istioctl kube-inject --filename ../../../common/workloads/sleep.yaml | kubectl apply -f -
 

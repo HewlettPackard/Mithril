@@ -22,14 +22,14 @@ docker run -i --rm \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c 'cd /mithril/usecases && find . -type f -iname "*.sh" -exec chmod +x {} \; && cd workload-to-ingress-upstream-disk/server-cluster && ../../../POC/create-kind-cluster.sh &&
-HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ../../../POC/create-docker-registry-secret.sh &&
+bash -c 'cd /mithril/usecases && find . -type f -iname "*.sh" -exec chmod +x {} \; && cd workload-to-ingress-upstream-disk/server-cluster && /mithril/POC/create-kind-cluster.sh &&
+HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} /mithril/POC/create-docker-registry-secret.sh &&
 kubectl create ns spire && TAG=${build_tag} HUB=${hub} ./deploy-all.sh &&
 kubectl rollout status deployment httpbin &&
 INGRESS_POD=$(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath="{.items[0].metadata.name}") &&
-../../../POC/forward-port.sh &&
-cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && ../../common/utils/create-kind2-cluster.sh &&
-HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} ../../../POC/create-docker-registry-secret.sh &&
+/mithril/POC/forward-port.sh &&
+cd /mithril/usecases/workload-to-ingress-upstream-disk/client-cluster && /mithril/usecases/common/utils/create-kind2-cluster.sh &&
+HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} /mithril/POC/create-docker-registry-secret.sh &&
 kubectl create ns spire && TAG=${build_tag} HUB=${hub} && ./deploy-all.sh &&
 kubectl rollout status deployment sleep &&
 CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}") &&

@@ -312,7 +312,7 @@ pipeline {
                   fi
                   if $BUCKET_EXISTS;
                     then
-                      echo "Artifact object exists"
+                      echo "Artifact object for usecase ${FOLDER} exists"
                     else
                       echo "Artifact ${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt object for usecase ${FOLDER} does not exist"
                       HAS_MISSING_ARTIFACTS=true

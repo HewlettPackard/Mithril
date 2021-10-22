@@ -28,9 +28,9 @@ kubectl create ns spire && TAG=${build_tag} HUB=${hub} ./deploy-all.sh &&
 kubectl rollout status deployment sleep &&
 SPIRE_AGENT_POD=$(kubectl get pod -l app=spire-agent -n spire -o jsonpath="{.items[0].metadata.name}") &&
 kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- /opt/spire/bin/spire-agent api fetch -write /tmp/ -socketPath /run/spire/sockets/agent.sock &&
-kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/svid.pem > svid.pem &&
-kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/svid.key > svid.key &&
-kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/bundle.pem > bundle.pem &&
+kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/svid.0.pem > svid.pem &&
+kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/svid.0.key > svid.key &&
+kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/bundle.0.pem > bundle.pem &&
 ./start-server.sh &&
 CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}") &&
 kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -v example.org 2>&1 | tee /tmp/${usecase}_test_response.txt" &&

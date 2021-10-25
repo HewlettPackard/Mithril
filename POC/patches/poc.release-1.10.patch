@@ -492,7 +492,7 @@ new file mode 100644
 +		return
 +	}
 +
-+	certChain := concatCerts([]string{string(workloadChain), string(root)})
++	certChain := concatCerts([]string{string(workloadChain)})
 +	leaf := c.SVIDs[0].Certificates[0]
 +
 +	item := &security.SecretItem{

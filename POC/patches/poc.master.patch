@@ -411,7 +411,7 @@ index 0000000000..c513cf7ad0
 +		return
 +	}
 +
-+	certChain := concatCerts([]string{string(workloadChain), string(root)})
++	certChain := concatCerts([]string{string(workloadChain)})
 +	leaf := c.SVIDs[0].Certificates[0]
 +
 +	item := &security.SecretItem{
@@ -468,21 +468,20 @@ index 0000000000..c513cf7ad0
 +	}
 +}
 diff --git a/security/pkg/nodeagent/sds/sdsservice.go b/security/pkg/nodeagent/sds/sdsservice.go
-index 7c0e83b26e..44d73dc1fb 100644
---- a/security/pkg/nodeagent/sds/sdsservice.go
-+++ b/security/pkg/nodeagent/sds/sdsservice.go
-@@ -18,6 +18,7 @@ package sds
+--- a/security/pkg/nodeagent/sds/sdsservice.go	(revision c099251ab59a290262badb676c782d4cbecd6a77)
++++ b/security/pkg/nodeagent/sds/sdsservice.go	(date 1634837282809)
+@@ -18,6 +18,7 @@
  import (
  	"context"
  	"fmt"
 +	"google.golang.org/protobuf/types/known/anypb"
  	"time"
- 
- 	"github.com/cenkalti/backoff"
-@@ -148,7 +149,11 @@ func (s *sdsservice) generate(resourceNames []string) (model.Resources, error) {
+
+ 	"github.com/cenkalti/backoff/v4"
+@@ -148,7 +149,11 @@
  			return nil, fmt.Errorf("failed to generate secret for %v: %v", resourceName, err)
  		}
- 
+
 -		res := util.MessageToAny(toEnvoySecret(secret, s.rootCaPath))
 +		envoySecret, err := toEnvoySecret(secret, s.rootCaPath)
 +		if err != nil {
@@ -492,16 +491,16 @@ index 7c0e83b26e..44d73dc1fb 100644
  		resources = append(resources, &discovery.Resource{
  			Name:     resourceName,
  			Resource: res,
-@@ -203,7 +208,7 @@ func (s *sdsservice) Close() {
+@@ -203,7 +208,7 @@
  }
- 
+
  // toEnvoySecret converts a security.SecretItem to an Envoy tls.Secret
 -func toEnvoySecret(s *security.SecretItem, caRootPath string) *tls.Secret {
 +func toEnvoySecret(s *security.SecretItem, caRootPath string) (*tls.Secret, error) {
  	secret := &tls.Secret{
  		Name: s.ResourceName,
  	}
-@@ -215,6 +220,15 @@ func toEnvoySecret(s *security.SecretItem, caRootPath string) *tls.Secret {
+@@ -215,6 +220,15 @@
  		cfg, ok = security.SdsCertificateConfigFromResourceName(s.ResourceName)
  	}
  	if s.ResourceName == security.RootCertReqResourceName || (ok && cfg.IsRootCertificate()) {
@@ -517,16 +516,16 @@ index 7c0e83b26e..44d73dc1fb 100644
  		secret.Type = &tls.Secret_ValidationContext{
  			ValidationContext: &tls.CertificateValidationContext{
  				TrustedCa: &core.DataSource{
-@@ -241,7 +255,7 @@ func toEnvoySecret(s *security.SecretItem, caRootPath string) *tls.Secret {
+@@ -241,7 +255,7 @@
  		}
  	}
- 
+
 -	return secret
 +	return secret, nil
  }
- 
+
  func pushLog(names []string) model.XdsLogDetails {
-@@ -251,3 +265,32 @@ func pushLog(names []string) model.XdsLogDetails {
+@@ -251,3 +265,32 @@
  	}
  	return model.DefaultXdsLogDetails
  }

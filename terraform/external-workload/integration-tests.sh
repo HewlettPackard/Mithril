@@ -32,9 +32,7 @@ kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/svid.0.pem > s
 kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/svid.0.key > svid.key &&
 kubectl exec -n spire $SPIRE_AGENT_POD -c spire-agent -- cat /tmp/bundle.0.pem > bundle.pem &&
 ./start-server.sh &&
-CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}") &&
-kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -v example.org 2>&1 | tee /tmp/${usecase}_test_response.txt" &&
-cd /mithril/e2e/${usecase} && touch ${build_tag}-${usecase}-result.txt && go test -v e2e -run TestExternalWorkload 2>&1 | tee ${build_tag}-${usecase}-result.txt &&
+cd /mithril/e2e && go test -v e2e -run TestExternalWorkload 2>&1 | tee ${build_tag}-${usecase}-result.txt &&
 AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} aws s3 cp ${build_tag}-${usecase}-result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1'
 
 cat /var/log/user-data.log >> ${build_tag}-${usecase}-log.txt

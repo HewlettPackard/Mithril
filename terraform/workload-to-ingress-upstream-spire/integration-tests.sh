@@ -33,9 +33,7 @@ cd /mithril/usecases/workload-to-ingress-upstream-spire/client-cluster && ../../
 HUB=${hub} AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} /mithril/POC/create-docker-registry-secret.sh &&
 kubectl create ns spire && TAG=${build_tag} HUB=${hub} && ./deploy-all.sh &&
 kubectl rollout status deployment sleep &&
-CLIENT_POD=$(kubectl get pod -l app=sleep -n default -o jsonpath="{.items[0].metadata.name}") &&
-kubectl exec -i -t pod/$CLIENT_POD -c sleep -- /bin/sh -c "curl -sSLv http://istio-ingressgateway.istio-system.svc:8000/status/200 2>&1 | tee /tmp/${usecase}_test_response.txt" &&
-cd /mithril/e2e/${usecase} && touch ${build_tag}-${usecase}-result.txt && go test -v e2e -run TestWorkloadToIngressUpstreamSpire 2>&1 | tee ${build_tag}-${usecase}-result.txt &&
+cd /mithril/e2e && go test -v e2e -run TestWorkloadToIngressUpstreamSpire 2>&1 | tee ${build_tag}-${usecase}-result.txt &&
 AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} aws s3 cp ${build_tag}-${usecase}-result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1'
 
 cat /var/log/user-data.log >> ${build_tag}-${usecase}-log.txt

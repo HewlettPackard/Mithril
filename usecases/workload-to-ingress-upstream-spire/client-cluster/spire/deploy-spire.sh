@@ -40,8 +40,8 @@ kubectl apply \
 
 # Configuring and deploying nested SPIRE Agent
 kubectl apply \
-    -f agent-nest-account.yaml \
-    -f agent-nest-cluster-role.yaml
+    -f ../../common/spire/agent-nest-account.yaml \
+    -f ../../common/spire/agent-nest-cluster-role.yaml
 
 sleep 2
 

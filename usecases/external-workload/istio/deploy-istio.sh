@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "Deploying Istio..."
-
 if [[ $HUB ]]; then
     echo "Using HUB from environment: $HUB"
     args="$args --set values.global.hub=$HUB"
@@ -18,6 +16,6 @@ fi
 
 kubectl create ns istio-system
 sleep 2
-kubectl apply -f ../../../../POC/istio/secrets.yaml
-istioctl install -f ../../../../POC/istio/istio-config.yaml --skip-confirmation $args
-kubectl apply -f ../../../../POC/istio/auth.yaml
+kubectl apply -f ../../../POC/istio/secrets.yaml
+istioctl install -f istio-config.yaml --skip-confirmation $args
+kubectl apply -f ../../../POC/istio/auth.yaml

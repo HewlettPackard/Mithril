@@ -431,7 +431,7 @@ pipeline {
 //         message: "${SLACK_ERROR_MESSAGE} (<${env.BUILD_URL}|See Job>)",
 //       )
 //     }
-//   }
+  }
 }
 
 // Method for creating the build tag

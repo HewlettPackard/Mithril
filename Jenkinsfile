@@ -72,7 +72,8 @@ pipeline {
     stage("make-poc-codebase") {
       steps {
         // Istio clone from the specified branch
-        sh "git clone --single-branch --branch ${params.ISTIO_BRANCH} https://github.com/istio/istio.git"
+//         sh "git clone --single-branch --branch ${params.ISTIO_BRANCH} https://github.com/istio/istio.git"
+        sh "git clone --single-branch --branch master https://github.com/istio/istio.git"
 
 //         // Apply Mithril patches
 //         sh """

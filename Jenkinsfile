@@ -432,7 +432,7 @@ pipeline {
 //       )
 //     }
 //   }
-// }
+}
 
 // Method for creating the build tag
 def makeTag() {

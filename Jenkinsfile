@@ -162,7 +162,7 @@ pipeline {
               num_tries=0
               while [ $num_tries -lt 250 ];
               do
-                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-log.txt" --no-cli-pager 2> /dev/null
+                aws s3api head-object --bucket mithril-artifacts --key "istio-unit-tests-log.txt" --no-cli-pager 2> /dev/null
                 if [ $? -eq 0 ];
                   then
                     break;

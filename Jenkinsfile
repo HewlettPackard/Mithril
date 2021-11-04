@@ -157,13 +157,12 @@ pipeline {
               cd terraform/istio-unit-tests
 
               echo "** Begin istio unit tests **"
-              tmp="istio-unit-tests"
               terraform init
               terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=${params.ISTIO_BRANCH}
               num_tries=0
               while [ $num_tries -lt 250 ];
               do
-                aws s3api head-object --bucket mithril-artifacts --key ${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-log.txt --no-cli-pager 2> /dev/null
+                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-log.txt" --no-cli-pager 2> /dev/null
                 if [ $? -eq 0 ];
                   then
                     break;

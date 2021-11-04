@@ -151,7 +151,7 @@ pipeline {
       steps {
         script {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh """
+            sh """#!/bin/bash
               cd ${WORKSPACE}/terraform/istio-unit-tests
 
               cd terraform/istio-unit-tests

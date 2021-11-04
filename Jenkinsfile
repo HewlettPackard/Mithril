@@ -158,7 +158,7 @@ pipeline {
               echo ${params.ISTIO_BRANCH}
               echo "** Begin istio unit tests **"
               terraform init
-              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=${params.ISTIO_BRANCH}
+              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"="${params.ISTIO_BRANCH}"
               num_tries=0
               while [ $num_tries -lt 50 ];
               do

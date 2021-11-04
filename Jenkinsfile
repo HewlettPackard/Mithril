@@ -155,7 +155,7 @@ pipeline {
               cd ${WORKSPACE}/terraform/istio-unit-tests
 
               cd terraform/istio-unit-tests
-
+              echo ${params.ISTIO_BRANCH}
               echo "** Begin istio unit tests **"
               terraform init
               terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=${params.ISTIO_BRANCH}

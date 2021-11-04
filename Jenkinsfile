@@ -69,18 +69,18 @@ pipeline {
       }
     }
 
-    stage("make-poc-codebase") {
-      steps {
-        // Istio clone from the specified branch
-        sh "git clone --single-branch --branch ${params.ISTIO_BRANCH} https://github.com/istio/istio.git"
-
-        // Apply Mithril patches
-        sh """
-          cd istio
-          git apply ${WORKSPACE}/POC/patches/poc.${params.ISTIO_BRANCH}.patch
-        """
-      }
-    }
+//     stage("make-poc-codebase") {
+//       steps {
+//         // Istio clone from the specified branch
+//         sh "git clone --single-branch --branch ${params.ISTIO_BRANCH} https://github.com/istio/istio.git"
+//
+//         // Apply Mithril patches
+//         sh """
+//           cd istio
+//           git apply ${WORKSPACE}/POC/patches/poc.${params.ISTIO_BRANCH}.patch
+//         """
+//       }
+//     }
 
     stage("build-ecr-images") {
       environment {
@@ -115,30 +115,30 @@ pipeline {
           }
         }
 
-        stage("build-and-push-poc-images-ecr") {
-          environment {
-            BUILD_WITH_CONTAINER = 0
-          }
-          steps {
-            script {
-              docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-
-                // Build and push to ECR registry
-                def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-                def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
-
-                sh """#!/bin/bash
-                  export HUB=${ECR_HUB}
-                  export TAG=${BUILD_TAG}
-
-                  aws ecr get-login-password --region ${ECR_REGION} | \
-                    docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                  cd istio && go mod tidy && make push
-                """
-              }
-            }
-          }
-        }
+//         stage("build-and-push-poc-images-ecr") {
+//           environment {
+//             BUILD_WITH_CONTAINER = 0
+//           }
+//           steps {
+//             script {
+//               docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+//
+//                 // Build and push to ECR registry
+//                 def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+//                 def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+//
+//                 sh """#!/bin/bash
+//                   export HUB=${ECR_HUB}
+//                   export TAG=${BUILD_TAG}
+//
+//                   aws ecr get-login-password --region ${ECR_REGION} | \
+//                     docker login --username AWS --password-stdin ${ECR_REGISTRY}
+//                   cd istio && go mod tidy && make push
+//                 """
+//               }
+//             }
+//           }
+//         }
       }
     }
 
@@ -160,7 +160,7 @@ pipeline {
               terraform init
               terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=${params.ISTIO_BRANCH}
               num_tries=0
-              while [ $num_tries -lt 250 ];
+              while [ $num_tries -lt 50 ];
               do
                 aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-log.txt --no-cli-pager 2> /dev/null
                 if [ $? -eq 0 ];

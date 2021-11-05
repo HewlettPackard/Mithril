@@ -154,7 +154,7 @@ pipeline {
             sh '''#!/bin/bash
               cd ${WORKSPACE}/terraform/istio-unit-tests
 
-              echo "istio branch =""\${params.ISTIO_BRANCH}"
+              echo "istio branch ="\$params.ISTIO_BRANCH"
               exit 1
               echo "** Begin istio unit tests **"
               terraform init

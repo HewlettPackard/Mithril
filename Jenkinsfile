@@ -156,14 +156,13 @@ pipeline {
               cd ${WORKSPACE}/terraform/istio-unit-tests
 
               echo "istio branch ="${ISTIO_BRANCH}
-              exit 1
               echo "** Begin istio unit tests **"
               terraform init
-              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=${ISTIO_BRANCH}
+              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=master
               num_tries=0
               while [ $num_tries -lt 50 ];
               do
-                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-log.txt --no-cli-pager 2> /dev/null
+                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${ISTIO_BRANCH}-istio-unit-tests-log.txt --no-cli-pager 2> /dev/null
                 if [ $? -eq 0 ];
                   then
                     break;
@@ -175,14 +174,14 @@ pipeline {
 
               terraform destroy -auto-approve
 
-              aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-result.txt" .
-              RESULT=$(tail -n 1 "${BUILD_TAG}-istio-unit-tests-result.txt" | grep -oE '^..')
+              aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-${ISTIO_BRANCH}-istio-unit-tests-result.txt" .
+              RESULT=$(tail -n 1 "${BUILD_TAG}-${ISTIO_BRANCH}-istio-unit-tests-result.txt" | grep -oE '^..')
               if [[ "$RESULT" == "ok" ]];
                 then
                   echo "Istio unit tests successful"
                 else
                   echo "Istio unit tests failed"
-                  cat "${BUILD_TAG}-istio-unit-tests-result.txt"
+                  cat "${BUILD_TAG}-${ISTIO_BRANCH}-istio-unit-tests-result.txt"
                   exit 1
               fi
 

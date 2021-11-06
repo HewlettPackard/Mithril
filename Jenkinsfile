@@ -85,14 +85,18 @@ pipeline {
     }
 
 //     stage("build-ecr-images") {
-//       environment {
-//         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
-//         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
-//       }
+//        environment {
+//          AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
+//          AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
+//        }
 //
 //       failFast true
 //       parallel {
     stage("build-and-push-dev-images-ecr"){
+       environment {
+         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
+         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
+       }
       steps {
         script {
           // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication

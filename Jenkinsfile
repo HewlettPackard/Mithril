@@ -82,56 +82,6 @@ pipeline {
       }
     }
 
-    stage("unit-test") {
-      environment {
-        AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
-        AWS_PROFILE = "${AWS_PROFILE}"
-        AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
-        ISTIO_BRANCH = "${params.ISTIO_BRANCH}"
-      }
-      steps {
-        script {
-          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh '''#!/bin/bash
-              cd ${WORKSPACE}/terraform/istio-unit-tests
-
-              echo "istio branch ="${ISTIO_BRANCH} ${BUILD_TAG}
-              echo "** Begin istio unit tests **"
-              terraform init
-              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=${ISTIO_BRANCH}
-              num_tries=0
-              aws configure set aws_access_key_id "${AWS_ACCESS_KEY_ID}"
-              aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-              while [ $num_tries -lt 500 ];
-              do
-                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-log.txt" --no-cli-pager
-                if [ $? -eq 0 ];
-                  then
-                    break;
-                  else
-                    ((num_tries++))
-                    sleep 1;
-                fi
-              done
-
-              terraform destroy -auto-approve
-
-              aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-result.txt" .
-              RESULT=$(tail -n 1 "${BUILD_TAG}-istio-unit-tests-result.txt" | grep -oE '^..')
-              if [[ "$RESULT" == "ok" ]];
-                then
-                  echo "Istio unit tests successful"
-                else
-                  echo "Istio unit tests failed"
-                  cat "${BUILD_TAG}-istio-unit-tests-result.txt"
-                  exit 1
-              fi
-            '''
-          }
-        }
-      }
-    }
-
     stage("build-ecr-images") {
       environment {
         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
@@ -192,54 +142,55 @@ pipeline {
       }
     }
 
-//     stage("unit-test") {
-//       environment {
-//         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
-//         AWS_PROFILE = "${AWS_PROFILE}"
-//         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
-//         ISTIO_BRANCH = "${params.ISTIO_BRANCH}"
-//       }
-//       steps {
-//         script {
-//           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-//             sh '''#!/bin/bash
-//               cd ${WORKSPACE}/terraform/istio-unit-tests
-//
-//               echo "istio branch ="${ISTIO_BRANCH} ${BUILD_TAG}
-//               echo "** Begin istio unit tests **"
-//               terraform init
-//               terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=${ISTIO_BRANCH}
-//               num_tries=0
-//               AWS_PROFILE=${AWS_PROFILE}
-//               while [ $num_tries -lt 500 ];
-//               do
-//                 aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-log.txt" --no-cli-pager
-//                 if [ $? -eq 0 ];
-//                   then
-//                     break;
-//                   else
-//                     ((num_tries++))
-//                     sleep 1;
-//                 fi
-//               done
-//
-//               terraform destroy -auto-approve
-//
-//               aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-result.txt" .
-//               RESULT=$(tail -n 1 "${BUILD_TAG}-istio-unit-tests-result.txt" | grep -oE '^..')
-//               if [[ "$RESULT" == "ok" ]];
-//                 then
-//                   echo "Istio unit tests successful"
-//                 else
-//                   echo "Istio unit tests failed"
-//                   cat "${BUILD_TAG}-istio-unit-tests-result.txt"
-//                   exit 1
-//               fi
-//             '''
-//           }
-//         }
-//       }
-//     }
+    stage("unit-test") {
+      environment {
+        AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
+        AWS_PROFILE = "${AWS_PROFILE}"
+        AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
+        ISTIO_BRANCH = "${params.ISTIO_BRANCH}"
+      }
+      steps {
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh '''#!/bin/bash
+              cd ${WORKSPACE}/terraform/istio-unit-tests
+
+              echo "istio branch ="${ISTIO_BRANCH} ${BUILD_TAG}
+              echo "** Begin istio unit tests **"
+              terraform init
+              terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=${ISTIO_BRANCH}
+              num_tries=0
+              aws configure set aws_access_key_id "${AWS_ACCESS_KEY_ID}"
+              aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+              while [ $num_tries -lt 500 ];
+              do
+                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-log.txt" --no-cli-pager
+                if [ $? -eq 0 ];
+                  then
+                    break;
+                  else
+                    ((num_tries++))
+                    sleep 1;
+                fi
+              done
+
+              terraform destroy -auto-approve
+
+              aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-result.txt" .
+              RESULT=$(tail -n 1 "${BUILD_TAG}-istio-unit-tests-result.txt" | grep -oE '^..')
+              if [[ "$RESULT" == "ok" ]];
+                then
+                  echo "Istio unit tests successful"
+                else
+                  echo "Istio unit tests failed"
+                  cat "${BUILD_TAG}-istio-unit-tests-result.txt"
+                  exit 1
+              fi
+            '''
+          }
+        }
+      }
+    }
 
     stage("build-and-push-poc-images-hpe-hub") {
       environment {

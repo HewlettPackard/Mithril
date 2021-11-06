@@ -324,7 +324,7 @@ pipeline {
 
       steps {
         script {
-          def folders = sh(script: 'cd terraform && ls -1 -i istio-unit-tests', returnStdout: true).split()
+          def folders = sh(script: 'cd terraform && rm -rf istio-unit-tests && ls -1', returnStdout: true).split()
           def builders = [:]
 
           folders.each{ folder ->

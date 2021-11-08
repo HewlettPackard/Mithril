@@ -84,14 +84,6 @@ pipeline {
       }
     }
 
-//     stage("build-ecr-images") {
-//        environment {
-//          AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
-//          AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
-//        }
-//
-//       failFast true
-//       parallel {
     stage("build-and-push-dev-images-ecr"){
        environment {
          AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
@@ -120,33 +112,6 @@ pipeline {
         }
       }
     }
-
-//         stage("build-and-push-poc-images-ecr") {
-//           environment {
-//             BUILD_WITH_CONTAINER = 0
-//           }
-//           steps {
-//             script {
-//               docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-//
-//                 // Build and push to ECR registry
-//                 def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-//                 def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
-//
-//                 sh """#!/bin/bash
-//                   export HUB=${ECR_HUB}
-//                   export TAG=${BUILD_TAG}
-//
-//                   aws ecr get-login-password --region ${ECR_REGION} | \
-//                     docker login --username AWS --password-stdin ${ECR_REGISTRY}
-//                   cd istio && go mod tidy && make push
-//                 """
-//               }
-//             }
-//           }
-//         }
-//       }
-//     }
 
     stage("unit-test") {
       environment {

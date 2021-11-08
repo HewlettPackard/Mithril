@@ -7,13 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
-)
-
-var (
-	serverCertPath string = os.Getenv("SERVER_CERT_PATH")
-	serverKeyPath  string = os.Getenv("SERVER_KEY_PATH")
-	caBundlePath   string = os.Getenv("CA_BUNDLE_PATH")
 )
 
 func main() {
@@ -30,9 +23,9 @@ func main() {
 		fmt.Fprintf(w, "%+v", req.TLS)
 	})
 
-	if serverCertPath == "" || serverKeyPath == "" || caBundlePath == "" {
-		panic("SERVER_CERT_PATH, SERVER_KEY_PATH or CA_BUNDLE_PATH not set")
-	}
+	serverCertPath := "./svid.pem"
+	serverKeyPath := "./svid.key"
+	caBundlePath := "./bundle.pem"
 
 	cer, err := tls.LoadX509KeyPair(serverCertPath, serverKeyPath)
 	if err != nil {

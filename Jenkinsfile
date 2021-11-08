@@ -134,7 +134,7 @@ pipeline {
               aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
               while [ $num_tries -lt 500 ];
               do
-                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-log.txt" --no-cli-pager
+                aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-log.txt" --no-cli-pager 2> /dev/null
                 if [ $? -eq 0 ];
                   then
                     break;

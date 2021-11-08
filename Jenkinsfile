@@ -126,7 +126,6 @@ pipeline {
             sh '''#!/bin/bash
               cd ${WORKSPACE}/terraform/istio-unit-tests
 
-              echo "istio branch ="${ISTIO_BRANCH} ${BUILD_TAG}
               echo "** Begin istio unit tests **"
               terraform init
               terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=${ISTIO_BRANCH}

@@ -282,7 +282,7 @@ pipeline {
 
       steps {
         script {
-          def folders = sh(script: 'cd terraform && rm -rf istio-unit-tests && ls -1', returnStdout: true).split()
+          def folders = sh(script: 'cd terraform && ls -1', returnStdout: true).split()
           def builders = [:]
 
           folders.each{ folder ->
@@ -339,10 +339,6 @@ pipeline {
               HAS_MISSING_ARTIFACTS=false
               for FOLDER in *;
                 do
-                  if [[ $FOLDER == "istio-unit-tests" ]];
-                    then continue
-                  fi
-
                   BUCKET_EXISTS=false
                   aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt" --no-cli-pager
                   if [ $? -eq 0 ];

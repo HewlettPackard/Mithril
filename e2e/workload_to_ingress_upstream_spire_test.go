@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestWorkloadToIngressUpstreamDisk(t *testing.T) {
+func TestWorkloadToIngressUpstreamSpire(t *testing.T) {
 	client, config, err := createClientGo()
 	if err != nil {
 		t.Fatal(err)

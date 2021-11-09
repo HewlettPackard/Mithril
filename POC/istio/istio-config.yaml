@@ -13,7 +13,7 @@ spec:
   values:
     global:
       hub: localhost:5000
-      tag: poc
+      tag: my-build
       imagePullPolicy: "Always"
       imagePullSecrets:
         - secret-registry

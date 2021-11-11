@@ -39,8 +39,10 @@ pipeline {
   triggers {
     parameterizedCron(
       BRANCH_NAME == MITHRIL_MAIN_BRANCH ? '''
+        H H(0-3) * * * %ISTIO_BRANCH=master
         H H(0-3) * * * %ISTIO_BRANCH=release-1.10
         H H(0-3) * * * %ISTIO_BRANCH=release-1.11
+        H H(0-3) * * * %ISTIO_BRANCH=release-1.12
       ''': ''
     )
   }
@@ -82,69 +84,106 @@ pipeline {
       }
     }
 
-    stage("unit-test") {
-      options {
-        retry(3)
-      }
+    stage("build-and-push-dev-images-ecr"){
+       environment {
+         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
+         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
+       }
       steps {
         script {
+          // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
+          // and build tag, building Istio and pushing images to the ECR
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-            sh """
-              set -x
-              export no_proxy="\${no_proxy},notpilot,xyz,:0,::,[::],::0,[::0],::1,[::1]"
 
-              cd istio
-              make clean
-              go mod tidy
-              make init
-              make test
+            def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+            sh """#!/bin/bash
+
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
+              docker build -t mithril:${BUILD_TAG} \
+                --build-arg http_proxy=${PROXY} \
+                --build-arg https_proxy=${PROXY} \
+                -f ./docker/Dockerfile .
+              docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
+              docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
             """
           }
         }
       }
     }
 
-    stage("build-ecr-images") {
+    stage("unit-test") {
       environment {
         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
+        AWS_PROFILE = "${AWS_PROFILE}"
         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
-      }    
+        ISTIO_BRANCH = "${params.ISTIO_BRANCH}"
+      }
+      steps {
+        script {
+          def passwordMask = [
+            $class: 'MaskPasswordsBuildWrapper',
+            varPasswordPairs: [ [ password: AWS_ACCESS_KEY_ID ],[password: AWS_SECRET_ACCESS_KEY ],[password: AWS_PROFILE ]]
+          ]
+          wrap(passwordMask) {
+            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+              sh '''#!/bin/bash
+                cd ${WORKSPACE}/terraform/istio-unit-tests
 
-      failFast true
-      parallel {
-        stage("build-and-push-dev-images-ecr"){
-          steps {
-            script {
-              // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
-              // and build tag, building Istio and pushing images to the ECR
-              docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+                echo "** Begin istio unit tests **"
+                terraform init
+                terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=${ISTIO_BRANCH}
+                num_tries=0
+                aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+                aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+                while [ $num_tries -lt 500 ];
+                do
+                  aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-log.txt" --no-cli-pager 2> /dev/null
+                  if [ $? -eq 0 ];
+                    then
+                      break;
+                    else
+                      ((num_tries++))
+                      sleep 1;
+                  fi
+                done
 
-                def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-                sh """#!/bin/bash
+                terraform destroy -auto-approve
 
-                  aws ecr get-login-password --region ${ECR_REGION} | \
-                    docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                  
-                  docker build -t mithril:${BUILD_TAG} \
-                    --build-arg http_proxy=${PROXY} \
-                    --build-arg https_proxy=${PROXY} \
-                    -f ./docker/Dockerfile .
-                  docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
-                  docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
-                """
-              }
+                aws s3 cp "s3://mithril-artifacts/${BUILD_TAG}/${BUILD_TAG}-istio-unit-tests-result.txt" .
+                RESULT=$(tail -n 1 "${BUILD_TAG}-istio-unit-tests-result.txt" | grep -oE '^..')
+                if [[ "$RESULT" == "ok" ]];
+                  then
+                    echo "Istio unit tests successful"
+                  else
+                    echo "Istio unit tests failed"
+                    cat "${BUILD_TAG}-istio-unit-tests-result.txt"
+                    exit 1
+                fi
+              '''
             }
           }
         }
+      }
+    }
 
-        stage("build-and-push-poc-images-ecr") {
+    stage("build-mithril-images") {
+      environment {
+        AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
+        AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
+      }
+
+      failFast true
+      parallel {
+        stage("build-and-push-mithril-images-ecr") {
           environment {
             BUILD_WITH_CONTAINER = 0
           }
           steps {
             script {
               docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-              
+
                 // Build and push to ECR registry
                 def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
                 def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
@@ -161,32 +200,32 @@ pipeline {
             }
           }
         }
-      }
-    }
 
-    stage("build-and-push-poc-images-hpe-hub") {
-      environment {
-        BUILD_WITH_CONTAINER = 0
-      }
-      steps {
-        // Use the mask token plugin
-        script {
-          def passwordMask = [
-            $class: 'MaskPasswordsBuildWrapper',
-            varPasswordPairs: [ [ password: HPE_DOCKER_HUB_SECRET ] ]
-          ]
+        stage("build-and-push-mithril-images-hpe-hub") {
+          environment {
+            BUILD_WITH_CONTAINER = 0
+          }
+          steps {
+            // Use the mask token plugin
+            script {
+              def passwordMask = [
+                $class: 'MaskPasswordsBuildWrapper',
+                varPasswordPairs: [ [ password: HPE_DOCKER_HUB_SECRET ] ]
+              ]
 
-          // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
-          // and build tag, building Istio and pushing images to the Dockerhub of HPE
-          wrap(passwordMask) {
-            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-              // Build and push to HPE registry
-              sh """
-                export HUB=${HPE_REGISTRY}
-                export TAG=${BUILD_TAG}
-                echo ${HPE_DOCKER_HUB_SECRET} | docker login hub.docker.hpecorp.net --username ${HPE_DOCKER_HUB_SECRET} --password-stdin
-                cd istio && go mod tidy && make push
-              """
+              // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
+              // and build tag, building Istio and pushing images to the Dockerhub of HPE
+              wrap(passwordMask) {
+                docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+                  // Build and push to HPE registry
+                  sh """
+                    export HUB=${HPE_REGISTRY}
+                    export TAG=${BUILD_TAG}
+                    echo ${HPE_DOCKER_HUB_SECRET} | docker login hub.docker.hpecorp.net --username ${HPE_DOCKER_HUB_SECRET} --password-stdin
+                    cd istio && go mod tidy && make push
+                  """
+                }
+              }
             }
           }
         }
@@ -199,15 +238,15 @@ pipeline {
       environment {
         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
-      }    
+      }
 
       when {
         allOf {
           branch MITHRIL_MAIN_BRANCH
-          equals expected: ISTIO_STABLE_BRANCH, actual: params.ISTIO_BRANCH 
+          equals expected: ISTIO_STABLE_BRANCH, actual: params.ISTIO_BRANCH
         }
       }
-      
+
       steps {
         script {
           def passwordMask = [
@@ -222,7 +261,7 @@ pipeline {
             docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
               sh """#!/bin/bash
                 set -x
-                    
+
                 aws ecr get-login-password --region ${ECR_REGION} | \
                   docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
@@ -238,18 +277,18 @@ pipeline {
       }
     }
 
-    stage("run-integration-tests") {  
+    stage("run-integration-tests") {
       environment {
         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
         AWS_PROFILE = "${AWS_PROFILE}"
         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
-      }    
+      }
 
       steps {
         script {
-          def folders = sh(script: 'cd terraform && ls -1', returnStdout: true).split()
+          def folders = sh(script: 'cd terraform/integration-tests && ls -1', returnStdout: true).split()
           def builders = [:]
-          
+
           folders.each{ folder ->
             builders[folder] = {
               stage("$folder") {
@@ -257,10 +296,10 @@ pipeline {
                   def usecase = folder
                   docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock --name $usecase -e usecase=$usecase ") {
                     sh '''#!/bin/bash
-                      cd terraform/${usecase} 
+                      cd terraform/integration-tests/${usecase}
 
-                      echo "** Begin test ${usecase} **" 
-                      terraform init 
+                      echo "** Begin test ${usecase} **"
+                      terraform init
                       terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
                       num_tries=0
                       while [ $num_tries -lt 500 ];
@@ -274,7 +313,7 @@ pipeline {
                             sleep 1;
                         fi
                       done
-                    
+
                       terraform destroy -auto-approve
                     '''
                   }
@@ -298,16 +337,16 @@ pipeline {
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh '''#!/bin/bash
               RESULT_LIST=()
-              
-              cd terraform
 
-              HAS_MISSING_ARTIFACTS=false 
+              cd terraform/integration-tests
+
+              HAS_MISSING_ARTIFACTS=false
               for FOLDER in *;
                 do
                   BUCKET_EXISTS=false
                   aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${FOLDER}-result.txt" --no-cli-pager
                   if [ $? -eq 0 ];
-                    then 
+                    then
                       BUCKET_EXISTS=true
                   fi
                   if $BUCKET_EXISTS;
@@ -350,7 +389,7 @@ pipeline {
             '''
           }
         }
-      }           
+      }
     }
 
     stage("distribute-poc") {
@@ -362,7 +401,7 @@ pipeline {
       when {
         allOf {
           branch MITHRIL_MAIN_BRANCH
-          equals expected: ISTIO_STABLE_BRANCH, actual: params.ISTIO_BRANCH 
+          equals expected: ISTIO_STABLE_BRANCH, actual: params.ISTIO_BRANCH
         }
       }
 
@@ -371,7 +410,7 @@ pipeline {
         stage("distribute-assets") {
           steps {
             script {
-              def S3_CUSTOMER_BUCKET = "s3://" + CUSTOMER_BUCKET 
+              def S3_CUSTOMER_BUCKET = "s3://" + CUSTOMER_BUCKET
 
               docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
                 sh """
@@ -410,8 +449,8 @@ pipeline {
   post {
     success {
       slackSend (
-        channel: CHANNEL_NAME,  
-        color: 'good', 
+        channel: CHANNEL_NAME,
+        color: 'good',
         message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. (<${env.BUILD_URL}|See Job>)"
       )
     }

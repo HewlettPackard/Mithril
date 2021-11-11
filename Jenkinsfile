@@ -130,13 +130,13 @@ pipeline {
             docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
               sh '''#!/bin/bash
                 cd ${WORKSPACE}/terraform/istio-unit-tests
-
+                cat .aws/config
+                aws configure list
+                exit 1
                 echo "** Begin istio unit tests **"
                 terraform init
                 terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE} -var "ISTIO_BRANCH"=${ISTIO_BRANCH}
                 num_tries=0
-                aws configure list
-                exit 1
                 aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
                 aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
                 while [ $num_tries -lt 500 ];

@@ -84,34 +84,37 @@ pipeline {
 //       }
 //     }
 
-//     stage("build-and-push-dev-images-ecr"){
-//        environment {
-//          AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
-//          AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
-//        }
-//       steps {
-//         script {
-//           // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
-//           // and build tag, building Istio and pushing images to the ECR
-//           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-//
-//             def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-//             sh """#!/bin/bash
-//
-//               aws ecr get-login-password --region ${ECR_REGION} | \
-//                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
-//
-//               docker build -t mithril:${BUILD_TAG} \
-//                 --build-arg http_proxy=${PROXY} \
-//                 --build-arg https_proxy=${PROXY} \
-//                 -f ./docker/Dockerfile .
-//               docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
-//               docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
-//             """
-//           }
-//         }
-//       }
-//     }
+    stage("build-and-push-dev-images-ecr"){
+       environment {
+         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
+         AWS_PROFILE = "${AWS_PROFILE}"
+         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
+       }
+      steps {
+        script {
+          // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
+          // and build tag, building Istio and pushing images to the ECR
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+
+            def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+            sh """#!/bin/bash
+              cat ~/.aws/config
+              aws configure list
+              exit 1
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
+              docker build -t mithril:${BUILD_TAG} \
+                --build-arg http_proxy=${PROXY} \
+                --build-arg https_proxy=${PROXY} \
+                -f ./docker/Dockerfile .
+              docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
+              docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
+            """
+          }
+        }
+      }
+    }
 
     stage("unit-test") {
       environment {

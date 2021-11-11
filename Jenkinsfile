@@ -130,7 +130,7 @@ pipeline {
             docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
               sh '''#!/bin/bash
                 cd ${WORKSPACE}/terraform/istio-unit-tests
-                cat .aws/config
+                cat ~/.aws/config
                 aws configure list
                 exit 1
                 echo "** Begin istio unit tests **"

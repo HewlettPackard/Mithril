@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 folder=$(dirname "$0")
 pushd "$folder" || exit
@@ -10,12 +11,12 @@ pushd "$folder" || exit
 (cd spire ; ./deploy-spire.sh)
 
 # wait until spire2 is ready
-kubectl wait --for=condition=ready pod spire-server-0 -n spire2 --timeout=-1s
+kubectl rollout status statefulset -n spire2 spire-server
 # echo bundle from spire2 (domain.test)
 bundle=$(kubectl exec --stdin spire-server-0 -c spire-server -n spire2  -- /opt/spire/bin/spire-server bundle show -format spiffe -socketPath /run/spire/sockets/server.sock)
 
 # wait until spire is ready
-kubectl wait --for=condition=ready pod spire-server-0 -n spire --timeout=-1s
+kubectl rollout status statefulset -n spire spire-server
 # set domain.test bundle to spire
 kubectl exec --stdin spire-server-0 -c spire-server -n spire -- /opt/spire/bin/spire-server bundle set -format spiffe -id spiffe://domain.test -socketPath /run/spire/sockets/server.sock <<< "$bundle"
 

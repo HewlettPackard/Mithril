@@ -1,4 +1,5 @@
 #!/bin/bash
+# set -e
 
 # Environment Variables
 export TAG=stable_20211022
@@ -13,8 +14,11 @@ NC='\033[0m' # No Color
 # Get POC from AWS S3
 echo -e "${PURPLE}Downloading POC version from AWS S3...${NC}"
 
-aws s3 cp s3://mithril-customer-assets/mithril.tar.gz . --profile scytale
-mkdir -p $BASE_DIR && tar -xf ./mithril.tar.gz -C $BASE_DIR 
+# aws s3 cp s3://mithril-customer-assets/mithril.tar.gz . # --profile scytale
+(cd .. && tar -zcvf mithril.tar.gz bookinfo spire istio \
+    deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh \
+    doc/poc-instructions.md demo/demo-script.sh demo/README.md demo/federation-demo.sh ../usecases/federation)
+mkdir -p $BASE_DIR && tar -xf ../mithril.tar.gz -C $BASE_DIR
 
 echo -e "${PURPLE}Creating namespaces...${NC}"
 $BASE_DIR/usecases/federation/create-namespaces.sh

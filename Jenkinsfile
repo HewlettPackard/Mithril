@@ -249,29 +249,21 @@ pipeline {
 
       steps {
         script {
-          def passwordMask = [
-            $class: 'MaskPasswordsBuildWrapper',
-            varPasswordPairs: [ [ password: AWS_ACCESS_KEY_ID ],[password: AWS_SECRET_ACCESS_KEY ]]
-          ]
 
           def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
           def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX
 
-          wrap(passwordMask) {
-            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-              sh """#!/bin/bash
-                set -x
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            sh """#!/bin/bash
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-                aws ecr get-login-password --region ${ECR_REGION} | \
-                  docker login --username AWS --password-stdin ${ECR_REGISTRY}
-
-                docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
-                  pieces=(\$line)
-                  docker tag "\${pieces[0]}" "\${pieces[1]}":latest
-                  docker push "\${pieces[1]}":latest
-                done
-              """
-            }
+              docker images "${ECR_HUB}/*" --format "{{.ID}} {{.Repository}}" | while read line; do
+                pieces=(\$line)
+                docker tag "\${pieces[0]}" "\${pieces[1]}":latest
+                docker push "\${pieces[1]}":latest
+              done
+            """
           }
         }
       }
@@ -280,7 +272,6 @@ pipeline {
     stage("run-integration-tests") {
       environment {
         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
-        AWS_PROFILE = "${AWS_PROFILE}"
         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
       }
 
@@ -302,9 +293,9 @@ pipeline {
                       terraform init
                       terraform apply -auto-approve -var "BUILD_TAG"=${BUILD_TAG} -var "AWS_PROFILE"=${AWS_PROFILE}
                       num_tries=0
-                      while [ $num_tries -lt 500 ];
+                      while [ $num_tries -lt 900 ];
                       do
-                        aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${usecase}-log.txt" --no-cli-pager 2> /dev/null
+                        aws s3api head-object --bucket mithril-artifacts --key "${BUILD_TAG}/${BUILD_TAG}-${usecase}-log.txt" --no-cli-pager
                         if [ $? -eq 0 ];
                           then
                             break;

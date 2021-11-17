@@ -23,7 +23,8 @@ docker run -i --rm \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
 bash -c 'echo ${istio_branch} && mkdir tmp && cd tmp && git clone --single-branch --branch ${istio_branch} https://github.com/istio/istio.git &&
-cd istio && git apply /mithril/POC/patches/poc.${istio_branch}.patch && go mod tidy && make clean && make init && make test 2>&1 | tee ${build_tag}-istio-unit-tests-result.txt &&
+cd istio && git apply /mithril/POC/patches/poc.${istio_branch}.patch && go get github.com/spiffe/go-spiffe/v2 &&
+go mod tidy && make clean && make init && make test 2>&1 | tee ${build_tag}-istio-unit-tests-result.txt &&
 AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} aws s3 cp ${build_tag}-istio-unit-tests-result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1'
 
 cat /var/log/user-data.log >> ${build_tag}-istio-unit-tests-log.txt

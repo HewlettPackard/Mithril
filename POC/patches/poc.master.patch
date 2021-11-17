@@ -36,30 +36,30 @@ index 0b4a09d4a1..ae1649aaef 100644
 +	log.Info("istiod Cert Bundle Watcher notified")
 +}
 diff --git a/pilot/pkg/bootstrap/server.go b/pilot/pkg/bootstrap/server.go
-index 54f080f8c4..d370bcbfa9 100644
+index e30259764e..ebe4292172 100644
 --- a/pilot/pkg/bootstrap/server.go
 +++ b/pilot/pkg/bootstrap/server.go
 @@ -28,6 +28,9 @@ import (
  	"sync"
  	"time"
- 
+
 +	"github.com/spiffe/go-spiffe/v2/spiffeid"
 +	"github.com/spiffe/go-spiffe/v2/workloadapi"
 +
  	"github.com/fsnotify/fsnotify"
  	prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
  	prom "github.com/prometheus/client_golang/prometheus"
-@@ -184,6 +187,9 @@ type Server struct {
- 	statusReporter *status.Reporter
+@@ -186,6 +189,9 @@ type Server struct {
+ 	statusManager  *status.Manager
  	// RWConfigStore is the configstore which allows updates, particularly for status.
  	RWConfigStore model.ConfigStoreCache
 +
 +	// source of X.509 certs and bundle, when using SPIFFE Workload API as cert provider
 +	x509Source *workloadapi.X509Source
  }
- 
+
  // NewServer creates a new Server instance based on the provided arguments.
-@@ -216,6 +222,16 @@ func NewServer(args *PilotArgs, initFuncs ...func(*Server)) (*Server, error) {
+@@ -218,6 +224,16 @@ func NewServer(args *PilotArgs, initFuncs ...func(*Server)) (*Server, error) {
  	for _, fn := range initFuncs {
  		fn(s)
  	}
@@ -76,7 +76,7 @@ index 54f080f8c4..d370bcbfa9 100644
  	// Initialize workload Trust Bundle before XDS Server
  	e.TrustBundle = s.workloadTrustBundle
  	s.XDSServer = xds.NewDiscoveryServer(e, args.Plugins, args.PodName, args.Namespace, args.RegistryOptions.KubeOptions.ClusterAliases)
-@@ -996,6 +1012,20 @@ func (s *Server) initIstiodCerts(args *PilotArgs, host string) error {
+@@ -989,14 +1005,25 @@ func (s *Server) initIstiodCerts(args *PilotArgs, host string) error {
  		if err == nil {
  			err = s.initIstiodCertLoader()
  		}
@@ -85,20 +85,18 @@ index 54f080f8c4..d370bcbfa9 100644
 +		if err != nil {
 +			return err
 +		}
-+
 +		bundleBytes, err := s.getBundleBytes()
 +		if err != nil {
 +			return err
 +		}
-+
 +		s.setIstioCertBundleAndNotify(chain, key, bundleBytes)
 +		s.watchIstioCertUpdates()
 +		return nil
  	}
- 
+-
  	return err
-@@ -1003,7 +1033,7 @@ func (s *Server) initIstiodCerts(args *PilotArgs, host string) error {
- 
+ }
+
  // createPeerCertVerifier creates a SPIFFE certificate verifier with the current istiod configuration.
  func (s *Server) createPeerCertVerifier(tlsOptions TLSOptions) (*spiffe.PeerCertVerifier, error) {
 -	if tlsOptions.CaCertFile == "" && s.CA == nil && features.SpiffeBundleEndpoints == "" && !s.isDisableCa() {
@@ -106,16 +104,15 @@ index 54f080f8c4..d370bcbfa9 100644
  		// Running locally without configured certs - no TLS mode
  		return nil, nil
  	}
-@@ -1039,6 +1069,18 @@ func (s *Server) createPeerCertVerifier(tlsOptions TLSOptions) (*spiffe.PeerCert
+@@ -1032,6 +1059,17 @@ func (s *Server) createPeerCertVerifier(tlsOptions TLSOptions) (*spiffe.PeerCert
  		peerCertVerifier.AddMappings(certMap)
  	}
- 
+
 +	if strings.EqualFold(features.PilotCertProvider, constants.SpiffeCertProvider) {
 +		bundleBytes, err := s.getBundleBytes()
 +		if err != nil {
 +			return nil, err
 +		}
-+
 +		err = peerCertVerifier.AddMappingFromPEM(spiffe.GetTrustDomain(), bundleBytes)
 +		if err != nil {
 +			return nil, fmt.Errorf("add root CAs into peerCertVerifier failed: %v", err)
@@ -124,10 +121,10 @@ index 54f080f8c4..d370bcbfa9 100644
 +
  	return peerCertVerifier, nil
  }
- 
-@@ -1244,3 +1286,57 @@ func (s *Server) initWorkloadTrustBundle(args *PilotArgs) error {
- func (s *Server) isDisableCa() bool {
- 	return features.PilotCertProvider == constants.CertProviderKubernetes && s.RA != nil
+
+@@ -1257,3 +1295,55 @@ func (s *Server) initStatusManager(_ *PilotArgs) {
+ 		return nil
+ 	})
  }
 +
 +func (s *Server) watchIstioCertUpdates() {
@@ -140,13 +137,11 @@ index 54f080f8c4..d370bcbfa9 100644
 +				log.Errorf("error watching SPIFFE updates: %v", err)
 +				continue
 +			}
-+
 +			bundleBytes, err := s.getBundleBytes()
 +			if err != nil {
 +				log.Errorf("error watching SPIFFE updates: %v", err)
 +				continue
 +			}
-+
 +			s.setIstioCertBundleAndNotify(chain, key, bundleBytes)
 +		}
 +	}()
@@ -178,11 +173,11 @@ index 54f080f8c4..d370bcbfa9 100644
 +	}
 +
 +	bundleBytes, err := bundle.Marshal()
-+	if err != nil {
++		if err != nil {
 +		return nil, fmt.Errorf("unable to marshal X.509 byndle: %v", err)
 +	}
-+	return bundleBytes, nil
-+}
++		return bundleBytes, nil
++	}
 diff --git a/pkg/config/constants/constants.go b/pkg/config/constants/constants.go
 index 0d0da3abb2..bb4ab1c81d 100644
 --- a/pkg/config/constants/constants.go
@@ -195,21 +190,21 @@ index 0d0da3abb2..bb4ab1c81d 100644
 +	SpiffeCertProvider  = "spiffe"
  )
 diff --git a/pkg/istio-agent/agent.go b/pkg/istio-agent/agent.go
-index 37a1bd3363..d69217738f 100644
+index 4ded6de207..c2e1dbd9a8 100644
 --- a/pkg/istio-agent/agent.go
 +++ b/pkg/istio-agent/agent.go
 @@ -109,7 +109,7 @@ type Agent struct {
  	envoyWaitCh chan error
- 
+
  	sdsServer   *sds.Server
 -	secretCache *cache.SecretManagerClient
 +	secretCache security.SecretProvider
- 
+
  	// Used when proxying envoy xds via istio-agent is enabled.
  	xdsProxy *XdsProxy
-@@ -629,7 +629,12 @@ func (a *Agent) FindRootCAForCA() (string, error) {
+@@ -633,7 +633,12 @@ func (a *Agent) FindRootCAForCA() (string, error) {
  }
- 
+
  // newSecretManager creates the SecretManager for workload secrets
 -func (a *Agent) newSecretManager() (*cache.SecretManagerClient, error) {
 +func (a *Agent) newSecretManager() (security.SecretProvider, error) {
@@ -222,13 +217,13 @@ index 37a1bd3363..d69217738f 100644
  	if a.secOpts.FileMountedCerts {
  		log.Info("Workload is using file mounted certificates. Skipping connecting to CA")
 diff --git a/pkg/security/security.go b/pkg/security/security.go
-index 8c020c6e3d..38ab458e36 100644
+index c1cf9b48f6..bd34404346 100644
 --- a/pkg/security/security.go
 +++ b/pkg/security/security.go
 @@ -24,6 +24,7 @@ import (
- 
+
  	"google.golang.org/grpc/metadata"
- 
+
 +	"github.com/spiffe/go-spiffe/v2/bundle/x509bundle"
  	"istio.io/pkg/env"
  	istiolog "istio.io/pkg/log"
@@ -236,7 +231,7 @@ index 8c020c6e3d..38ab458e36 100644
 @@ -285,6 +286,13 @@ type SecretManager interface {
  	GenerateSecret(resourceName string) (*SecretItem, error)
  }
- 
+
 +type SecretProvider interface {
 +	SecretManager
 +	Close()
@@ -248,9 +243,9 @@ index 8c020c6e3d..38ab458e36 100644
  type TokenExchanger interface {
  	// ExchangeToken provides a common interface to exchange an existing token for a new one.
 @@ -298,6 +306,9 @@ type SecretItem struct {
- 
+
  	RootCert []byte
- 
+
 +	// Trust bundles keyed by trust domain
 +	TrustBundles *x509bundle.Set
 +
@@ -259,7 +254,7 @@ index 8c020c6e3d..38ab458e36 100644
  	ResourceName string
 diff --git a/security/pkg/nodeagent/cache/spiffesecret.go b/security/pkg/nodeagent/cache/spiffesecret.go
 new file mode 100644
-index 0000000000..c513cf7ad0
+index 0000000000..c7ba8279a2
 --- /dev/null
 +++ b/security/pkg/nodeagent/cache/spiffesecret.go
 @@ -0,0 +1,192 @@
@@ -456,9 +451,10 @@ index 0000000000..c513cf7ad0
 +	}
 +}
 diff --git a/security/pkg/nodeagent/sds/sdsservice.go b/security/pkg/nodeagent/sds/sdsservice.go
---- a/security/pkg/nodeagent/sds/sdsservice.go	(revision c099251ab59a290262badb676c782d4cbecd6a77)
-+++ b/security/pkg/nodeagent/sds/sdsservice.go	(date 1634837282809)
-@@ -18,6 +18,7 @@
+index 3ac84d6fd9..fd73728707 100644
+--- a/security/pkg/nodeagent/sds/sdsservice.go
++++ b/security/pkg/nodeagent/sds/sdsservice.go
+@@ -18,6 +18,7 @@ package sds
  import (
  	"context"
  	"fmt"
@@ -466,7 +462,7 @@ diff --git a/security/pkg/nodeagent/sds/sdsservice.go b/security/pkg/nodeagent/s
  	"time"
 
  	"github.com/cenkalti/backoff/v4"
-@@ -148,7 +149,11 @@
+@@ -148,7 +149,11 @@ func (s *sdsservice) generate(resourceNames []string) (model.Resources, error) {
  			return nil, fmt.Errorf("failed to generate secret for %v: %v", resourceName, err)
  		}
 
@@ -479,7 +475,7 @@ diff --git a/security/pkg/nodeagent/sds/sdsservice.go b/security/pkg/nodeagent/s
  		resources = append(resources, &discovery.Resource{
  			Name:     resourceName,
  			Resource: res,
-@@ -203,7 +208,7 @@
+@@ -203,7 +208,7 @@ func (s *sdsservice) Close() {
  }
 
  // toEnvoySecret converts a security.SecretItem to an Envoy tls.Secret
@@ -488,7 +484,7 @@ diff --git a/security/pkg/nodeagent/sds/sdsservice.go b/security/pkg/nodeagent/s
  	secret := &tls.Secret{
  		Name: s.ResourceName,
  	}
-@@ -215,6 +220,15 @@
+@@ -215,6 +220,15 @@ func toEnvoySecret(s *security.SecretItem, caRootPath string) *tls.Secret {
  		cfg, ok = security.SdsCertificateConfigFromResourceName(s.ResourceName)
  	}
  	if s.ResourceName == security.RootCertReqResourceName || (ok && cfg.IsRootCertificate()) {
@@ -504,7 +500,7 @@ diff --git a/security/pkg/nodeagent/sds/sdsservice.go b/security/pkg/nodeagent/s
  		secret.Type = &tls.Secret_ValidationContext{
  			ValidationContext: &tls.CertificateValidationContext{
  				TrustedCa: &core.DataSource{
-@@ -241,7 +255,7 @@
+@@ -241,7 +255,7 @@ func toEnvoySecret(s *security.SecretItem, caRootPath string) *tls.Secret {
  		}
  	}
 
@@ -513,7 +509,7 @@ diff --git a/security/pkg/nodeagent/sds/sdsservice.go b/security/pkg/nodeagent/s
  }
 
  func pushLog(names []string) model.XdsLogDetails {
-@@ -251,3 +265,32 @@
+@@ -251,3 +265,32 @@ func pushLog(names []string) model.XdsLogDetails {
  	}
  	return model.DefaultXdsLogDetails
  }

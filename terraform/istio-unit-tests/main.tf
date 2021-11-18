@@ -124,6 +124,6 @@ data "template_file" "init" {
     hub               = var.HUB,
     build_tag         = var.BUILD_TAG
     usecase           = var.USECASE
-    istio_branch           = var.ISTIO_BRANCH
+    istio_branch      = var.ISTIO_BRANCH
   }
 }

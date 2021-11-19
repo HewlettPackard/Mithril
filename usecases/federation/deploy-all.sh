@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 
 folder=$(dirname "$0")
 pushd "$folder" || exit

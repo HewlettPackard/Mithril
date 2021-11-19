@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 # Environment Variables
 export TAG=stable_20211022

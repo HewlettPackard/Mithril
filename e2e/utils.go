@@ -63,6 +63,7 @@ func createClientGo() (*kubernetes.Clientset, *rest.Config, error) {
 
 	return clientset, config, err
 }
+
 func createSecureHttpClient(certBytes, keyBytes string) (*http.Client, error) {
 	cert, err := tls.X509KeyPair([]byte(certBytes), []byte(keyBytes))
 
@@ -152,7 +153,6 @@ func requestFromSleep(t *testing.T) {
 }
 
 func execInContainer(clientset *kubernetes.Clientset, config *rest.Config, labelSelector, container, namespace, cmd string) (string, string, error) {
-
 	podList, err := clientset.CoreV1().
 		Pods(namespace).
 		List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})

@@ -177,31 +177,37 @@ pipeline {
 
       steps {
         script {
-          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+          def passwordMask = [
+            $class: 'MaskPasswordsBuildWrapper',
+            varPasswordPairs: [ [ password: AWS_ACCESS_KEY_ID ],[password: AWS_SECRET_ACCESS_KEY ],[password: AWS_PROFILE ]]
+          ]
+          wrap(passwordMask) {
+            docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
 
-            // Build and push to ECR registry
-            def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-            def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+              // Build and push to ECR registry
+              def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+              def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
 
-            sh """#!/bin/bash
-              export HUB=${HPE_REGISTRY}
-              export TAG=${BUILD_TAG}
+              sh """#!/bin/bash
+                export HUB=${HPE_REGISTRY}
+                export TAG=${BUILD_TAG}
 
-              echo ${HPE_DOCKER_HUB_SECRET} | docker login hub.docker.hpecorp.net --username ${HPE_DOCKER_HUB_SECRET} --password-stdin
-              cd istio && go get github.com/spiffe/go-spiffe/v2 && go mod tidy && make push
+                echo ${HPE_DOCKER_HUB_SECRET} | docker login hub.docker.hpecorp.net --username ${HPE_DOCKER_HUB_SECRET} --password-stdin
+                cd istio && go get github.com/spiffe/go-spiffe/v2 && go mod tidy && make push
 
-              aws ecr get-login-password --region ${ECR_REGION} | \
-                docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                aws ecr get-login-password --region ${ECR_REGION} | \
+                  docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-              docker images --format "{{.ID}} {{.Repository}}" | while read line; do
-                pieces=(\$line)
-                if [[ "\${pieces[1]}" == *"hub.docker.hpecorp.net"* ]]; then
-                  tag=\$(echo "\${pieces[1]}" | sed -e "s|^${HPE_REGISTRY}||")
-                  docker tag "\${pieces[0]}" "${ECR_HUB}\${tag}:${BUILD_TAG}"
-                  docker push "${ECR_HUB}\${tag}:${BUILD_TAG}"
-                fi
-              done
-            """
+                docker images --format "{{.ID}} {{.Repository}}" | while read line; do
+                  pieces=(\$line)
+                  if [[ "\${pieces[1]}" == *"hub.docker.hpecorp.net"* ]]; then
+                    tag=\$(echo "\${pieces[1]}" | sed -e "s|^${HPE_REGISTRY}||")
+                    docker tag "\${pieces[0]}" "${ECR_HUB}\${tag}:${BUILD_TAG}"
+                    docker push "${ECR_HUB}\${tag}:${BUILD_TAG}"
+                  fi
+                done
+              """
+            }
           }
         }
       }

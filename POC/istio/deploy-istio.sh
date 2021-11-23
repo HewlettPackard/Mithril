@@ -14,8 +14,5 @@ else
     echo "No TAG set, using default value from istio-config.yaml"
 fi
 
-kubectl create ns istio-system
-sleep 2
-kubectl apply -f secrets.yaml
 istioctl install -f istio-config.yaml --skip-confirmation $args
 kubectl apply -f auth.yaml

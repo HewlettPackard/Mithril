@@ -114,7 +114,7 @@ data "aws_secretsmanager_secret_version" "mithril_secret" {
 }
 
 data "template_file" "init" {
-  template = file("unit-tests.sh")
+  template = file("integration-tests.sh")
 
   vars = {
     access_key        = jsondecode(nonsensitive(data.aws_secretsmanager_secret_version.mithril_secret.secret_string))["ACCESS_KEY_ID"],
@@ -124,6 +124,5 @@ data "template_file" "init" {
     hub               = var.HUB,
     build_tag         = var.BUILD_TAG
     usecase           = var.USECASE
-    istio_branch      = var.ISTIO_BRANCH
   }
 }

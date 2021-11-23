@@ -11,10 +11,6 @@ spec:
     accessLogFile: /dev/stdout
     outboundTrafficPolicy:
      mode: REGISTRY_ONLY # disallow calls for unknown hosts
-    defaultConfig:
-      proxyMetadata:
-        # define the ROOT CA that will be used by all istio-agents to connect with istiod using TLS and a JWT token.
-        XDS_ROOT_CA: /etc/certs/root-cert.pem
 
   values:
     global:
@@ -37,16 +33,10 @@ spec:
               - name: SPIFFE_ENDPOINT_SOCKET
                 value: "unix:///run/spire/sockets/agent.sock"
               volumeMounts:
-                - name: xds-root-ca
-                  mountPath:  /etc/certs/
-                  readOnly: false
                 - name: spire-agent-socket
                   mountPath: /run/spire/sockets
                   readOnly: true
             volumes:
-              - name: xds-root-ca
-                configMap:
-                  name: trust-bundle
               - name: spire-agent-socket
                 hostPath:
                   path: /run/spire/sockets
@@ -94,36 +84,17 @@ spec:
               kind: Deployment
               name: istio-ingressgateway
               patches:
-                - path: spec.template.spec.volumes[0]
-                  value:
-                    name: istiod-ca-cert
-                    configMap:
-                      name: trust-bundle
                 - path: spec.template.spec.volumes[8]
                   value:
                     name: spire-agent-socket
                     hostPath:
                       path: /run/spire/sockets
                       type: Directory
-
-                - path: spec.template.spec.volumes[9]
-                  value:
-                    name: xds-root-ca
-                    configMap:
-                      name: trust-bundle
-
                 - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
                   value:
                     name: spire-agent-socket
                     mountPath: "/run/spire/sockets/"
                     readOnly: true
-
-                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[9]
-                  value:
-                    name: xds-root-ca
-                    mountPath: "/etc/certs/"
-                    readOnly: true
-
           env:
             - name: CA_PROVIDER
               value: "spiffe"
@@ -139,11 +110,6 @@ spec:
               kind: Deployment
               name: istio-egressgateway
               patches:
-                - path: spec.template.spec.volumes[0]
-                  value:
-                    name: istiod-ca-cert
-                    configMap:
-                      name: trust-bundle
                 - path: spec.template.spec.volumes[8]
                   value:
                     name: spire-agent-socket
@@ -151,24 +117,11 @@ spec:
                       path: /run/spire/sockets
                       type: Directory
 
-                - path: spec.template.spec.volumes[9]
-                  value:
-                    name: xds-root-ca
-                    configMap:
-                      name: trust-bundle
-
                 - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
                   value:
                     name: spire-agent-socket
                     mountPath: "/run/spire/sockets/"
                     readOnly: true
-
-                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[9]
-                  value:
-                    name: xds-root-ca
-                    mountPath: "/etc/certs/"
-                    readOnly: true
-                
                 # If using ALLOW_ANY for outboundTrafficPolicy.Mode (the default value) this configuration
                 #  can be used to replace the ServiceEntry that is required for both (direct/egress) use cases
                 # - path: spec.template.spec.hostAliases
@@ -176,7 +129,6 @@ spec:
                 #     - ip: 10.0.1.50
                 #       hostnames:
                 #       - "example.org"
-
           env:
             - name: CA_PROVIDER
               value: "spiffe"

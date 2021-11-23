@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 echo -e "${PURPLE}Downloading POC version from AWS S3...${NC}"
 
 aws s3 cp s3://mithril-customer-assets/mithril.tar.gz . --profile scytale
-mkdir -p $BASE_DIR && tar -xf ./mithril.tar.gz -C $BASE_DIR 
+mkdir -p $BASE_DIR && tar -xf ./mithril.tar.gz -C $BASE_DIR
 
 echo -e "${PURPLE}Creating namespaces...${NC}"
 $BASE_DIR/usecases/federation/create-namespaces.sh

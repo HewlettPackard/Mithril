@@ -2,12 +2,6 @@
 
 set -e
 
-# Deploy the k8s operator that synchronizes the trust bundle across namespaces
-kubectl apply -f ../../../../POC/spire/synator-synchronizer.yaml
-
-# Create the namespace
-kubectl apply -f ../../../../POC/spire/spire-namespace.yaml
-
 # Create the k8s-workload-registrar crd, configmap and associated role bindingsspace
 kubectl apply \
     -f ../../../../POC/spire/k8s-workload-registrar-crd-cluster-role.yaml \

@@ -179,8 +179,9 @@ pipeline {
         script {
           def passwordMask = [
             $class: 'MaskPasswordsBuildWrapper',
-            varPasswordPairs: [ [ password: AWS_ACCESS_KEY_ID ],[password: AWS_SECRET_ACCESS_KEY ],[password: AWS_PROFILE ]]
+            varPasswordPairs: [ [ password: HPE_DOCKER_HUB_SECRET ] ]
           ]
+          
           wrap(passwordMask) {
             docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
 
@@ -230,18 +231,11 @@ pipeline {
 
       steps {
         script {
-          def passwordMask = [
-            $class: 'MaskPasswordsBuildWrapper',
-            varPasswordPairs: [ [ password: HPE_DOCKER_HUB_SECRET ] ]
-          ]
-          
           def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com"
           def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX
 
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
             sh """#!/bin/bash
-              set -x
-
               aws ecr get-login-password --region ${ECR_REGION} | \
                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
@@ -259,7 +253,6 @@ pipeline {
     stage("run-integration-tests") {
       environment {
         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
-        AWS_PROFILE = "${AWS_PROFILE}"
         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
       }
 

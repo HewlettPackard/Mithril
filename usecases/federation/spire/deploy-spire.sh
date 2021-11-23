@@ -9,12 +9,6 @@ if [[ "$1" ]]; then
     DIR=$1
 fi
 
-# Deploy the k8s operator that synchronizes the trust bundle across namespaces
-kubectl apply -f $DIR/spire/synator-synchronizer.yaml
-
-# Create the namespace
-kubectl apply -f $DIR/spire/spire-namespace.yaml
-
 # Create the k8s-workload-registrar crd, configmap and associated role bindingsspace
 kubectl apply \
     -f $DIR/spire/k8s-workload-registrar-crd-cluster-role.yaml \
@@ -41,6 +35,6 @@ kubectl apply \
 sleep 2
 
 kubectl apply \
-    -f $DIR/spire/agent-configmap.yaml \
+    -f agent-configmap.yaml \
     -f $DIR/spire/agent-daemonset.yaml
     

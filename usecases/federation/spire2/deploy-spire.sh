@@ -2,9 +2,6 @@
 
 set -e
 
-# Create the namespace
-kubectl apply -f spire-namespace.yaml
-
 # Create the server’s service account, configmap and associated role bindings
 kubectl apply \
     -f server-account.yaml \

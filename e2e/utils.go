@@ -64,8 +64,8 @@ func createClientGo() (*kubernetes.Clientset, *rest.Config, error) {
 	return clientset, config, err
 }
 
-func createSecureHttpClient(certBytes, keyBytes string) (*http.Client, error) {
-	cert, err := tls.X509KeyPair([]byte(certBytes), []byte(keyBytes))
+func createSecureHttpClient(certPEM, keyPEM string) (*http.Client, error) {
+	cert, err := tls.X509KeyPair([]byte(certPEM), []byte(keyPEM))
 
 	if err != nil {
 		return nil, err

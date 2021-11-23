@@ -22,8 +22,7 @@ docker run -i \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c 'set -x &&
-export HUB=${hub} &&
+bash -c 'export HUB=${hub} &&
 export TAG=${build_tag} &&
 export AWS_ACCESS_KEY_ID=${access_key} &&
 export AWS_SECRET_ACCESS_KEY=${secret_access_key} &&

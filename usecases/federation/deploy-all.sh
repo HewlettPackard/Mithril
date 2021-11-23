@@ -6,6 +6,8 @@ pushd "$folder" || exit
 # create all namespaces at the beginning to prevent errors with the bundle sync
 ./create-namespaces.sh
 
+kubectl apply -f ../../POC/configmaps.yaml
+
 (cd spire2 ; ./deploy-spire.sh)
 (cd spire ; ./deploy-spire.sh)
 

@@ -8,7 +8,7 @@ data:
     server {
       bind_address = "0.0.0.0"
       bind_port = "8081"
-      registration_uds_path = "/run/spire/sockets/server.sock"
+      socket_path = "/run/spire/sockets/server.sock"
       trust_domain = "domain.test"
       data_dir = "/run/spire/data"
       log_level = "DEBUG"
@@ -42,14 +42,10 @@ data:
             # NOTE: Change this to your cluster name
             "demo-cluster" = {
               use_token_review_api_validation = true
-              service_account_whitelist = ["spire:spire-agent"]
+              service_account_allow_list = ["spire:spire-agent"]
             }
           }
         }
-      }
-
-      NodeResolver "noop" {
-        plugin_data {}
       }
 
       KeyManager "disk" {

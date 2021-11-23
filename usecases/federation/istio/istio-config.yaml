@@ -8,10 +8,6 @@ spec:
 
   meshConfig:
     trustDomain: example.org
-    defaultConfig:
-      proxyMetadata:
-        # define the ROOT CA that will be used by all istio-agents to connect with istiod using TLS and a JWT token.
-        XDS_ROOT_CA: /etc/certs/root-cert.pem
 
   values:
     global:
@@ -33,16 +29,10 @@ spec:
               - name: SPIFFE_ENDPOINT_SOCKET
                 value: "unix:///run/spire/sockets/agent.sock"
               volumeMounts:
-                - name: xds-root-ca
-                  mountPath:  /etc/certs/
-                  readOnly: false
                 - name: spire-agent-socket
                   mountPath: /run/spire/sockets
                   readOnly: true
             volumes:
-              - name: xds-root-ca
-                configMap:
-                  name: trust-bundle
               - name: spire-agent-socket
                 hostPath:
                   path: /run/spire/sockets
@@ -92,36 +82,17 @@ spec:
               kind: Deployment
               name: istio-ingressgateway
               patches:
-                - path: spec.template.spec.volumes[0]
-                  value:
-                    name: istiod-ca-cert
-                    configMap:
-                      name: trust-bundle
                 - path: spec.template.spec.volumes[8]
                   value:
                     name: spire-agent-socket
                     hostPath:
                       path: /run/spire/sockets
                       type: Directory
-
-                - path: spec.template.spec.volumes[9]
-                  value:
-                    name: xds-root-ca
-                    configMap:
-                      name: trust-bundle
-
                 - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
                   value:
                     name: spire-agent-socket
                     mountPath: "/run/spire/sockets/"
                     readOnly: true
-
-                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[9]
-                  value:
-                    name: xds-root-ca
-                    mountPath: "/etc/certs/"
-                    readOnly: true
-
           env:
             - name: CA_PROVIDER
               value: "spiffe"
@@ -139,36 +110,17 @@ spec:
               kind: Deployment
               name: istio-ingressgateway-mtls
               patches:
-                - path: spec.template.spec.volumes[0]
-                  value:
-                    name: istiod-ca-cert
-                    configMap:
-                      name: trust-bundle
                 - path: spec.template.spec.volumes[8]
                   value:
                     name: spire-agent-socket
                     hostPath:
                       path: /run/spire/sockets
                       type: Directory
-
-                - path: spec.template.spec.volumes[9]
-                  value:
-                    name: xds-root-ca
-                    configMap:
-                      name: trust-bundle
-
                 - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
                   value:
                     name: spire-agent-socket
                     mountPath: "/run/spire/sockets/"
                     readOnly: true
-
-                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[9]
-                  value:
-                    name: xds-root-ca
-                    mountPath: "/etc/certs/"
-                    readOnly: true
-
           env:
             - name: CA_PROVIDER
               value: "spiffe"

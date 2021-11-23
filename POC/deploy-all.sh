@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# create all namespaces at the beginning to prevent errors with the bundle sync
 ./create-namespaces.sh
+kubectl apply -f ./configmaps.yaml
 
 (cd spire ; ./deploy-spire.sh)
 

@@ -1,9 +1,10 @@
-# Bundle set by trust bundle synchronizer
+---
+# This remains empty but needs to be present because of istio-agent injection
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: trust-bundle
-  namespace: istio-system
+  name: istio-ca-root-cert
+  namespace: default
 ---
 # This remains empty but needs to be present because of istio-agent injection
 apiVersion: v1

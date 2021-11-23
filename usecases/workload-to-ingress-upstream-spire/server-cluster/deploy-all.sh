@@ -3,6 +3,8 @@
 # create all namespaces at the beginning to prevent errors with the bundle sync
 ../../../POC/create-namespaces.sh
 
+kubectl apply -f ../../../POC/configmaps.yaml
+
 kubectl create configmap spire-bundle-nest --from-file ../root-cert.pem --namespace="spire"
 kubectl create configmap agent-nesteda-cert --from-file ../nestedA/agent-nestedA.crt.pem --namespace="spire"
 kubectl create configmap agent-nesteda-key --from-file ../nestedA/agent-nestedA.key.pem --namespace="spire"

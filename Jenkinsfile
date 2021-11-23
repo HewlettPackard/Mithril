@@ -168,65 +168,40 @@ pipeline {
       }
     }
 
-    stage("build-mithril-images") {
+    stage("build-and-push-istio-images") {
       environment {
         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
+        BUILD_WITH_CONTAINER = 0
       }
 
-      failFast true
-      parallel {
-        stage("build-and-push-mithril-images-ecr") {
-          environment {
-            BUILD_WITH_CONTAINER = 0
-          }
-          steps {
-            script {
-              docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+      steps {
+        script {
+          docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
 
-                // Build and push to ECR registry
-                def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
-                def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
+            // Build and push to ECR registry
+            def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";
+            def ECR_HUB = ECR_REGISTRY + "/" + ECR_REPOSITORY_PREFIX;
 
-                sh """#!/bin/bash
-                  export HUB=${ECR_HUB}
-                  export TAG=${BUILD_TAG}
+            sh """#!/bin/bash
+              export HUB=${HPE_REGISTRY}
+              export TAG=${BUILD_TAG}
 
-                  aws ecr get-login-password --region ${ECR_REGION} | \
-                    docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                  cd istio && go get github.com/spiffe/go-spiffe/v2 && go mod tidy && make push
-                """
-              }
-            }
-          }
-        }
+              echo ${HPE_DOCKER_HUB_SECRET} | docker login hub.docker.hpecorp.net --username ${HPE_DOCKER_HUB_SECRET} --password-stdin
+              cd istio && go get github.com/spiffe/go-spiffe/v2 && go mod tidy && make push
 
-        stage("build-and-push-mithril-images-hpe-hub") {
-          environment {
-            BUILD_WITH_CONTAINER = 0
-          }
-          steps {
-            // Use the mask token plugin
-            script {
-              def passwordMask = [
-                $class: 'MaskPasswordsBuildWrapper',
-                varPasswordPairs: [ [ password: HPE_DOCKER_HUB_SECRET ] ]
-              ]
+              aws ecr get-login-password --region ${ECR_REGION} | \
+                docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-              // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
-              // and build tag, building Istio and pushing images to the Dockerhub of HPE
-              wrap(passwordMask) {
-                docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
-                  // Build and push to HPE registry
-                  sh """
-                    export HUB=${HPE_REGISTRY}
-                    export TAG=${BUILD_TAG}
-                    echo ${HPE_DOCKER_HUB_SECRET} | docker login hub.docker.hpecorp.net --username ${HPE_DOCKER_HUB_SECRET} --password-stdin
-                    cd istio && go get github.com/spiffe/go-spiffe/v2 && go mod tidy && make push
-                  """
-                }
-              }
-            }
+              docker images --format "{{.ID}} {{.Repository}}" | while read line; do
+                pieces=(\$line)
+                if [[ "\${pieces[1]}" == *"hub.docker.hpecorp.net"* ]]; then
+                  tag=\$(echo "\${pieces[1]}" | sed -e "s|^${HPE_REGISTRY}||")
+                  docker tag "\${pieces[0]}" "${ECR_HUB}\${tag}:${BUILD_TAG}"
+                  docker push "${ECR_HUB}\${tag}:${BUILD_TAG}"
+                fi
+              done
+            """
           }
         }
       }

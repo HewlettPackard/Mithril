@@ -469,7 +469,7 @@ ingressGateways:
 ```
 
 We still need to create a couple of configmaps for the istio namespace and for every
-namespace that you want to deploy your workloads, and the `istio-ca-root-cert` configmap that is required for _istio-agent_ injection. Both configmaps creation should be unnecessary in future releases.
+namespace that you want to deploy your workloads. The `istio-ca-root-cert` configmap that is required for _istio-agent_ injection. Both configmaps creation should be unnecessary in future releases.
 
 ```yaml
 # This remains empty but needs to be present because of istio-agent injection

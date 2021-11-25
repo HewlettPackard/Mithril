@@ -389,81 +389,6 @@ Notifier "k8sbundle" {
 }
 ```
 
-#### Synator deployment configuration
-
-```yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: synator
-  namespace: default
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: synator
-rules:
-  - apiGroups: [""]
-    resources: ["secrets", "configmaps"]
-    verbs: ["*"]
-  - apiGroups: [events.k8s.io]
-    resources: [events]
-    verbs: [create]
-  - apiGroups: [""]
-    resources: [events]
-    verbs: [create]
-  - apiGroups: [""]
-    resources: ["namespaces", "pods", "replicasets", "namespaces/status"]
-    verbs: ["*"]
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: synator
-subjects:
-  - kind: ServiceAccount
-    name: synator
-    namespace: default
-roleRef:
-  kind: ClusterRole
-  name: synator
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: synator
-  namespace: default
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      name: synator
-  template:
-    metadata:
-      labels:
-        name: synator
-    spec:
-      serviceAccountName: synator
-      containers:
-        - name: synator
-          image: theykk/synator:v1.1.0
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: trust-bundle
-  namespace: spire
-  annotations:
-    synator/sync: 'yes'
-    synator/include-namespaces: 'istio-system,default'
-```
-You can add a new namespace at `synator/include-namespaces` annotation section.
-
-Note: The use of the **synator** tool will be deprecated in future releases. It's
-function will be replaced by a new implementation of the **k8s notifier** plugin that will
-push bundle updates to configmaps located at specified namespaces.
-
 #### Istio Discovery configuration
 
 - Environment variables:
@@ -512,7 +437,6 @@ pilot:
     - `SPIFFE_ENDPOINT_SOCKET`: sets the SPIFFE Workload API socket path.
 - Volume mounts:
     - `spire-agent-socket`: SPIFFE Workload API socket path.
-    - `xds-root-ca`: path CA bundle for XDS check.
 
 ```yaml
 ingressGateways:
@@ -532,20 +456,10 @@ ingressGateways:
                 hostPath:
                   path: /run/spire/sockets
                   type: Directory
-            - path: spec.template.spec.volumes[9]
-              value:
-                name: xds-root-ca
-                configMap:
-                  name: trust-bundle
             - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
               value:
                 name: spire-agent-socket
                 mountPath: "/run/spire/sockets/"
-                readOnly: true
-            - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[9]
-              value:
-                name: xds-root-ca
-                mountPath: "/etc/certs/"
                 readOnly: true
       env:
         - name: CA_PROVIDER
@@ -555,31 +469,15 @@ ingressGateways:
 ```
 
 We still need to create a couple of configmaps for the istio namespace and for every
-namespace that you want to deploy your workloads (as seen in below), one for storing the bundle set by **synator**
-, and the `istio-ca-root-cert` configmap that is required for _istio-agent_ injection. Both
-configmaps creation should be unnecessary in future releases.
+namespace that you want to deploy your workloads. The `istio-ca-root-cert` configmap that is required for _istio-agent_ injection. Both configmaps creation should be unnecessary in future releases.
 
 ```yaml
-# Bundle set by trust bundle synchronizer
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: trust-bundle
-  namespace: istio-system
----
 # This remains empty but needs to be present because of istio-agent injection
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: istio-ca-root-cert
   namespace: istio-system
----
-# Bundle set by synchronizer
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: trust-bundle
-  namespace: default
 ---
 # This remains empty but needs to be present because of istio-agent injection
 apiVersion: v1
@@ -608,16 +506,10 @@ sidecarInjectorWebhook:
           - name: SPIFFE_ENDPOINT_SOCKET
             value: "unix:///run/spire/sockets/agent.sock"
           volumeMounts:
-            - name: xds-root-ca
-              mountPath:  /etc/certs/
-              readOnly: false
             - name: spire-agent-socket
               mountPath: /run/spire/sockets
               readOnly: true
         volumes:
-          - name: xds-root-ca
-            configMap:
-              name: trust-bundle
           - name: spire-agent-socket
             hostPath:
               path: /run/spire/sockets

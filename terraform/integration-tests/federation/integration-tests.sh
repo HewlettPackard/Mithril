@@ -29,6 +29,7 @@ export AWS_SECRET_ACCESS_KEY=${secret_access_key} &&
 /mithril/POC/create-kind-cluster.sh &&
 /mithril/POC/create-docker-registry-secret.sh &&
 cd /mithril/usecases/federation &&
+kubectl create ns spire && kubectl create ns spire2 &&
 ./deploy-all.sh &&
 kubectl wait pod --for=condition=Ready -l app=productpage --timeout=-1s &&
 kubectl wait pod --for=condition=Ready -l app=details --timeout=-1s &&

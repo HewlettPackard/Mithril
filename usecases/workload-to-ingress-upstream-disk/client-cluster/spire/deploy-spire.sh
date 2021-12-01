@@ -31,4 +31,5 @@ kubectl apply \
     -f ../../../../POC/spire/agent-configmap.yaml \
     -f ../../../../POC/spire/agent-daemonset.yaml
 
-
+# Applying SPIFFE CSI Driver configuration
+kubectl apply -f ../../../../POC/spire/spiffe-csi-driver.yaml

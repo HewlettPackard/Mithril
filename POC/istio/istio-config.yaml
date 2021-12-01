@@ -9,7 +9,7 @@ spec:
   values:
     global:
       hub: localhost:5000
-      tag: xds
+      tag: my-build
       imagePullPolicy: "Always"
       imagePullSecrets:
         - secret-registry

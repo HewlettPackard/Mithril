@@ -10,7 +10,7 @@
 **Description of change**
 <!-- Please provide a description of the change -->
 
-**Which Jira task this PR is related**
+**Which Jira task this PR is related to**
 <!-- optional. [Jira task](https://jira-pro.its.hpecorp.net:8443/secure/RapidBoard.jspa?rapidView=6259&projectKey=ISTIOSPIRE&view=detail&selectedIssue=ISTIOSPIRE-<task_number>) -->
 
 **Depends on**

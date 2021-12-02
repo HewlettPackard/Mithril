@@ -20,7 +20,7 @@ In order to merge a PR, **it is necessary to have at least one approval**. Since
 
 ### Mithril images
 Our private images are available at [ECR](https://console.aws.amazon.com/ecr/home?region=us-east-1) and [HPE HUB](https://hub.docker.hpecorp.net/), respectively, 
-**529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril/** and **hub.docker.hpecorp.net/**.
+**529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril** and **hub.docker.hpecorp.net**.
 
 For development purpouses, we have the following images:
 

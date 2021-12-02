@@ -72,7 +72,7 @@ spec:
           mountPath: /sleep-certs
         - name: spire-agent-socket
           mountPath: /run/spire/sockets
-          readOnly: false
+          readOnly: true
       volumes:
       - name: secret-volume
         secret:
@@ -81,9 +81,8 @@ spec:
       - name: tmp
         emptyDir: {}
       - name: spire-agent-socket
-        hostPath:
-          path: /run/spire/sockets
-          type: Directory
+        csi:
+          driver: "csi.spiffe.io"
       - name: sleep-certs
         emptyDir: {}
 ---

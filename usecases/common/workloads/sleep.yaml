@@ -80,9 +80,6 @@ spec:
           optional: true
       - name: tmp
         emptyDir: {}
-      - name: spire-agent-socket
-        csi:
-          driver: "csi.spiffe.io"
       - name: sleep-certs
         emptyDir: {}
 ---

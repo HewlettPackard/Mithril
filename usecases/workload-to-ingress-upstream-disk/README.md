@@ -176,10 +176,8 @@ spec:
           optional: true
       - name: tmp
         emptyDir: {}
-      - name: spire-agent-socket
-        hostPath:
-          path: /run/spire/sockets
-          type: Directory
+      - name: sleep-certs
+        emptyDir: {}
 ---
 EOF
 ```

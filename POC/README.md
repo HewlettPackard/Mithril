@@ -169,25 +169,25 @@ Expected output:
 
 ```
 NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
-default              details-v1-c658fff7-cvj8d                    2/2     Running   0          6m19s
-default              productpage-v1-5f85c6d9d8-mb6jm              2/2     Running   0          6m18s
-default              ratings-v1-66db75fdb9-jv4ln                  2/2     Running   0          6m19s
-default              reviews-v1-dbcbb4f7c-jzkh5                   2/2     Running   0          6m19s
-default              reviews-v2-64854577cd-cw7zw                  2/2     Running   0          6m18s
-default              reviews-v3-bd5fcc875-8b722                   2/2     Running   0          6m18s
-istio-system         istio-ingressgateway-849d55784b-fwz7m        1/1     Running   0          6m36s
-istio-system         istiod-5c79c669f9-7qx5m                      1/1     Running   0          6m49s
-kube-system          coredns-74ff55c5b-pl5wd                      1/1     Running   0          19m
-kube-system          coredns-74ff55c5b-zq798                      1/1     Running   0          19m
-kube-system          etcd-kind-control-plane                      1/1     Running   0          19m
-kube-system          kindnet-cxrzk                                1/1     Running   0          19m
-kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          19m
-kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          19m
-kube-system          kube-proxy-xzjgd                             1/1     Running   0          19m
-kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          19m
-local-path-storage   local-path-provisioner-78776bfc44-4dp4x      1/1     Running   0          19m
-spire                spire-agent-w9jfd                            1/1     Running   0          6m21s
-spire                spire-server-0                               2/2     Running   0          6m24s
+default              details-v1-5d8d8fbf4-t49fm                   2/2     Running   0          38m
+default              productpage-v1-6c79c57c79-zzgbs              2/2     Running   0          38m
+default              ratings-v1-9655b4cf8-zbv6v                   2/2     Running   0          38m
+default              reviews-v1-7bc6ccf8b6-ccs4m                  2/2     Running   0          38m
+default              reviews-v2-8468c7558f-g2jlh                  2/2     Running   0          38m
+default              reviews-v3-57648fdb96-hclfj                  2/2     Running   0          38m
+istio-system         istio-ingressgateway-84cc868cb6-tv2s7        1/1     Running   0          38m
+istio-system         istiod-c87f5f7f8-wwv25                       1/1     Running   0          41m
+kube-system          coredns-74ff55c5b-gz44l                      1/1     Running   0          41m
+kube-system          coredns-74ff55c5b-pvph4                      1/1     Running   0          41m
+kube-system          etcd-kind-control-plane                      1/1     Running   0          41m
+kube-system          kindnet-dhgtt                                1/1     Running   0          41m
+kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          41m
+kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          41m
+kube-system          kube-proxy-nf78x                             1/1     Running   0          41m
+kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          41m
+local-path-storage   local-path-provisioner-78776bfc44-t2zjm      1/1     Running   0          41m
+spire                spire-agent-8dtgl                            3/3     Running   0          41m
+spire                spire-server-0                               2/2     Running   0          41m
 ```
 
 ### Cluster Overview
@@ -362,18 +362,8 @@ spec:
   profile: default
   meshConfig:
     trustDomain: example.org
-    defaultConfig:
-      proxyMetadata:
-        # define the ROOT CA that will be used by all istio-agents to connect with istiod using TLS and a JWT token.
-        XDS_ROOT_CA: /etc/certs/root-cert.pem
 ```
 This defines the `trustDomain` environment variable and sets a default Istio deployment.
-To perform XDS discovery we need to share the CA bundle with all the sidecars,`XDS_ROOT_CA`
-sets a path for the bundle check. We can populate this data by making use of the
-[k8s notifier](https://github.com/spiffe/spire/blob/main/doc/plugin_server_notifier_k8sbundle.md) plugin
-to get bundle updates and write them to a configmap within the same namespace
-of the SPIRE Server, and the [synator](https://github.com/TheYkk/synator) to propagate that
-configmap to all additional wanted namespaces.
 
 #### SPIRE Server k8s notifier plugin configuration
 
@@ -420,14 +410,13 @@ pilot:
           - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
             value:
               name: spire-agent-socket
-              mountPath: "/run/spire/sockets/"
+              mountPath: "/run/spire/sockets"
               readOnly: true
           - path: spec.template.spec.volumes[7]
             value:
               name: spire-agent-socket
-              hostPath:
-                path: /run/spire/sockets
-                type: Directory
+              csi:
+                driver: "csi.spiffe.io"
 ```
 
 #### Istio Agent (sidecar) configuration
@@ -453,13 +442,12 @@ ingressGateways:
             - path: spec.template.spec.volumes[8]
               value:
                 name: spire-agent-socket
-                hostPath:
-                  path: /run/spire/sockets
-                  type: Directory
+                csi:
+                  driver: "csi.spiffe.io"
             - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
               value:
                 name: spire-agent-socket
-                mountPath: "/run/spire/sockets/"
+                mountPath: "/run/spire/sockets"
                 readOnly: true
       env:
         - name: CA_PROVIDER
@@ -469,7 +457,7 @@ ingressGateways:
 ```
 
 We still need to create a couple of configmaps for the istio namespace and for every
-namespace that you want to deploy your workloads. The `istio-ca-root-cert` configmap that is required for _istio-agent_ injection. Both configmaps creation should be unnecessary in future releases.
+namespace that you want to deploy your workloads. The `istio-ca-root-cert` configmap that is required for _istio-agent_ injection.
 
 ```yaml
 # This remains empty but needs to be present because of istio-agent injection
@@ -511,9 +499,8 @@ sidecarInjectorWebhook:
               readOnly: true
         volumes:
           - name: spire-agent-socket
-            hostPath:
-              path: /run/spire/sockets
-              type: Directory
+            csi:
+              driver: "csi.spiffe.io"
 ```
 
 The template holds the same configuration for the `ingressgateway` and can be applied 

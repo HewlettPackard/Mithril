@@ -193,7 +193,7 @@ pipeline {
 
                 docker images --format "{{.ID}} {{.Repository}}" | while read line; do
                   pieces=(\$line)
-                  if [[ "\${pieces[1]}" == *"hub.docker.hpecorp.net"* ]] && [[ "\${pieces[1]}" != *"mithril/ubuntu"* ]]; then
+                  if [[ "\${pieces[1]}" == *"hub.docker.hpecorp.net"* ]] && [[ "\${pieces[1]}" != *"/ubuntu"* ]]; then
                     tag=\$(echo "\${pieces[1]}" | sed -e "s|^${HPE_REGISTRY}||")
                     docker tag "\${pieces[0]}" "${ECR_HUB}\${tag}:${BUILD_TAG}"
                     docker push "${ECR_HUB}\${tag}:${BUILD_TAG}"

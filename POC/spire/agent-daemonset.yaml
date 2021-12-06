@@ -57,7 +57,7 @@ spec:
             periodSeconds: 5
         # This is the container which runs the SPIFFE CSI driver.
         - name: spiffe-csi-driver
-          image: ghcr.io/spiffe/spiffe-csi-driver:nightly
+          image: ghcr.io/spiffe/spiffe-csi-driver:0.1.0
           imagePullPolicy: IfNotPresent
           args: [
               "-workload-api-socket-dir", "/spire-agent-socket",

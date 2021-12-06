@@ -64,13 +64,6 @@ spec:
               "-workload-api-socket-dir", "/spire-agent-socket",
               "-csi-socket-path", "/spiffe-csi/csi.sock",
           ]
-          env:
-            # The CSI driver needs a unique node ID. The node name can be
-            # used for this purpose.
-            - name: MY_NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
           volumeMounts:
             # The volume containing the SPIRE agent socket. The SPIFFE CSI
             # driver will mount this directory into containers.

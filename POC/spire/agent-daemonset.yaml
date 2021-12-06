@@ -60,6 +60,7 @@ spec:
           image: ghcr.io/spiffe/spiffe-csi-driver:0.1.0
           imagePullPolicy: IfNotPresent
           args: [
+              "-node-id", "CSI_NODE",
               "-workload-api-socket-dir", "/spire-agent-socket",
               "-csi-socket-path", "/spiffe-csi/csi.sock",
           ]

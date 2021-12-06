@@ -65,7 +65,7 @@ spec:
           ]
           env:
             # The CSI driver needs a unique node ID. The node name can be
-            # used for this purpose.
+            # used for this purpose
             - name: MY_NODE_NAME
               valueFrom:
                 fieldRef:

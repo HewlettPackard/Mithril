@@ -33,6 +33,7 @@ spec:
           volumeMounts:
             - name: spire-config
               mountPath: /run/spire/config
+
               readOnly: true
             - name: spire-bundle
               mountPath: /run/spire/bundle

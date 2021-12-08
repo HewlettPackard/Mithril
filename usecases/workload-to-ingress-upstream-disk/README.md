@@ -139,7 +139,7 @@ spec:
             - "app.example.org"
       initContainers:
         - name: fetch-config
-          image: gcr.io/spiffe-io/spire-agent:1.0.0
+          image: gcr.io/spiffe-io/spire-agent:1.1.1
           command: [ "/bin/sh" ]
           args:
             - "-c"

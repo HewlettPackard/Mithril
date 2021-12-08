@@ -169,7 +169,7 @@ spec:
             - "root-spire"
       containers:
         - name: spire-server
-          image: gcr.io/spiffe-io/spire-server:1.1.0
+          image: gcr.io/spiffe-io/spire-server:1.1.1
           args:
             - -config
             - /run/spire/config/server.conf
@@ -202,7 +202,7 @@ spec:
             - name: tmp
               mountPath: /tmp
         - name: k8s-workload-registrar
-          image: gcr.io/spiffe-io/k8s-workload-registrar:1.0.0
+          image: gcr.io/spiffe-io/k8s-workload-registrar:1.1.1
           args:
             - -config
             - /run/spire/config/k8s-workload-registrar.conf
@@ -218,7 +218,7 @@ spec:
               mountPath: /run/spire/sockets
               readOnly: true
         - name: spire-agent-nest
-          image: gcr.io/spiffe-io/spire-agent:1.0.0
+          image: gcr.io/spiffe-io/spire-agent:1.1.1
           args: ["-config", "/run/spire/config/agent.conf"]
           volumeMounts:
             - name: spire-config-nest

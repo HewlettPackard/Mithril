@@ -44,7 +44,7 @@ spec:
           # Check that istio-agent's namespace and service account match the ones in the JWT token presented in the connection
           - name: PILOT_ENABLE_XDS_IDENTITY_CHECK
             value: "true"
-          # Configure the SPIFFE Workload API as the cert provider for istiod.
+          # Configure the SPIFFE Workload API as the cert provider for istiod
           - name: PILOT_CERT_PROVIDER
             value: "spiffe"
           - name: SPIFFE_ENDPOINT_SOCKET

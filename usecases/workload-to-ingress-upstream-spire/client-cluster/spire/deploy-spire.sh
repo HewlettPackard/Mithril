@@ -42,3 +42,5 @@ sleep 2
 kubectl apply \
     -f agent-nest-configmap.yaml
 
+# Applying SPIFFE CSI Driver configuration
+kubectl apply -f ../../../../POC/spire/spiffe-csi-driver.yaml

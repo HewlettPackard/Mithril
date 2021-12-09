@@ -26,14 +26,13 @@ spec:
               - name: SPIFFE_ENDPOINT_SOCKET
                 value: "unix:///run/spire/sockets/agent.sock"
               volumeMounts:
-                - name: spire-agent-socket
-                  mountPath: /run/spire/sockets
-                  readOnly: true
+              - name: spire-agent-socket
+                mountPath: /run/spire/sockets
+                readOnly: true
             volumes:
               - name: spire-agent-socket
-                hostPath:
-                  path: /run/spire/sockets
-                  type: Directory
+                csi:
+                  driver: "csi.spiffe.io"
   components:
     pilot:
       k8s:
@@ -57,14 +56,13 @@ spec:
               - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
                 value:
                   name: spire-agent-socket
-                  mountPath: "/run/spire/sockets/"
+                  mountPath: "/run/spire/sockets"
                   readOnly: true
               - path: spec.template.spec.volumes[7]
                 value:
                   name: spire-agent-socket
-                  hostPath:
-                    path: /run/spire/sockets
-                    type: Directory
+                  csi:
+                    driver: "csi.spiffe.io"
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
@@ -79,13 +77,12 @@ spec:
                 - path: spec.template.spec.volumes[8]
                   value:
                     name: spire-agent-socket
-                    hostPath:
-                      path: /run/spire/sockets
-                      type: Directory
+                    csi:
+                      driver: "csi.spiffe.io"
                 - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
                   value:
                     name: spire-agent-socket
-                    mountPath: "/run/spire/sockets/"
+                    mountPath: "/run/spire/sockets"
                     readOnly: true
           env:
             - name: CA_PROVIDER

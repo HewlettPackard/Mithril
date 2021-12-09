@@ -30,3 +30,6 @@ sleep 2
 kubectl apply \
     -f agent-configmap.yaml \
     -f agent-daemonset.yaml
+
+# Applying SPIFFE CSI Driver configuration
+kubectl apply -f spiffe-csi-driver.yaml

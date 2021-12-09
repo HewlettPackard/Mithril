@@ -379,7 +379,7 @@ pipeline {
               docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
                 sh """
                   cd ./POC
-                  tar -zcvf mithril.tar.gz bookinfo spire istio \
+                  tar -zcvf mithril.tar.gz bookinfo spire istio configmaps.yaml \
                     deploy-all.sh create-namespaces.sh cleanup-all.sh forward-port.sh create-kind-cluster.sh \
                     doc/poc-instructions.md demo/demo-script.sh demo/README.md demo/federation-demo.sh ../usecases/federation
                   aws s3 cp mithril.tar.gz ${S3_CUSTOMER_BUCKET}

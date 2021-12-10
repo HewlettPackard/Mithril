@@ -53,5 +53,6 @@ tar -zcvf mithril-poc-patchset.tar.gz patches
 ### Mithril public images tags
 
 Our current images are:
+- stable_20211209
 - stable_20211022
 - stable_20210920 

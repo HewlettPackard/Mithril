@@ -36,16 +36,16 @@ pipeline {
     string(name: 'ISTIO_BRANCH', defaultValue: ISTIO_STABLE_BRANCH, description: 'The Istio branch to run against')
   }
 
-  triggers {
-    parameterizedCron(
-      BRANCH_NAME == MITHRIL_MAIN_BRANCH ? '''
-        H H(0-3) * * * %ISTIO_BRANCH=master
-        H H(0-3) * * * %ISTIO_BRANCH=release-1.10
-        H H(0-3) * * * %ISTIO_BRANCH=release-1.11
-        H H(0-3) * * * %ISTIO_BRANCH=release-1.12
-      ''': ''
-    )
-  }
+//   triggers {
+//     parameterizedCron(
+//       BRANCH_NAME == MITHRIL_MAIN_BRANCH ? '''
+//         H H(0-3) * * * %ISTIO_BRANCH=master
+//         H H(0-3) * * * %ISTIO_BRANCH=release-1.10
+//         H H(0-3) * * * %ISTIO_BRANCH=release-1.11
+//         H H(0-3) * * * %ISTIO_BRANCH=release-1.12
+//       ''': ''
+//     )
+//   }
 
   stages {
     stage("notify-slack") {

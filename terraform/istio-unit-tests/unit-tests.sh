@@ -27,9 +27,8 @@ cd istio &&
 git apply /mithril/POC/patches/poc.${istio_branch}.patch &&
 go get github.com/spiffe/go-spiffe/v2 &&
 go mod tidy &&
-make clean &&
-make init &&
-make test 2>&1 | tee ${build_tag}-istio-unit-tests-result.txt &&
+make build &&
+go test ./... 2>&1 | tee ${build_tag}-istio-unit-tests-result.txt &&
 AWS_ACCESS_KEY_ID=${access_key} AWS_SECRET_ACCESS_KEY=${secret_access_key} aws s3 cp ${build_tag}-istio-unit-tests-result.txt s3://mithril-artifacts/${build_tag}/ --region us-east-1 &&
 go test -race -coverprofile cover.out ./... 2>&1'
 

@@ -102,8 +102,6 @@ pipeline {
                 docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
               docker build -t mithril:${BUILD_TAG} \
-                --build-arg http_proxy=${PROXY} \
-                --build-arg https_proxy=${PROXY} \
                 -f ./docker/Dockerfile .
               docker tag mithril:${BUILD_TAG} ${DEVELOPMENT_IMAGE}:${BUILD_TAG}
               docker push ${DEVELOPMENT_IMAGE}:${BUILD_TAG}

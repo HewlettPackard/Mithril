@@ -22,7 +22,7 @@ docker run -i \
 -v "/var/run/docker.sock:/var/run/docker.sock:rw" \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
-bash -c 'echo ${istio_branch} &&
+bash -c 'echo ${istio_branch} && export istio_branch=${istio_branch} &&
 bash /mithril/terraform/istio-unit-tests/check-go-version.sh &&
 mkdir tmp &&
 cd tmp &&

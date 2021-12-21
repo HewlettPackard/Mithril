@@ -23,7 +23,7 @@ docker run -i \
 -v "/.kube/config:/root/.kube/config:rw" \
 --network host mithril-testing:${build_tag} \
 bash -c 'echo ${istio_branch} && export istio_branch=${istio_branch} &&
-bash /mithril/terraform/istio-unit-tests/check-go-version.sh &&
+. /mithril/terraform/istio-unit-tests/check-go-version.sh &&
 mkdir tmp &&
 cd tmp &&
 git clone --single-branch --branch ${istio_branch} https://github.com/istio/istio.git &&

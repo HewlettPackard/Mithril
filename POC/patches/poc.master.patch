@@ -179,18 +179,28 @@ index 4ded6de207..987947aa43 100644
  	} else if a.cfg.XDSRootCerts != "" {
  		// Using specific platform certs or custom roots
  		rootCAPath = a.cfg.XDSRootCerts
-diff --git a/pkg/istio-agent/xds_proxy.go b/pkg/istio-agent/xds_proxy.go
-index 0ec16873a0..c05ceb61f8 100644
---- a/pkg/istio-agent/xds_proxy.go
-+++ b/pkg/istio-agent/xds_proxy.go
-@@ -20,6 +20,7 @@ import (
- 	"crypto/x509"
- 	"encoding/json"
+diff --git a/pkg/security/security.go b/pkg/security/security.go
+index c1cf9b48f6..e0c919f5e0 100644
+--- a/pkg/security/security.go
++++ b/pkg/security/security.go
+@@ -17,6 +17,7 @@ package security
+ import (
+ 	"context"
  	"fmt"
-+	"istio.io/istio/pkg/security"
- 	"math"
- 	"net"
++	"github.com/spiffe/go-spiffe/v2/bundle/x509bundle"
  	"net/http"
+ 	"os"
+ 	"strings"
+@@ -305,6 +306,9 @@ type SecretItem struct {
+ 	CreatedTime time.Time
+ 
+ 	ExpireTime time.Time
++
++	// Trust bundles keyed by trust domain
++	TrustBundles *x509bundle.Set
+ }
+ 
+ type CredFetcher interface {
 diff --git a/security/pkg/nodeagent/cache/spiffesecret.go b/security/pkg/nodeagent/cache/spiffesecret.go
 new file mode 100644
 index 0000000000..47938e400c
@@ -415,7 +425,7 @@ index 0000000000..47938e400c
 +	}
 +}
 diff --git a/security/pkg/nodeagent/sds/sdsservice.go b/security/pkg/nodeagent/sds/sdsservice.go
-index 3ac84d6fd9..2703fb4642 100644
+index 3ac84d6fd9..fd73728707 100644
 --- a/security/pkg/nodeagent/sds/sdsservice.go
 +++ b/security/pkg/nodeagent/sds/sdsservice.go
 @@ -18,6 +18,7 @@ package sds
@@ -426,7 +436,29 @@ index 3ac84d6fd9..2703fb4642 100644
  	"time"
  
  	"github.com/cenkalti/backoff/v4"
-@@ -215,6 +216,15 @@ func toEnvoySecret(s *security.SecretItem, caRootPath string) *tls.Secret {
+@@ -148,7 +149,11 @@ func (s *sdsservice) generate(resourceNames []string) (model.Resources, error) {
+ 			return nil, fmt.Errorf("failed to generate secret for %v: %v", resourceName, err)
+ 		}
+ 
+-		res := util.MessageToAny(toEnvoySecret(secret, s.rootCaPath))
++		envoySecret, err := toEnvoySecret(secret, s.rootCaPath)
++		if err != nil {
++			return nil, fmt.Errorf("failed to generate secret for %v: %v", resourceName, err)
++		}
++		res := util.MessageToAny(envoySecret)
+ 		resources = append(resources, &discovery.Resource{
+ 			Name:     resourceName,
+ 			Resource: res,
+@@ -203,7 +208,7 @@ func (s *sdsservice) Close() {
+ }
+ 
+ // toEnvoySecret converts a security.SecretItem to an Envoy tls.Secret
+-func toEnvoySecret(s *security.SecretItem, caRootPath string) *tls.Secret {
++func toEnvoySecret(s *security.SecretItem, caRootPath string) (*tls.Secret, error) {
+ 	secret := &tls.Secret{
+ 		Name: s.ResourceName,
+ 	}
+@@ -215,6 +220,15 @@ func toEnvoySecret(s *security.SecretItem, caRootPath string) *tls.Secret {
  		cfg, ok = security.SdsCertificateConfigFromResourceName(s.ResourceName)
  	}
  	if s.ResourceName == security.RootCertReqResourceName || (ok && cfg.IsRootCertificate()) {
@@ -442,7 +474,16 @@ index 3ac84d6fd9..2703fb4642 100644
  		secret.Type = &tls.Secret_ValidationContext{
  			ValidationContext: &tls.CertificateValidationContext{
  				TrustedCa: &core.DataSource{
-@@ -251,3 +261,32 @@ func pushLog(names []string) model.XdsLogDetails {
+@@ -241,7 +255,7 @@ func toEnvoySecret(s *security.SecretItem, caRootPath string) *tls.Secret {
+ 		}
+ 	}
+ 
+-	return secret
++	return secret, nil
+ }
+ 
+ func pushLog(names []string) model.XdsLogDetails {
+@@ -251,3 +265,32 @@ func pushLog(names []string) model.XdsLogDetails {
  	}
  	return model.DefaultXdsLogDetails
  }

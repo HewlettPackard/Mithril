@@ -4,6 +4,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG ISTIO_VERSION=release-1.10
 ARG ISTIO_CTL_VERSION=1.10.1
 ARG PATCH_VERSION=1.10
+ARG GO_VERSION=1.17.4
+ARG SPIRE_VERSION=1.1.1
 
 ENV TAG=my-build 
 ENV HUB=localhost:5000 
@@ -24,18 +26,17 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     && ./aws/install --update
 
 # Go installation
-RUN wget https://golang.org/dl/go1.16.1.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go1.16.1.linux-amd64.tar.gz \
-    && rm -rf go1.16.1.linux-amd64.tar.gz
+RUN wget https://golang.org/dl/go$GO_VERSION.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go$GO_VERSION.linux-amd64.tar.gz \
+    && rm -rf go$GO_VERSION.linux-amd64.tar.gz
 
 ENV PATH="${PATH}:/usr/local/go/bin"
 
 # Spire installation
-RUN wget https://github.com/spiffe/spire/releases/download/v1.0.0/spire-1.0.0-linux-x86_64-glibc.tar.gz \
-    && tar zvxf spire-1.0.0-linux-x86_64-glibc.tar.gz \
-    && mv spire-858d04b/ spire-1.0.0 \
-    && cp -r spire-1.0.0/. /opt/spire/ \
-    && rm -rf spire-1.0.0-linux-x86_64-glibc.tar.gz
+RUN wget https://github.com/spiffe/spire/releases/download/v$SPIRE_VERSION/spire-$SPIRE_VERSION-linux-x86_64-glibc.tar.gz \
+    && tar zvxf spire-$SPIRE_VERSION-linux-x86_64-glibc.tar.gz \
+    && cp -r spire-$SPIRE_VERSION/. /opt/spire/ \
+    && rm -rf spire-$SPIRE_VERSION-linux-x86_64-glibc.tar.gz
 
 ENV PATH="${PATH}:/opt/spire/bin"
 

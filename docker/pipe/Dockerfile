@@ -22,8 +22,8 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 RUN unzip -o awscliv2.zip
 RUN ./aws/install --update
 
-RUN wget https://golang.org/dl/go1.16.1.linux-amd64.tar.gz
-RUN tar -C /usr/local -xzf go1.16.1.linux-amd64.tar.gz
+RUN wget https://golang.org/dl/go1.17.5.linux-amd64.tar.gz
+RUN tar -C /usr/local -xzf go1.17.5.linux-amd64.tar.gz
 
 ENV PATH=/usr/local/go/bin:$PATH
 

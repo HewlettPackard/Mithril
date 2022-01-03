@@ -184,6 +184,10 @@ pipeline {
                 export TAG=${BUILD_TAG}
 
                 echo ${HPE_DOCKER_HUB_SECRET} | docker login hub.docker.hpecorp.net --username ${HPE_DOCKER_HUB_SECRET} --password-stdin
+
+                # Checks go version dependencies
+                . ./terraform/istio-unit-tests/check-go-version.sh
+
                 cd istio && go get github.com/spiffe/go-spiffe/v2 && go mod tidy && make push
 
                 aws ecr get-login-password --region ${ECR_REGION} | \

@@ -188,8 +188,7 @@ pipeline {
 
                 # Checks go version dependencies
                 echo ${istio_branch}
-                export istio_branch=${istio_branch}
-                . ./terraform/istio-unit-tests/check-go-version.sh
+                ./terraform/istio-unit-tests/check-go-version.sh
                 exit
                 cd istio && go get github.com/spiffe/go-spiffe/v2 && go mod tidy && make push
 

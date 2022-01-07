@@ -163,6 +163,7 @@ pipeline {
         AWS_ACCESS_KEY_ID = "${AWS_ACCESS_KEY_ID}"
         AWS_SECRET_ACCESS_KEY = "${AWS_SECRET_ACCESS_KEY}"
         BUILD_WITH_CONTAINER = 0
+        ISTIO_BRANCH = "${params.ISTIO_BRANCH}"
       }
 
       steps {
@@ -182,8 +183,13 @@ pipeline {
               sh """#!/bin/bash
                 export HUB=${HPE_REGISTRY}
                 export TAG=${BUILD_TAG}
+                export istio_branch=${istio_branch}
 
                 echo ${HPE_DOCKER_HUB_SECRET} | docker login hub.docker.hpecorp.net --username ${HPE_DOCKER_HUB_SECRET} --password-stdin
+
+                # Checks go version dependencies of istio branches
+                . ./terraform/istio-unit-tests/check-go-version.sh
+
                 cd istio && go get github.com/spiffe/go-spiffe/v2 && go mod tidy && make push
 
                 aws ecr get-login-password --region ${ECR_REGION} | \

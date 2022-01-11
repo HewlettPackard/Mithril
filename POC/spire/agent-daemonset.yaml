@@ -115,7 +115,7 @@ spec:
         # CSI driver and SPIRE agent
         - name: spire-agent-socket-dir
           hostPath:
-            path: /run/spire/csi
+            path: /run/spire/socket-dir
             type: DirectoryOrCreate
         # This volume is where the socket for kubelet->driver communication lives
         - name: spiffe-csi-socket-dir

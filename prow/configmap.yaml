@@ -1,0 +1,256 @@
+# TODO: Add explanation
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: prow
+  name: config
+data:
+  config.yaml: |
+    prowjob_namespace: prow
+    pod_namespace: test-pods-3
+
+    in_repo_config:
+      enabled:
+        "*": true
+
+    deck:
+      spyglass:
+        lenses:
+        - lens:
+            name: metadata
+          required_files:
+          - started.json|finished.json
+        - lens:
+            config:
+            name: buildlog
+          required_files:
+          - build-log.txt
+        - lens:
+            name: junit
+          required_files:
+          - .*/junit.*\.xml
+        - lens:
+            name: podinfo
+          required_files:
+          - podinfo.json
+
+    plank:
+      job_url_prefix_config:
+        "*": http://prow.spire-test.com/view/
+      report_templates:
+        '*': >-
+            [Full PR test history](http://prow.spire-test.com/pr-history?org={{.Spec.Refs.Org}}&repo={{.Spec.Refs.Repo}}&pr={{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}).
+            [Your PR dashboard](http://prow.spire-test.com/pr?query=is:pr+state:open+author:{{with
+            index .Spec.Refs.Pulls 0}}{{.Author}}{{end}}).
+      default_decoration_configs:
+        "*":
+          gcs_configuration:
+            bucket: s3://prow-logs
+            path_strategy: explicit
+          s3_credentials_secret: s3-credentials
+          utility_images:
+            clonerefs: gcr.io/k8s-prow/clonerefs:v20211210-dfd4c4dd7d
+            entrypoint: gcr.io/k8s-prow/entrypoint:v20211210-dfd4c4dd7d
+            initupload: gcr.io/k8s-prow/initupload:v20211210-dfd4c4dd7d
+            sidecar: gcr.io/k8s-prow/sidecar:v20211210-dfd4c4dd7d
+
+    sinker:
+      max_pod_age: 300m
+      max_prowjob_age: 300m
+      resync_period: 300m
+
+    tide:
+      queries:
+      - labels:
+        - lgtm
+        - approved
+        missingLabels:
+        - needs-rebase
+        - do-not-merge/hold
+        - do-not-merge/work-in-progress
+        - do-not-merge/invalid-owners-file
+        orgs:
+        - n-th-org
+
+    decorate_all_jobs: true
+    periodics:
+
+    #TODO: replicate for different tags and go versions
+    - interval: 24h
+      agent: kubernetes
+      name: istio-unit-test-sh
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+          command: ["/bin/bash", "/mithril/prow-files/istio-unit-tests.sh"]
+          envFrom:
+          - secretRef:
+              name: aws-secret
+          volumeMounts:
+          - name: config-volume
+            mountPath: /mithril/prow-files
+        volumes:
+          - name: config-volume
+            configMap:
+              name: prow-required_files
+
+    - interval: 24h
+      agent: kubernetes
+      decorate: true
+      # decoration_config:
+      #   ssh_key_secrets:
+      #   - ssh-key-secret
+      # extra_refs:
+      #   - org: n-th-org
+      #     clone_uri: "git@github.com:n-th-org/prow.git"
+      #     repo: prow
+      #     base_ref: initial
+      name: create-istio-images-and-push-ecr
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+          command: ["/bin/bash", "/mithril/prow-files/istio-images.sh"]
+          envFrom:
+          - secretRef:
+              name: aws-secret
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - name: config-volume
+            mountPath: /mithril/prow-files
+        volumes:
+          - name: config-volume
+            configMap:
+              name: prow-files
+
+    #depends on create-istio-images-and-push-ecr
+    - interval: 24h
+      agent: kubernetes
+      name: tag-latest
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+          command: ["/bin/bash", "/mithril/prow-files/tag-latest-images.sh"]
+          envFrom:
+          - secretRef:
+              name: aws-secret
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - name: config-volume
+            mountPath: /mithril/prow-files
+        volumes:
+          - name: config-volume
+            configMap:
+              name: prow-files
+
+    #postsubmit
+    - interval: 24h
+      agent: kubernetes
+      name: distribute-patches
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+          command: ["/bin/sh", "/mithril/prow-files/distribute-patches.sh"]
+          envFrom:
+          - secretRef:
+              name: aws-secret
+          volumeMounts:
+          - name: config-volume
+            mountPath: /mithril/prow-files
+        volumes:
+          - name: config-volume
+            configMap:
+              name: prow-files
+
+    #postsubmit
+    - interval: 24h
+      agent: kubernetes
+      name: distribute-assets
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+          command: ["/bin/sh", "/mithril/prow-files/distribute-assets.sh"]
+          envFrom:
+          - secretRef:
+              name: aws-secret
+          volumeMounts:
+          - name: config-volume
+            mountPath: /mithril/prow-files
+        volumes:
+          - name: config-volume
+            configMap:
+              name: prow-files
+
+    #presubmit
+    - interval: 24h
+      agent: kubernetes
+      name: analyze-integration-tests
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+          command: ["/bin/bash", "/mithril/prow-files/analyze-integration-tests.sh"]
+          envFrom:
+          - secretRef:
+              name: aws-secret
+          volumeMounts:
+          - name: config-volume
+            mountPath: /mithril/prow-files
+        volumes:
+          - name: config-volume
+            configMap:
+              name: prow-files
+
+    #presubmit
+    - interval: 24h
+      agent: kubernetes
+      name: integration-tests
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+          command: ["/bin/bash", "/mithril/prow-files/integration-tests.sh"]
+          envFrom:
+          - secretRef:
+              name: aws-secret
+          volumeMounts:
+          - name: config-volume
+            mountPath: /mithril/prow-files
+        volumes:
+          - name: config-volume
+            configMap:
+              name: prow-files
+
+    # presubmits:
+    #   n-th-org/prow:
+    #   - name: create-istio-images # As for periodics.
+    #     decorate: true # As for periodics.
+    #     decoration_config:
+    #       ssh_key_secrets:
+    #       - ssh-key-secret
+    #     extra_refs:
+    #       - org: n-th-org
+    #         clone_uri: "git@github.com:n-th-org/prow.git"
+    #         repo: prow
+    #         base_ref: initial
+    #     always_run: true # Run for every PR, or only when requested.
+    #     skip_report: false # Whether to skip setting a status on GitHub.
+    #     spec:
+    #       containers:
+    #       - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+    #         command: ["/bin/sh", "/mithril/prow-files/istio-images.sh"]
+    #       imagePullSecrets:
+    #       - name: secret-registry

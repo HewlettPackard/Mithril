@@ -92,7 +92,7 @@ pipeline {
       steps {
         script {
           // Creating volume for the docker.sock, passing some environment variables for Dockerhub authentication
-          // and build tag, building Istio and pushing images to the ECR.
+          // and build tag, building Istio and pushing images to the ECR
           docker.image(BUILD_IMAGE).inside("-v /var/run/docker.sock:/var/run/docker.sock") {
 
             def ECR_REGISTRY = AWS_ACCOUNT_ID + ".dkr.ecr." + ECR_REGION + ".amazonaws.com";

@@ -7,7 +7,7 @@ metadata:
 data:
   config.yaml: |
     prowjob_namespace: prow
-    pod_namespace: test-pods-3
+    pod_namespace: test-pods-3 #TODO: Change to name of pod_namespace
 
     in_repo_config:
       enabled:
@@ -55,8 +55,8 @@ data:
             sidecar: gcr.io/k8s-prow/sidecar:v20211210-dfd4c4dd7d
 
     sinker:
-      max_pod_age: 300m
-      max_prowjob_age: 300m
+      max_pod_age: 24h
+      max_prowjob_age: 24h
       resync_period: 300m
 
     tide:
@@ -76,9 +76,9 @@ data:
     periodics:
 
     #TODO: replicate for different tags and go versions
-    - interval: 24h
+    - interval: 100m
       agent: kubernetes
-      name: istio-unit-test-sh
+      name: istio-unit-test
       spec:
         imagePullSecrets:
         - name: secret-registry
@@ -94,7 +94,7 @@ data:
         volumes:
           - name: config-volume
             configMap:
-              name: prow-required_files
+              name: prow-files
 
     - interval: 24h
       agent: kubernetes

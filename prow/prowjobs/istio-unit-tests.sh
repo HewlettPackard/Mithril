@@ -7,4 +7,7 @@ git apply /mithril/POC/patches/poc.release-1.10.patch
 
 go get github.com/spiffe/go-spiffe/v2 && go mod tidy
 make build
-go test -race -coverprofile cover.out ./...
+
+go install github.com/jstemmer/go-junit-report@latest
+
+go test -v 2>&1 | $GOPATH/bin/go-junit-report > junit.xml

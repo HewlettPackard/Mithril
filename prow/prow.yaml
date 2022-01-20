@@ -20,7 +20,7 @@ metadata:
 data:
   plugins.yaml: |
     plugins:
-      n-th-org:
+      HewlettPackard:
         plugins:
         - approve
         - assign
@@ -37,47 +37,47 @@ data:
         - wip
         - yuks
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  namespace: prow
-  name: hmac-token
-stringData:
-  # Generate via `openssl rand -hex 20`. This is the secret used in the GitHub webhook configuration
-  hmac: <<HMAC>>
----
-apiVersion: v1
-kind: Secret
-metadata:
-  namespace: prow
-  name: s3-credentials
-stringData:
-  service-account.json: |
-    {
-      "region": "minio",
-      "access_key": <<ACCESS_KEY>>,
-      "endpoint": "minio.prow.svc.cluster.local",
-      "insecure": true,
-      "s3_force_path_style": true,
-      "secret_key": "<<SECRET_KEY>>"
-    }
----
-apiVersion: v1
-kind: Secret
-metadata:
-  namespace: test-pods-3
-  name: s3-credentials
-stringData:
-  service-account.json: |
-    {
-      "region": "minio",
-      "access_key": <<ACCESS_KEY>>,
-      "endpoint": "minio.prow.svc.cluster.local",
-      "insecure": true,
-      "s3_force_path_style": true,
-      "secret_key": "<<SECRET_KEY>>"
-    }
----
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   namespace: prow
+#   name: hmac-token
+# stringData:
+#   # Generate via `openssl rand -hex 20`. This is the secret used in the GitHub webhook configuration
+#   hmac: "<<HMAC>>"
+# ---
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   namespace: prow
+#   name: s3-credentials
+# stringData:
+#   service-account.json: |
+#     {
+#       "region": "minio",
+#       "access_key": "<<ACCESS_KEY>>",
+#       "endpoint": "minio.prow.svc.cluster.local",
+#       "insecure": true,
+#       "s3_force_path_style": true,
+#       "secret_key": "<<SECRET_KEY>>"
+#     }
+# ---
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   namespace: test-pods-3
+#   name: s3-credentials
+# stringData:
+#   service-account.json: |
+#     {
+#       "region": "minio",
+#       "access_key": "<<ACCESS_KEY>>",
+#       "endpoint": "minio.prow.svc.cluster.local",
+#       "insecure": true,
+#       "s3_force_path_style": true,
+#       "secret_key": "<<SECRET_KEY>>"
+#     }
+# ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -167,12 +167,21 @@ kind: Service
 metadata:
   namespace: prow
   name: hook
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-east-1:529024819027:certificate/4b3bbc9a-22f8-4d50-93bf-99c5014023be
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
 spec:
   type: LoadBalancer
   selector:
     app: hook
   ports:
-  - port: 8888
+  - name: http
+    port: 80
+    targetPort: 8888
+  - name: https
+    port: 443
+    targetPort: 8888
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -300,12 +309,20 @@ kind: Service
 metadata:
   namespace: prow
   name: deck
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-east-1:529024819027:certificate/4b3bbc9a-22f8-4d50-93bf-99c5014023be
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
 spec:
   type: LoadBalancer
   selector:
     app: deck
   ports:
-  - port: 80
+  - name: http
+    port: 80
+    targetPort: 8080
+  - name: https
+    port: 443
     targetPort: 8080
 ---
 apiVersion: apps/v1
@@ -425,10 +442,6 @@ kind: Ingress
 metadata:
   namespace: prow
   name: prow
-  annotations:
-    # Change this to your issuer when using cert-manager. Does
-    # nothing when not using cert-manager.
-    cert-manager.io/cluster-issuer: letsencrypt-staging
 spec:
   defaultBackend:
     # specify the default backend for `ingress-gce` (https://cloud.google.com/kubernetes-engine/docs/concepts/ingress#default_backend)
@@ -437,7 +450,7 @@ spec:
       port:
         number: 80
   rules:
-  - host: prow.n-th.site
+  - host: prow.spire-test.com
     http:
       paths:
       - path: /
@@ -1188,66 +1201,66 @@ spec:
     requests:
       storage: 100Gi
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: minio
-  namespace: prow
-spec:
-  selector:
-    matchLabels:
-      app: minio
-  strategy:
-    type: Recreate
-  template:
-    metadata:
-      labels:
-        app: minio
-    spec:
-      volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: minio
-      initContainers:
-      - name: bucket-creator
-        image: alpine
-        command:
-        - mkdir
-        - -p
-        - /data/prow-logs
-        - /data/tide
-        - /data/status-reconciler
-        volumeMounts:
-        - name: data
-          mountPath: "/data"
-      containers:
-      - name: minio
-        volumeMounts:
-        - name: data
-          mountPath: "/data"
-        image: minio/minio:latest
-        args:
-        - server
-        - /data
-        env:
-        - name: MINIO_ROOT_USER
-          value: <<ACCESS_KEY>>
-        - name: MINIO_ROOT_PASSWORD
-          value: "<<SECRET_KEY>>"
-        - name: MINIO_REGION_NAME
-          value: minio
-        ports:
-        - containerPort: 9000
-        readinessProbe:
-          httpGet:
-            path: /minio/health/ready
-            port: 9000
-          periodSeconds: 20
-        livenessProbe:
-          httpGet:
-            path: /minio/health/live
-            port: 9000
----
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: minio
+#   namespace: prow
+# spec:
+#   selector:
+#     matchLabels:
+#       app: minio
+#   strategy:
+#     type: Recreate
+#   template:
+#     metadata:
+#       labels:
+#         app: minio
+#     spec:
+#       volumes:
+#       - name: data
+#         persistentVolumeClaim:
+#           claimName: minio
+#       initContainers:
+#       - name: bucket-creator
+#         image: alpine
+#         command:
+#         - mkdir
+#         - -p
+#         - /data/prow-logs
+#         - /data/tide
+#         - /data/status-reconciler
+#         volumeMounts:
+#         - name: data
+#           mountPath: "/data"
+#       containers:
+#       - name: minio
+#         volumeMounts:
+#         - name: data
+#           mountPath: "/data"
+#         image: minio/minio:latest
+#         args:
+#         - server
+#         - /data
+#         env:
+#         - name: MINIO_ROOT_USER
+#           value: "<<ACCESS_KEY>>"
+#         - name: MINIO_ROOT_PASSWORD
+#           value: "<<SECRET_KEY>>"
+#         - name: MINIO_REGION_NAME
+#           value: minio
+#         ports:
+#         - containerPort: 9000
+#         readinessProbe:
+#           httpGet:
+#             path: /minio/health/ready
+#             port: 9000
+#           periodSeconds: 20
+#         livenessProbe:
+#           httpGet:
+#             path: /minio/health/live
+#             port: 9000
+# ---
 apiVersion: v1
 kind: Service
 metadata:

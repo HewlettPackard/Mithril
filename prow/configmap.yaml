@@ -36,11 +36,11 @@ data:
 
     plank:
       job_url_prefix_config:
-        "*": http://prow.spire-test.com/view/
+        "*": https://prow.spire-test.com/view/
       report_templates:
         '*': >-
-            [Full PR test history](http://prow.spire-test.com/pr-history?org={{.Spec.Refs.Org}}&repo={{.Spec.Refs.Repo}}&pr={{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}).
-            [Your PR dashboard](http://prow.spire-test.com/pr?query=is:pr+state:open+author:{{with
+            [Full PR test history](https://prow.spire-test.com/pr-history?org={{.Spec.Refs.Org}}&repo={{.Spec.Refs.Repo}}&pr={{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}).
+            [Your PR dashboard](https://prow.spire-test.com/pr?query=is:pr+state:open+author:{{with
             index .Spec.Refs.Pulls 0}}{{.Author}}{{end}}).
       default_decoration_configs:
         "*":
@@ -234,24 +234,25 @@ data:
             configMap:
               name: prow-files
 
-    - interval: 1m
+    - interval: 100m
       agent: kubernetes
       decorate: true
       decoration_config:
         ssh_key_secrets:
         - ssh-key-secret
-      extra_refs:
+        extra_refs:
         - org: HewlettPackard
-          clone_uri: "git@github.com:HewlettPackard/Mithril.git"
           repo: prow
-          base_ref: initial
+          base_ref: master
+          workdir: false
+          clone_uri: "git@github.com:HewlettPackard/Mithril.git"
       name: ls-hpe
       spec:
         imagePullSecrets:
         - name: secret-registry
-        containers:
-        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
-          command: ["/bin/bash", -c", "ls"]
+          containers:
+          - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+            command: ["/bin/bash", -c", "ls"]
 
     # presubmits:
     #   HewlettPackard/prow:

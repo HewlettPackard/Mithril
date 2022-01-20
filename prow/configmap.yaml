@@ -70,7 +70,7 @@ data:
         - do-not-merge/work-in-progress
         - do-not-merge/invalid-owners-file
         orgs:
-        - n-th-org
+        - HewlettPackard
 
     decorate_all_jobs: true
     periodics:
@@ -103,8 +103,8 @@ data:
       #   ssh_key_secrets:
       #   - ssh-key-secret
       # extra_refs:
-      #   - org: n-th-org
-      #     clone_uri: "git@github.com:n-th-org/prow.git"
+      #   - org: HewlettPackard
+      #     clone_uri: "git@github.com:HewlettPackard/prow.git"
       #     repo: prow
       #     base_ref: initial
       name: create-istio-images-and-push-ecr
@@ -234,16 +234,35 @@ data:
             configMap:
               name: prow-files
 
+    - interval: 1m
+      agent: kubernetes
+      decorate: true
+      decoration_config:
+        ssh_key_secrets:
+        - ssh-key-secret
+      extra_refs:
+        - org: HewlettPackard
+          clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+          repo: prow
+          base_ref: initial
+      name: ls-hpe
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+          command: ["/bin/bash", -c", "ls"]
+
     # presubmits:
-    #   n-th-org/prow:
+    #   HewlettPackard/prow:
     #   - name: create-istio-images # As for periodics.
     #     decorate: true # As for periodics.
     #     decoration_config:
     #       ssh_key_secrets:
     #       - ssh-key-secret
     #     extra_refs:
-    #       - org: n-th-org
-    #         clone_uri: "git@github.com:n-th-org/prow.git"
+    #       - org: HewlettPackard
+    #         clone_uri: "git@github.com:HewlettPackard/prow.git"
     #         repo: prow
     #         base_ref: initial
     #     always_run: true # Run for every PR, or only when requested.

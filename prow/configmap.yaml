@@ -55,7 +55,7 @@ data:
             sidecar: gcr.io/k8s-prow/sidecar:v20211210-dfd4c4dd7d
 
     sinker:
-      max_pod_age: 24h
+      max_pod_age: 10m
       max_prowjob_age: 24h
       resync_period: 300m
 
@@ -250,9 +250,9 @@ data:
       spec:
         imagePullSecrets:
         - name: secret-registry
-          containers:
-          - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
-            command: ["/bin/bash", -c", "ls"]
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+          command: ["/bin/bash", "-c", "ls"]
 
     # presubmits:
     #   HewlettPackard/prow:

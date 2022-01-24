@@ -1,0 +1,3052 @@
+diff --git a/manifests/charts/gateways/istio-egress/templates/deployment.yaml b/manifests/charts/gateways/istio-egress/templates/deployment.yaml
+index 8c71ea1890..fec4323520 100644
+--- a/manifests/charts/gateways/istio-egress/templates/deployment.yaml
++++ b/manifests/charts/gateways/istio-egress/templates/deployment.yaml
+@@ -225,6 +225,8 @@ spec:
+           - name: ISTIO_META_CLUSTER_ID
+             value: "{{ $.Values.global.multiCluster.clusterName | default `Kubernetes` }}"
+           volumeMounts:
++          - name: workload-identity
++            mountPath: /var/run/secrets/workload-identity
+           - name: istio-envoy
+             mountPath: /etc/istio/proxy
+           - name: config-volume
+@@ -264,7 +266,9 @@ spec:
+ {{ toYaml $gateway.additionalContainers | indent 8 }}
+ {{- end }}
+       volumes:
+-{{- if eq .Values.global.pilotCertProvider "istiod" }}
++      - emptyDir:
++        name: workload-identity
++  {{- if eq .Values.global.pilotCertProvider "istiod" }}
+       - name: istiod-ca-cert
+         configMap:
+           name: istio-ca-root-cert
+diff --git a/manifests/charts/gateways/istio-ingress/templates/deployment.yaml b/manifests/charts/gateways/istio-ingress/templates/deployment.yaml
+index 45d7695a40..64f0173e53 100644
+--- a/manifests/charts/gateways/istio-ingress/templates/deployment.yaml
++++ b/manifests/charts/gateways/istio-ingress/templates/deployment.yaml
+@@ -225,6 +225,8 @@ spec:
+           - name: ISTIO_META_CLUSTER_ID
+             value: "{{ $.Values.global.multiCluster.clusterName | default `Kubernetes` }}"
+           volumeMounts:
++          - name: workload-identity
++            mountPath: /var/run/secrets/workload-identity
+           - name: istio-envoy
+             mountPath: /etc/istio/proxy
+           - name: config-volume
+@@ -264,6 +266,8 @@ spec:
+ {{ toYaml $gateway.additionalContainers | indent 8 }}
+ {{- end }}
+       volumes:
++      - emptyDir:
++        name: workload-identity
+ {{- if eq .Values.global.pilotCertProvider "istiod" }}
+       - name: istiod-ca-cert
+         configMap:
+diff --git a/manifests/charts/gateways/istio-ingress/templates/injected-deployment.yaml b/manifests/charts/gateways/istio-ingress/templates/injected-deployment.yaml
+index 13e75d0e64..b28f6f39a7 100644
+--- a/manifests/charts/gateways/istio-ingress/templates/injected-deployment.yaml
++++ b/manifests/charts/gateways/istio-ingress/templates/injected-deployment.yaml
+@@ -102,6 +102,8 @@ spec:
+             value: {{ $val | quote }}
+           {{- end }}
+           volumeMounts:
++          - name: workload-identity
++            mountPath: /var/run/secrets/workload-identity
+           {{- range $gateway.secretVolumes }}
+           - name: {{ .name }}
+             mountPath: {{ .mountPath | quote }}
+@@ -118,6 +120,8 @@ spec:
+ {{ toYaml $gateway.additionalContainers | indent 8 }}
+ {{- end }}
+       volumes:
++      - emptyDir:
++        name: workload-identity
+       {{- range $gateway.secretVolumes }}
+       - name: {{ .name }}
+         secret:
+diff --git a/manifests/charts/istio-control/istio-discovery/files/gateway-injection-template.yaml b/manifests/charts/istio-control/istio-discovery/files/gateway-injection-template.yaml
+index d91e17f7df..4f3dc16d55 100644
+--- a/manifests/charts/istio-control/istio-discovery/files/gateway-injection-template.yaml
++++ b/manifests/charts/istio-control/istio-discovery/files/gateway-injection-template.yaml
+@@ -131,6 +131,8 @@ spec:
+       timeoutSeconds: 3
+       failureThreshold: {{ .Values.global.proxy.readinessFailureThreshold }}
+     volumeMounts:
++    - name: workload-identity
++      mountPath: /var/run/secrets/workload-identity
+     {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+     - name: gke-workload-certificate
+       mountPath: /var/run/secrets/workload-spiffe-credentials
+@@ -158,6 +160,8 @@ spec:
+     - name: istio-podinfo
+       mountPath: /etc/istio/pod
+   volumes:
++  - emptyDir:
++    name: workload-identity
+   {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+   - name: gke-workload-certificate
+     csi:
+diff --git a/manifests/charts/istio-control/istio-discovery/files/gen-istio.yaml b/manifests/charts/istio-control/istio-discovery/files/gen-istio.yaml
+index c5201dffed..11bf5bd58b 100644
+--- a/manifests/charts/istio-control/istio-discovery/files/gen-istio.yaml
++++ b/manifests/charts/istio-control/istio-discovery/files/gen-istio.yaml
+@@ -616,6 +616,8 @@ data:
+               {{ end }}
+               {{- end }}
+           volumes:
++          - emptyDir:
++            name: workload-identity
+           {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+           - name: gke-workload-certificate
+             csi:
+@@ -822,6 +824,8 @@ data:
+               timeoutSeconds: 3
+               failureThreshold: {{ .Values.global.proxy.readinessFailureThreshold }}
+             volumeMounts:
++            - name: workload-identity
++              mountPath: /var/run/secrets/workload-identity
+             {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+             - name: gke-workload-certificate
+               mountPath: /var/run/secrets/workload-spiffe-credentials
+diff --git a/manifests/charts/istio-control/istio-discovery/files/grpc-agent.yaml b/manifests/charts/istio-control/istio-discovery/files/grpc-agent.yaml
+index 182e39b713..824d0573b0 100644
+--- a/manifests/charts/istio-control/istio-discovery/files/grpc-agent.yaml
++++ b/manifests/charts/istio-control/istio-discovery/files/grpc-agent.yaml
+@@ -177,6 +177,8 @@ spec:
+     {{- end }}
+   {{- end }}
+     volumeMounts:
++    - name: workload-identity
++      mountPath: /var/run/secrets/workload-identity
+     {{- if eq .Values.global.pilotCertProvider "istiod" }}
+     - mountPath: /var/run/secrets/istio
+       name: istiod-ca-cert
+@@ -199,6 +201,8 @@ spec:
+     {{ end }}
+     {{- end }}
+   volumes:
++  - emptyDir:
++    name: workload-identity
+   # UDS channel between istioagent and gRPC client for XDS/SDS
+   - emptyDir:
+       medium: Memory
+diff --git a/manifests/charts/istio-control/istio-discovery/files/injection-template.yaml b/manifests/charts/istio-control/istio-discovery/files/injection-template.yaml
+index dbe7708093..cee0ecf6e6 100644
+--- a/manifests/charts/istio-control/istio-discovery/files/injection-template.yaml
++++ b/manifests/charts/istio-control/istio-discovery/files/injection-template.yaml
+@@ -356,6 +356,8 @@ spec:
+     resources:
+   {{ template "resources" . }}
+     volumeMounts:
++    - name: workload-identity
++      mountPath: /var/run/secrets/workload-identity
+     {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+     - name: gke-workload-certificate
+       mountPath: /var/run/secrets/workload-spiffe-credentials
+@@ -398,6 +400,8 @@ spec:
+       {{ end }}
+       {{- end }}
+   volumes:
++  - emptyDir:
++    name: workload-identity
+   {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+   - name: gke-workload-certificate
+     csi:
+diff --git a/manifests/charts/istiod-remote/files/gateway-injection-template.yaml b/manifests/charts/istiod-remote/files/gateway-injection-template.yaml
+index d91e17f7df..4f3dc16d55 100644
+--- a/manifests/charts/istiod-remote/files/gateway-injection-template.yaml
++++ b/manifests/charts/istiod-remote/files/gateway-injection-template.yaml
+@@ -131,6 +131,8 @@ spec:
+       timeoutSeconds: 3
+       failureThreshold: {{ .Values.global.proxy.readinessFailureThreshold }}
+     volumeMounts:
++    - name: workload-identity
++      mountPath: /var/run/secrets/workload-identity
+     {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+     - name: gke-workload-certificate
+       mountPath: /var/run/secrets/workload-spiffe-credentials
+@@ -158,6 +160,8 @@ spec:
+     - name: istio-podinfo
+       mountPath: /etc/istio/pod
+   volumes:
++  - emptyDir:
++    name: workload-identity
+   {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+   - name: gke-workload-certificate
+     csi:
+diff --git a/manifests/charts/istiod-remote/files/injection-template.yaml b/manifests/charts/istiod-remote/files/injection-template.yaml
+index dbe7708093..cee0ecf6e6 100644
+--- a/manifests/charts/istiod-remote/files/injection-template.yaml
++++ b/manifests/charts/istiod-remote/files/injection-template.yaml
+@@ -356,6 +356,8 @@ spec:
+     resources:
+   {{ template "resources" . }}
+     volumeMounts:
++    - name: workload-identity
++      mountPath: /var/run/secrets/workload-identity
+     {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+     - name: gke-workload-certificate
+       mountPath: /var/run/secrets/workload-spiffe-credentials
+@@ -398,6 +400,8 @@ spec:
+       {{ end }}
+       {{- end }}
+   volumes:
++  - emptyDir:
++    name: workload-identity
+   {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+   - name: gke-workload-certificate
+     csi:
+diff --git a/pilot/cmd/pilot-agent/options/security.go b/pilot/cmd/pilot-agent/options/security.go
+index 0a15a08ed6..7801a34f8d 100644
+--- a/pilot/cmd/pilot-agent/options/security.go
++++ b/pilot/cmd/pilot-agent/options/security.go
+@@ -17,7 +17,6 @@ package options
+ import (
+ 	"fmt"
+ 	"os"
+-	"path/filepath"
+ 	"strings"
+ 
+ 	meshconfig "istio.io/api/mesh/v1alpha1"
+@@ -40,7 +39,6 @@ func NewSecurityOptions(proxyConfig *meshconfig.ProxyConfig, stsPort int, tokenM
+ 		PilotCertProvider:              features.PilotCertProvider,
+ 		OutputKeyCertToDir:             outputKeyCertToDir,
+ 		ProvCert:                       provCert,
+-		WorkloadUDSPath:                filepath.Join(proxyConfig.ConfigPath, "SDS"),
+ 		ClusterID:                      clusterIDVar.Get(),
+ 		FileMountedCerts:               fileMountedCertsEnv,
+ 		WorkloadNamespace:              PodNamespaceVar.Get(),
+diff --git a/pkg/bootstrap/testdata/all_golden.json b/pkg/bootstrap/testdata/all_golden.json
+index 16b371dc57..c58cc1052d 100644
+--- a/pkg/bootstrap/testdata/all_golden.json
++++ b/pkg/bootstrap/testdata/all_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/all/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/auth_golden.json b/pkg/bootstrap/testdata/auth_golden.json
+index d468b349eb..6f0c8f41a6 100644
+--- a/pkg/bootstrap/testdata/auth_golden.json
++++ b/pkg/bootstrap/testdata/auth_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/auth/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/authsds_golden.json b/pkg/bootstrap/testdata/authsds_golden.json
+index 0bf9437ced..1ff64cfe76 100644
+--- a/pkg/bootstrap/testdata/authsds_golden.json
++++ b/pkg/bootstrap/testdata/authsds_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/authsds/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/default_golden.json b/pkg/bootstrap/testdata/default_golden.json
+index 4806f87bfa..8cf41f79d1 100644
+--- a/pkg/bootstrap/testdata/default_golden.json
++++ b/pkg/bootstrap/testdata/default_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/default/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/metrics_no_statsd_golden.json b/pkg/bootstrap/testdata/metrics_no_statsd_golden.json
+index 6a63ea0cb0..bfeef41f62 100644
+--- a/pkg/bootstrap/testdata/metrics_no_statsd_golden.json
++++ b/pkg/bootstrap/testdata/metrics_no_statsd_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/metrics_no_statsd/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/running_golden.json b/pkg/bootstrap/testdata/running_golden.json
+index 4411247954..c4e33acb08 100644
+--- a/pkg/bootstrap/testdata/running_golden.json
++++ b/pkg/bootstrap/testdata/running_golden.json
+@@ -354,7 +354,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/running/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/runningsds_golden.json b/pkg/bootstrap/testdata/runningsds_golden.json
+index a40a1715b7..6b450061a2 100644
+--- a/pkg/bootstrap/testdata/runningsds_golden.json
++++ b/pkg/bootstrap/testdata/runningsds_golden.json
+@@ -354,7 +354,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/runningsds/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/stats_inclusion_golden.json b/pkg/bootstrap/testdata/stats_inclusion_golden.json
+index b55a100502..6c755d99ec 100644
+--- a/pkg/bootstrap/testdata/stats_inclusion_golden.json
++++ b/pkg/bootstrap/testdata/stats_inclusion_golden.json
+@@ -442,7 +442,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/stats_inclusion/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/tracing_datadog_golden.json b/pkg/bootstrap/testdata/tracing_datadog_golden.json
+index 5e7638c704..da5848ec9f 100644
+--- a/pkg/bootstrap/testdata/tracing_datadog_golden.json
++++ b/pkg/bootstrap/testdata/tracing_datadog_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/tracing_datadog/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/tracing_lightstep_golden.json b/pkg/bootstrap/testdata/tracing_lightstep_golden.json
+index 5685281d31..d84e555c0a 100644
+--- a/pkg/bootstrap/testdata/tracing_lightstep_golden.json
++++ b/pkg/bootstrap/testdata/tracing_lightstep_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/tracing_lightstep/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/tracing_opencensusagent_golden.json b/pkg/bootstrap/testdata/tracing_opencensusagent_golden.json
+index 1b267e3e81..0f6f4079a0 100644
+--- a/pkg/bootstrap/testdata/tracing_opencensusagent_golden.json
++++ b/pkg/bootstrap/testdata/tracing_opencensusagent_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/tracing_opencensusagent/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/tracing_stackdriver_golden.json b/pkg/bootstrap/testdata/tracing_stackdriver_golden.json
+index e34b4445f2..f587c5d650 100644
+--- a/pkg/bootstrap/testdata/tracing_stackdriver_golden.json
++++ b/pkg/bootstrap/testdata/tracing_stackdriver_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/tracing_stackdriver/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/tracing_tls_custom_sni_golden.json b/pkg/bootstrap/testdata/tracing_tls_custom_sni_golden.json
+index 7b2acde9cb..10b7b0bb18 100644
+--- a/pkg/bootstrap/testdata/tracing_tls_custom_sni_golden.json
++++ b/pkg/bootstrap/testdata/tracing_tls_custom_sni_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/tracing_tls_custom_sni/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/tracing_tls_golden.json b/pkg/bootstrap/testdata/tracing_tls_golden.json
+index 4c0124768f..efb8e0f1d4 100644
+--- a/pkg/bootstrap/testdata/tracing_tls_golden.json
++++ b/pkg/bootstrap/testdata/tracing_tls_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/tracing_tls/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/tracing_zipkin_golden.json b/pkg/bootstrap/testdata/tracing_zipkin_golden.json
+index 6fc99b7604..e8096e7560 100644
+--- a/pkg/bootstrap/testdata/tracing_zipkin_golden.json
++++ b/pkg/bootstrap/testdata/tracing_zipkin_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/tracing_zipkin/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/bootstrap/testdata/xdsproxy_golden.json b/pkg/bootstrap/testdata/xdsproxy_golden.json
+index 1a1c068117..1eef91b094 100644
+--- a/pkg/bootstrap/testdata/xdsproxy_golden.json
++++ b/pkg/bootstrap/testdata/xdsproxy_golden.json
+@@ -349,7 +349,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "/tmp/bootstrap/xdsproxy/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }
+diff --git a/pkg/config/constants/constants.go b/pkg/config/constants/constants.go
+index 77b0956925..4b536b88e7 100644
+--- a/pkg/config/constants/constants.go
++++ b/pkg/config/constants/constants.go
+@@ -42,6 +42,21 @@ const (
+ 	// ConfigPathDir config directory for storing envoy json config files.
+ 	ConfigPathDir = "./etc/istio/proxy"
+ 
++	// WorkloadIdentityPath is the path to the folder where workload identity materials are placed
++	WorkloadIdentityPath = "./var/run/secrets/workload-identity/"
++
++	// WorkloadIdentitySocketPath is the path to the Unix Domain Socket for SDS
++	WorkloadIdentitySocketPath = WorkloadIdentityPath + "socket"
++
++	// WorkloadIdentityCertChainPath is path to an existing workload certificate chain file
++	WorkloadIdentityCertChainPath = WorkloadIdentityPath + "cert-chain.pem"
++
++	// WorkloadIdentityKeyPath is path to an existing workload key file
++	WorkloadIdentityKeyPath = WorkloadIdentityPath + "key.pem"
++
++	// WorkloadIdentityRootCertPath is path to an existing workload root certificate file
++	WorkloadIdentityRootCertPath = WorkloadIdentityPath + "root-cert.pem"
++
+ 	// IstioDataDir is the directory to store binary data such as envoy core dump, profile, and downloaded Wasm modules.
+ 	IstioDataDir = "/var/lib/istio/data"
+ 
+diff --git a/pkg/istio-agent/agent.go b/pkg/istio-agent/agent.go
+index b8fc77b9a7..6fcfde9746 100644
+--- a/pkg/istio-agent/agent.go
++++ b/pkg/istio-agent/agent.go
+@@ -403,13 +403,33 @@ func (a *Agent) Run(ctx context.Context) (func(), error) {
+ 		return nil, fmt.Errorf("failed to start local DNS server: %v", err)
+ 	}
+ 
+-	a.secretCache, err = a.newSecretManager()
+-	if err != nil {
+-		return nil, fmt.Errorf("failed to start workload secret manager %v", err)
+-	}
++	socketExists := socketFileExists(constants.WorkloadIdentitySocketPath)
++
++	if !socketExists {
++		log.Info("SDS socket not detected, creating own SDS Server")
+ 
+-	a.sdsServer = sds.NewServer(a.secOpts, a.secretCache)
+-	a.secretCache.SetUpdateCallback(a.sdsServer.UpdateCallback)
++		if workloadCertFilesExist() {
++			log.Info("workload identity cert files detected, creating secret manager without caClient")
++			a.secOpts.RootCertFilePath = constants.WorkloadIdentityRootCertPath
++			a.secOpts.CertChainFilePath = constants.WorkloadIdentityCertChainPath
++			a.secOpts.KeyFilePath = constants.WorkloadIdentityKeyPath
++
++			a.secretCache, err = cache.NewSecretManagerClient(nil, a.secOpts)
++			if err != nil {
++				return nil, fmt.Errorf("failed to start workload secret manager %v", err)
++			}
++		} else {
++			log.Info("workload identity cert files not found, create secret manager with caClient")
++			a.secretCache, err = a.newSecretManager()
++			if err != nil {
++				return nil, fmt.Errorf("failed to start workload secret manager %v", err)
++			}
++		}
++		a.sdsServer = sds.NewServer(a.secOpts, a.secretCache)
++		a.secretCache.SetUpdateCallback(a.sdsServer.UpdateCallback)
++	} else {
++		log.Info("SDS socket detected, don't start SDS Server")
++	}
+ 
+ 	a.xdsProxy, err = initXdsProxy(a)
+ 	if err != nil {
+@@ -627,6 +647,20 @@ func fileExists(path string) bool {
+ 	return false
+ }
+ 
++func socketFileExists(path string) bool {
++	if fi, err := os.Stat(path); err == nil && !fi.Mode().IsRegular() {
++		return true
++	}
++	return false
++}
++
++func workloadCertFilesExist() bool {
++	rootCertExists := fileExists(constants.WorkloadIdentityRootCertPath)
++	certChainExists := fileExists(constants.WorkloadIdentityCertChainPath)
++	keyExists := fileExists(constants.WorkloadIdentityKeyPath)
++	return rootCertExists && certChainExists && keyExists
++}
++
+ // FindRootCAForCA Find the root CA to use when connecting to the CA (Istiod or external).
+ func (a *Agent) FindRootCAForCA() (string, error) {
+ 	var rootCAPath string
+diff --git a/pkg/istio-agent/agent_test.go b/pkg/istio-agent/agent_test.go
+index 56add5d0bf..65ff9059d0 100644
+--- a/pkg/istio-agent/agent_test.go
++++ b/pkg/istio-agent/agent_test.go
+@@ -20,6 +20,9 @@ import (
+ 	"crypto/x509"
+ 	"encoding/json"
+ 	"fmt"
++	"istio.io/istio/pkg/config/constants"
++	"istio.io/istio/security/pkg/nodeagent/cache"
++	"istio.io/istio/security/pkg/nodeagent/sds"
+ 	"net"
+ 	"os"
+ 	"path"
+@@ -259,6 +262,47 @@ func TestAgent(t *testing.T) {
+ 			return a
+ 		}).Check(t, security.WorkloadKeyCertResourceName, security.RootCertReqResourceName)
+ 	})
++	t.Run("External SDS socket", func(t *testing.T) {
++
++		dir := mktemp()
++		copyCerts(t, dir)
++
++		secOpts := &security.Options{}
++		secOpts.RootCertFilePath = dir + "/root-cert.pem"
++		secOpts.CertChainFilePath = dir + "/cert-chain.pem"
++		secOpts.KeyFilePath = dir + "/key.pem"
++
++		secretCache, err := cache.NewSecretManagerClient(nil, secOpts)
++		if err != nil {
++			t.Fatal(err)
++		}
++		defer secretCache.Close()
++
++		// this SDS Server listens on the fixed socket path serving the certs copied to the temp directory,
++		// and acts as the external SDS Server that the Agent will detect at startup
++		sdsServer := sds.NewServer(secOpts, secretCache)
++		defer sdsServer.Stop()
++
++		Setup(t).Check(t, security.WorkloadKeyCertResourceName, security.RootCertReqResourceName)
++
++		t.Cleanup(func() {
++			_ = os.RemoveAll(dir)
++		})
++	})
++	t.Run("Workload certificates", func(t *testing.T) {
++
++		dir := constants.WorkloadIdentityPath
++		if err := os.MkdirAll(dir, 0o755); err != nil {
++			t.Fatal(err)
++		}
++		copyCerts(t, dir)
++
++		Setup(t).Check(t, security.WorkloadKeyCertResourceName, security.RootCertReqResourceName)
++
++		t.Cleanup(func() {
++			_ = os.RemoveAll(dir)
++		})
++	})
+ 	t.Run("VMs", func(t *testing.T) {
+ 		// Bootstrap sets up a short lived JWT token and root certificate. The initial run will fetch
+ 		// a certificate and write it to disk. This will be used (by mTLS authenticator) for future
+@@ -543,7 +587,7 @@ func Setup(t *testing.T, opts ...func(a AgentTest) AgentTest) *AgentTest {
+ 	}
+ 	ca := setupCa(t, resp.CaAuthenticator)
+ 	resp.Security = security.Options{
+-		WorkloadUDSPath:   filepath.Join(d, "SDS"),
++		WorkloadUDSPath:   "./var/run/secrets/workload-identity/socket",
+ 		CAEndpoint:        ca.URL,
+ 		CAProviderName:    "Citadel",
+ 		TrustDomain:       "cluster.local",
+@@ -590,7 +634,6 @@ func Setup(t *testing.T, opts ...func(a AgentTest) AgentTest) *AgentTest {
+ 	a := NewAgent(&resp.ProxyConfig, &resp.AgentConfig, &resp.Security, envoy.ProxyConfig{TestOnly: !resp.envoyEnable})
+ 	t.Cleanup(a.Close)
+ 	ctx, done := context.WithCancel(context.Background())
+-
+ 	wait, err := a.Run(ctx)
+ 	if err != nil {
+ 		t.Fatal(err)
+diff --git a/pkg/kube/inject/testdata/inject/auth.non-default-service-account.yaml.injected b/pkg/kube/inject/testdata/inject/auth.non-default-service-account.yaml.injected
+index 67714154e7..4d31db6051 100644
+--- a/pkg/kube/inject/testdata/inject/auth.non-default-service-account.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/auth.non-default-service-account.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -182,6 +184,7 @@ spec:
+         fsGroup: 1337
+       serviceAccountName: non-default
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/auth.yaml.injected b/pkg/kube/inject/testdata/inject/auth.yaml.injected
+index 4d299834d8..7057c4a22c 100644
+--- a/pkg/kube/inject/testdata/inject/auth.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/auth.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -181,6 +183,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/cronjob.yaml.injected b/pkg/kube/inject/testdata/inject/cronjob.yaml.injected
+index 42ed659209..9ea3ef372f 100644
+--- a/pkg/kube/inject/testdata/inject/cronjob.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/cronjob.yaml.injected
+@@ -12,7 +12,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         security.istio.io/tlsMode: istio
+@@ -121,6 +121,8 @@ spec:
+               runAsNonRoot: true
+               runAsUser: 1337
+             volumeMounts:
++            - mountPath: /var/run/secrets/workload-identity
++              name: workload-identity
+             - mountPath: /var/run/secrets/istio
+               name: istiod-ca-cert
+             - mountPath: /var/lib/istio/data
+@@ -176,6 +178,7 @@ spec:
+           securityContext:
+             fsGroup: 1337
+           volumes:
++          - name: workload-identity
+           - emptyDir:
+               medium: Memory
+             name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/daemonset.yaml.injected b/pkg/kube/inject/testdata/inject/daemonset.yaml.injected
+index 1a421484c7..41529899b4 100644
+--- a/pkg/kube/inject/testdata/inject/daemonset.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/daemonset.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -125,6 +125,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -179,6 +181,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/deploymentconfig-multi.yaml.injected b/pkg/kube/inject/testdata/inject/deploymentconfig-multi.yaml.injected
+index 4de2b3797b..ba8eea9f32 100644
+--- a/pkg/kube/inject/testdata/inject/deploymentconfig-multi.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/deploymentconfig-multi.yaml.injected
+@@ -32,7 +32,7 @@ items:
+           prometheus.io/path: /stats/prometheus
+           prometheus.io/port: "15020"
+           prometheus.io/scrape: "true"
+-          sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++          sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         creationTimestamp: null
+         labels:
+           app: hello
+@@ -140,6 +140,8 @@ items:
+             runAsNonRoot: true
+             runAsUser: 1337
+           volumeMounts:
++          - mountPath: /var/run/secrets/workload-identity
++            name: workload-identity
+           - mountPath: /var/run/secrets/istio
+             name: istiod-ca-cert
+           - mountPath: /var/lib/istio/data
+@@ -194,6 +196,7 @@ items:
+         securityContext:
+           fsGroup: 1337
+         volumes:
++        - name: workload-identity
+         - emptyDir:
+             medium: Memory
+           name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/deploymentconfig-with-canonical-service-label.yaml.injected b/pkg/kube/inject/testdata/inject/deploymentconfig-with-canonical-service-label.yaml.injected
+index c19a216dc4..bb1a8e3b4e 100644
+--- a/pkg/kube/inject/testdata/inject/deploymentconfig-with-canonical-service-label.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/deploymentconfig-with-canonical-service-label.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -125,6 +125,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -179,6 +181,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/deploymentconfig.yaml.injected b/pkg/kube/inject/testdata/inject/deploymentconfig.yaml.injected
+index 380c804799..d51a6aa050 100644
+--- a/pkg/kube/inject/testdata/inject/deploymentconfig.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/deploymentconfig.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -125,6 +125,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -179,6 +181,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/enable-core-dump-annotation.yaml.injected b/pkg/kube/inject/testdata/inject/enable-core-dump-annotation.yaml.injected
+index d936ac8284..294e1c1176 100644
+--- a/pkg/kube/inject/testdata/inject/enable-core-dump-annotation.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/enable-core-dump-annotation.yaml.injected
+@@ -20,7 +20,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         sidecar.istio.io/enableCoreDump: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init","enable-core-dump"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init","enable-core-dump"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -128,6 +128,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -209,6 +211,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/enable-core-dump.yaml.injected b/pkg/kube/inject/testdata/inject/enable-core-dump.yaml.injected
+index 42daf082a8..36b7d7ccd8 100644
+--- a/pkg/kube/inject/testdata/inject/enable-core-dump.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/enable-core-dump.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init","enable-core-dump"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init","enable-core-dump"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -208,6 +210,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/explicit-security-context.yaml.injected b/pkg/kube/inject/testdata/inject/explicit-security-context.yaml.injected
+index c8bebc6312..af636f6696 100644
+--- a/pkg/kube/inject/testdata/inject/explicit-security-context.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/explicit-security-context.yaml.injected
+@@ -16,7 +16,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -118,6 +118,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -172,6 +174,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/format-duration.yaml.injected b/pkg/kube/inject/testdata/inject/format-duration.yaml.injected
+index 161e6a49a2..a02a1ed679 100644
+--- a/pkg/kube/inject/testdata/inject/format-duration.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/format-duration.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -181,6 +183,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/frontend.yaml.injected b/pkg/kube/inject/testdata/inject/frontend.yaml.injected
+index b38b8ab764..b1a63bca51 100644
+--- a/pkg/kube/inject/testdata/inject/frontend.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/frontend.yaml.injected
+@@ -33,7 +33,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -144,6 +144,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -198,6 +200,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/grpc-agent.yaml.injected b/pkg/kube/inject/testdata/inject/grpc-agent.yaml.injected
+index 1cf5cb2688..2805a8bfdb 100644
+--- a/pkg/kube/inject/testdata/inject/grpc-agent.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/grpc-agent.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/scrape: "true"
+         proxy.istio.io/overrides: '{"containers":[{"name":"traffic","image":"fake.docker.io/google-samples/traffic-go-gke:1.0","resources":{},"readinessProbe":{"httpGet":{"port":80}}}]}'
+         sidecar.istio.io/rewriteAppHTTPProbers: "false"
+-        sidecar.istio.io/status: '{"initContainers":null,"containers":["traffic","istio-proxy"],"volumes":["istio-xds","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":null,"containers":["traffic","istio-proxy"],"volumes":["workload-identity","istio-xds","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: grpc
+@@ -123,6 +123,8 @@ spec:
+             cpu: 100m
+             memory: 128Mi
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -134,6 +136,7 @@ spec:
+         - mountPath: /etc/istio/pod
+           name: istio-podinfo
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-xds
+diff --git a/pkg/kube/inject/testdata/inject/hello-always.yaml.injected b/pkg/kube/inject/testdata/inject/hello-always.yaml.injected
+index f7e068f150..a334c1ae36 100644
+--- a/pkg/kube/inject/testdata/inject/hello-always.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-always.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -128,6 +128,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -183,6 +185,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-cncf-networks.yaml.injected b/pkg/kube/inject/testdata/inject/hello-cncf-networks.yaml.injected
+index 5acb34d3d9..92b9685ac3 100644
+--- a/pkg/kube/inject/testdata/inject/hello-cncf-networks.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-cncf-networks.yaml.injected
+@@ -21,7 +21,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         sidecar.istio.io/interceptionMode: REDIRECT
+-        sidecar.istio.io/status: '{"initContainers":["istio-validation"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-validation"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         traffic.sidecar.istio.io/excludeInboundPorts: "15020"
+         traffic.sidecar.istio.io/includeInboundPorts: '*'
+         traffic.sidecar.istio.io/includeOutboundIPRanges: '*'
+@@ -132,6 +132,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -185,6 +187,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-existing-cncf-networks-json.yaml.injected b/pkg/kube/inject/testdata/inject/hello-existing-cncf-networks-json.yaml.injected
+index 7d763c2cc6..bf153e6d36 100644
+--- a/pkg/kube/inject/testdata/inject/hello-existing-cncf-networks-json.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-existing-cncf-networks-json.yaml.injected
+@@ -21,7 +21,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         sidecar.istio.io/interceptionMode: REDIRECT
+-        sidecar.istio.io/status: '{"initContainers":["istio-validation"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-validation"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         traffic.sidecar.istio.io/excludeInboundPorts: "15020"
+         traffic.sidecar.istio.io/includeInboundPorts: '*'
+         traffic.sidecar.istio.io/includeOutboundIPRanges: '*'
+@@ -132,6 +132,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -185,6 +187,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-existing-cncf-networks.yaml.injected b/pkg/kube/inject/testdata/inject/hello-existing-cncf-networks.yaml.injected
+index d2e4be6645..283cff4f8d 100644
+--- a/pkg/kube/inject/testdata/inject/hello-existing-cncf-networks.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-existing-cncf-networks.yaml.injected
+@@ -21,7 +21,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         sidecar.istio.io/interceptionMode: REDIRECT
+-        sidecar.istio.io/status: '{"initContainers":["istio-validation"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-validation"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         traffic.sidecar.istio.io/excludeInboundPorts: "15020"
+         traffic.sidecar.istio.io/includeInboundPorts: '*'
+         traffic.sidecar.istio.io/includeOutboundIPRanges: '*'
+@@ -132,6 +132,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -185,6 +187,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-image-pull-secret.yaml.injected b/pkg/kube/inject/testdata/inject/hello-image-pull-secret.yaml.injected
+index 4d68cbcd13..22e5b6cf12 100644
+--- a/pkg/kube/inject/testdata/inject/hello-image-pull-secret.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-image-pull-secret.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -183,6 +185,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-image-secrets-in-values.yaml.injected b/pkg/kube/inject/testdata/inject/hello-image-secrets-in-values.yaml.injected
+index 985b233a37..b6159ce266 100644
+--- a/pkg/kube/inject/testdata/inject/hello-image-secrets-in-values.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-image-secrets-in-values.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":["barSecret"],"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":["barSecret"],"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -183,6 +185,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-mount-mtls-certs.yaml.injected b/pkg/kube/inject/testdata/inject/hello-mount-mtls-certs.yaml.injected
+index 982a842094..12d4170967 100644
+--- a/pkg/kube/inject/testdata/inject/hello-mount-mtls-certs.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-mount-mtls-certs.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert","istio-certs"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert","istio-certs"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -184,6 +186,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-mtls-not-ready.yaml.injected b/pkg/kube/inject/testdata/inject/hello-mtls-not-ready.yaml.injected
+index ae62446840..db471d46af 100644
+--- a/pkg/kube/inject/testdata/inject/hello-mtls-not-ready.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-mtls-not-ready.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -181,6 +183,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-multi.yaml.injected b/pkg/kube/inject/testdata/inject/hello-multi.yaml.injected
+index f2aeb14317..e37ad527c6 100644
+--- a/pkg/kube/inject/testdata/inject/hello-multi.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-multi.yaml.injected
+@@ -20,7 +20,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -129,6 +129,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -183,6 +185,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+@@ -231,7 +234,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -340,6 +343,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -394,6 +399,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-multiple-image-secrets.yaml.injected b/pkg/kube/inject/testdata/inject/hello-multiple-image-secrets.yaml.injected
+index 11ef382132..9735706a74 100644
+--- a/pkg/kube/inject/testdata/inject/hello-multiple-image-secrets.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-multiple-image-secrets.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":["barSecret"],"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":["barSecret"],"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -184,6 +186,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-namespace.yaml.injected b/pkg/kube/inject/testdata/inject/hello-namespace.yaml.injected
+index 42aced6663..ea94261d05 100644
+--- a/pkg/kube/inject/testdata/inject/hello-namespace.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-namespace.yaml.injected
+@@ -20,7 +20,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -128,6 +128,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -182,6 +184,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-never.yaml.injected b/pkg/kube/inject/testdata/inject/hello-never.yaml.injected
+index 8ebfde83f1..bc741d5ef1 100644
+--- a/pkg/kube/inject/testdata/inject/hello-never.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-never.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -128,6 +128,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -183,6 +185,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-no-seccontext.yaml.injected b/pkg/kube/inject/testdata/inject/hello-no-seccontext.yaml.injected
+index 34948d182b..7f882baa7b 100644
+--- a/pkg/kube/inject/testdata/inject/hello-no-seccontext.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-no-seccontext.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -179,6 +181,7 @@ spec:
+           runAsNonRoot: false
+           runAsUser: 0
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-probes-noProxyHoldApplication-ProxyConfig.yaml.injected b/pkg/kube/inject/testdata/inject/hello-probes-noProxyHoldApplication-ProxyConfig.yaml.injected
+index 04f77fb466..8ea486eec2 100644
+--- a/pkg/kube/inject/testdata/inject/hello-probes-noProxyHoldApplication-ProxyConfig.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-probes-noProxyHoldApplication-ProxyConfig.yaml.injected
+@@ -18,7 +18,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": false }'
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -129,6 +129,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -212,6 +214,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-probes-proxyHoldApplication-ProxyConfig.yaml.injected b/pkg/kube/inject/testdata/inject/hello-probes-proxyHoldApplication-ProxyConfig.yaml.injected
+index 3beaa853bf..79ebf5c0d7 100644
+--- a/pkg/kube/inject/testdata/inject/hello-probes-proxyHoldApplication-ProxyConfig.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-probes-proxyHoldApplication-ProxyConfig.yaml.injected
+@@ -18,7 +18,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -129,6 +129,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -212,6 +214,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-probes-with-flag-set-in-annotation.yaml.injected b/pkg/kube/inject/testdata/inject/hello-probes-with-flag-set-in-annotation.yaml.injected
+index 39983854dc..1cf386b422 100644
+--- a/pkg/kube/inject/testdata/inject/hello-probes-with-flag-set-in-annotation.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-probes-with-flag-set-in-annotation.yaml.injected
+@@ -18,7 +18,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         sidecar.istio.io/rewriteAppHTTPProbers: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -152,6 +152,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -206,6 +208,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-probes-with-flag-unset-in-annotation.yaml.injected b/pkg/kube/inject/testdata/inject/hello-probes-with-flag-unset-in-annotation.yaml.injected
+index f5b9f261f8..21f38417ce 100644
+--- a/pkg/kube/inject/testdata/inject/hello-probes-with-flag-unset-in-annotation.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-probes-with-flag-unset-in-annotation.yaml.injected
+@@ -18,7 +18,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         sidecar.istio.io/rewriteAppHTTPProbers: "false"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -147,6 +147,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -201,6 +203,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-probes.proxyHoldsApplication.yaml.injected b/pkg/kube/inject/testdata/inject/hello-probes.proxyHoldsApplication.yaml.injected
+index 459f8cf58d..a0b359815a 100644
+--- a/pkg/kube/inject/testdata/inject/hello-probes.proxyHoldsApplication.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-probes.proxyHoldsApplication.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -128,6 +128,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -211,6 +213,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-probes.yaml.injected b/pkg/kube/inject/testdata/inject/hello-probes.yaml.injected
+index f672231395..a6c9585ed1 100644
+--- a/pkg/kube/inject/testdata/inject/hello-probes.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-probes.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -151,6 +151,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -205,6 +207,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-proxy-override.yaml.injected b/pkg/kube/inject/testdata/inject/hello-proxy-override.yaml.injected
+index b5977a21de..024a624439 100644
+--- a/pkg/kube/inject/testdata/inject/hello-proxy-override.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-proxy-override.yaml.injected
+@@ -20,7 +20,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         sidecar.istio.io/proxyImage: docker.io/istio/proxy2_debug:unittest
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -128,6 +128,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -182,6 +184,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-readiness.yaml.injected b/pkg/kube/inject/testdata/inject/hello-readiness.yaml.injected
+index db73f7e2c0..97253e25da 100644
+--- a/pkg/kube/inject/testdata/inject/hello-readiness.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-readiness.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -133,6 +133,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -187,6 +189,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-template-in-values.yaml.injected b/pkg/kube/inject/testdata/inject/hello-template-in-values.yaml.injected
+index 4d299834d8..7057c4a22c 100644
+--- a/pkg/kube/inject/testdata/inject/hello-template-in-values.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-template-in-values.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -181,6 +183,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello-tproxy.yaml.injected b/pkg/kube/inject/testdata/inject/hello-tproxy.yaml.injected
+index 612fc0d5b0..4336814bc5 100644
+--- a/pkg/kube/inject/testdata/inject/hello-tproxy.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello-tproxy.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -129,6 +129,8 @@ spec:
+           runAsNonRoot: false
+           runAsUser: 0
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -183,6 +185,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello.proxyHoldsApplication.yaml.injected b/pkg/kube/inject/testdata/inject/hello.proxyHoldsApplication.yaml.injected
+index 4b588e1488..290a412b37 100644
+--- a/pkg/kube/inject/testdata/inject/hello.proxyHoldsApplication.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello.proxyHoldsApplication.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -187,6 +189,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello.yaml.cni.injected b/pkg/kube/inject/testdata/inject/hello.yaml.cni.injected
+index 463bddc8cb..b8ea1b1a23 100644
+--- a/pkg/kube/inject/testdata/inject/hello.yaml.cni.injected
++++ b/pkg/kube/inject/testdata/inject/hello.yaml.cni.injected
+@@ -20,7 +20,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         sidecar.istio.io/interceptionMode: REDIRECT
+-        sidecar.istio.io/status: '{"initContainers":["istio-validation"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-validation"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         traffic.sidecar.istio.io/excludeInboundPorts: "15020"
+         traffic.sidecar.istio.io/includeInboundPorts: '*'
+         traffic.sidecar.istio.io/includeOutboundIPRanges: '*'
+@@ -134,6 +134,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -187,6 +189,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello.yaml.injected b/pkg/kube/inject/testdata/inject/hello.yaml.injected
+index 4d299834d8..7057c4a22c 100644
+--- a/pkg/kube/inject/testdata/inject/hello.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/hello.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -181,6 +183,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/hello.yaml.proxyImageName.injected b/pkg/kube/inject/testdata/inject/hello.yaml.proxyImageName.injected
+index a0118b952c..96e4c7a237 100644
+--- a/pkg/kube/inject/testdata/inject/hello.yaml.proxyImageName.injected
++++ b/pkg/kube/inject/testdata/inject/hello.yaml.proxyImageName.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -181,6 +183,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/https-probes.yaml.injected b/pkg/kube/inject/testdata/inject/https-probes.yaml.injected
+index d89e9800a8..472ff48fcd 100644
+--- a/pkg/kube/inject/testdata/inject/https-probes.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/https-probes.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -152,6 +152,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -206,6 +208,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/job.yaml.injected b/pkg/kube/inject/testdata/inject/job.yaml.injected
+index 43674b26b0..2a498e765e 100644
+--- a/pkg/kube/inject/testdata/inject/job.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/job.yaml.injected
+@@ -12,7 +12,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         security.istio.io/tlsMode: istio
+@@ -119,6 +119,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -174,6 +176,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/kubevirtInterfaces.yaml.injected b/pkg/kube/inject/testdata/inject/kubevirtInterfaces.yaml.injected
+index 3b39eb7e9a..3343932615 100644
+--- a/pkg/kube/inject/testdata/inject/kubevirtInterfaces.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/kubevirtInterfaces.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         traffic.sidecar.istio.io/kubevirtInterfaces: net1
+       creationTimestamp: null
+       labels:
+@@ -128,6 +128,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -184,6 +186,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/kubevirtInterfaces_list.yaml.injected b/pkg/kube/inject/testdata/inject/kubevirtInterfaces_list.yaml.injected
+index eb205a6862..31df226174 100644
+--- a/pkg/kube/inject/testdata/inject/kubevirtInterfaces_list.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/kubevirtInterfaces_list.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         traffic.sidecar.istio.io/kubevirtInterfaces: net1,net2
+       creationTimestamp: null
+       labels:
+@@ -128,6 +128,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -184,6 +186,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/list-frontend.yaml.injected b/pkg/kube/inject/testdata/inject/list-frontend.yaml.injected
+index f5a12440d5..0875531bb5 100644
+--- a/pkg/kube/inject/testdata/inject/list-frontend.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/list-frontend.yaml.injected
+@@ -34,7 +34,7 @@ items:
+           prometheus.io/path: /stats/prometheus
+           prometheus.io/port: "15020"
+           prometheus.io/scrape: "true"
+-          sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++          sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         creationTimestamp: null
+         labels:
+           app: hello
+@@ -145,6 +145,8 @@ items:
+             runAsNonRoot: true
+             runAsUser: 1337
+           volumeMounts:
++          - mountPath: /var/run/secrets/workload-identity
++            name: workload-identity
+           - mountPath: /var/run/secrets/istio
+             name: istiod-ca-cert
+           - mountPath: /var/lib/istio/data
+@@ -199,6 +201,7 @@ items:
+         securityContext:
+           fsGroup: 1337
+         volumes:
++        - name: workload-identity
+         - emptyDir:
+             medium: Memory
+           name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/list.yaml.injected b/pkg/kube/inject/testdata/inject/list.yaml.injected
+index d6669c5de7..6ff36a5497 100644
+--- a/pkg/kube/inject/testdata/inject/list.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/list.yaml.injected
+@@ -22,7 +22,7 @@ items:
+           prometheus.io/path: /stats/prometheus
+           prometheus.io/port: "15020"
+           prometheus.io/scrape: "true"
+-          sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++          sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         creationTimestamp: null
+         labels:
+           app: hello
+@@ -131,6 +131,8 @@ items:
+             runAsNonRoot: true
+             runAsUser: 1337
+           volumeMounts:
++          - mountPath: /var/run/secrets/workload-identity
++            name: workload-identity
+           - mountPath: /var/run/secrets/istio
+             name: istiod-ca-cert
+           - mountPath: /var/lib/istio/data
+@@ -185,6 +187,7 @@ items:
+         securityContext:
+           fsGroup: 1337
+         volumes:
++        - name: workload-identity
+         - emptyDir:
+             medium: Memory
+           name: istio-envoy
+@@ -232,7 +235,7 @@ items:
+           prometheus.io/path: /stats/prometheus
+           prometheus.io/port: "15020"
+           prometheus.io/scrape: "true"
+-          sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++          sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         creationTimestamp: null
+         labels:
+           app: hello
+@@ -341,6 +344,8 @@ items:
+             runAsNonRoot: true
+             runAsUser: 1337
+           volumeMounts:
++          - mountPath: /var/run/secrets/workload-identity
++            name: workload-identity
+           - mountPath: /var/run/secrets/istio
+             name: istiod-ca-cert
+           - mountPath: /var/lib/istio/data
+@@ -395,6 +400,7 @@ items:
+         securityContext:
+           fsGroup: 1337
+         volumes:
++        - name: workload-identity
+         - emptyDir:
+             medium: Memory
+           name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/multi-container.yaml.injected b/pkg/kube/inject/testdata/inject/multi-container.yaml.injected
+index 58333f4bba..e39cd88e04 100644
+--- a/pkg/kube/inject/testdata/inject/multi-container.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/multi-container.yaml.injected
+@@ -15,7 +15,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: app
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -181,6 +183,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/multi-init.yaml.injected b/pkg/kube/inject/testdata/inject/multi-init.yaml.injected
+index b9bf345d19..e569f1abf6 100644
+--- a/pkg/kube/inject/testdata/inject/multi-init.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/multi-init.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -195,6 +197,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/multiple-templates.yaml.injected b/pkg/kube/inject/testdata/inject/multiple-templates.yaml.injected
+index 8d21a6bb5c..e9cf5f3ebc 100644
+--- a/pkg/kube/inject/testdata/inject/multiple-templates.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/multiple-templates.yaml.injected
+@@ -18,7 +18,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         proxy.istio.io/overrides: '{"containers":[{"name":"istio-proxy","image":"foo/bar","resources":{}}]}'
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -120,6 +120,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -174,6 +176,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/named_port.yaml.injected b/pkg/kube/inject/testdata/inject/named_port.yaml.injected
+index 88840da562..d66678acb8 100644
+--- a/pkg/kube/inject/testdata/inject/named_port.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/named_port.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -133,6 +133,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -187,6 +189,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/one_container.yaml.injected b/pkg/kube/inject/testdata/inject/one_container.yaml.injected
+index ea55030225..1b4fc0f20f 100644
+--- a/pkg/kube/inject/testdata/inject/one_container.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/one_container.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -137,6 +137,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -191,6 +193,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/only-proxy-container.yaml.injected b/pkg/kube/inject/testdata/inject/only-proxy-container.yaml.injected
+index 6767851ca3..0b8d3565cb 100644
+--- a/pkg/kube/inject/testdata/inject/only-proxy-container.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/only-proxy-container.yaml.injected
+@@ -15,7 +15,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         proxy.istio.io/overrides: '{"containers":[{"name":"istio-proxy","resources":{}}]}'
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         istio: ingressgateway
+@@ -113,6 +113,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -167,6 +169,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/pod.yaml.injected b/pkg/kube/inject/testdata/inject/pod.yaml.injected
+index a03fd5fcb5..cb6af057f4 100644
+--- a/pkg/kube/inject/testdata/inject/pod.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/pod.yaml.injected
+@@ -7,7 +7,7 @@ metadata:
+     prometheus.io/path: /stats/prometheus
+     prometheus.io/port: "15020"
+     prometheus.io/scrape: "true"
+-    sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++    sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+   creationTimestamp: null
+   labels:
+     security.istio.io/tlsMode: istio
+@@ -113,6 +113,8 @@ spec:
+       runAsNonRoot: true
+       runAsUser: 1337
+     volumeMounts:
++    - mountPath: /var/run/secrets/workload-identity
++      name: workload-identity
+     - mountPath: /var/run/secrets/istio
+       name: istiod-ca-cert
+     - mountPath: /var/lib/istio/data
+@@ -167,6 +169,7 @@ spec:
+   securityContext:
+     fsGroup: 1337
+   volumes:
++  - name: workload-identity
+   - emptyDir:
+       medium: Memory
+     name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/proxy-override-args.yaml.injected b/pkg/kube/inject/testdata/inject/proxy-override-args.yaml.injected
+index 98ed4769a7..9663b4c222 100644
+--- a/pkg/kube/inject/testdata/inject/proxy-override-args.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/proxy-override-args.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         proxy.istio.io/overrides: '{"containers":[{"name":"istio-proxy","command":["envoy"],"args":["-c","my-config.yaml"],"resources":{}}]}'
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -114,6 +114,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -168,6 +170,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/proxy-override.yaml.injected b/pkg/kube/inject/testdata/inject/proxy-override.yaml.injected
+index 4baba73fd9..f6261204f5 100644
+--- a/pkg/kube/inject/testdata/inject/proxy-override.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/proxy-override.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+         proxy.istio.io/overrides: '{"containers":[{"name":"istio-proxy","resources":{"requests":{"cpu":"123m"}},"volumeMounts":[{"name":"certs","mountPath":"/etc/certs"}],"livenessProbe":{"httpGet":{"path":"/healthz/ready","port":15021},"initialDelaySeconds":10,"timeoutSeconds":3,"periodSeconds":2,"failureThreshold":30},"lifecycle":{"preStop":{"exec":{"command":["sleep","10"]}}},"terminationMessagePath":"/foo/bar","securityContext":{"readOnlyRootFilesystem":false,"allowPrivilegeEscalation":true},"tty":true}],"initContainers":[{"name":"istio-init","image":"fake/custom-image","args":["my","custom","args"],"resources":{}}]}'
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -135,6 +135,8 @@ spec:
+         terminationMessagePath: /foo/bar
+         tty: true
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -177,6 +179,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/ready_live.yaml.injected b/pkg/kube/inject/testdata/inject/ready_live.yaml.injected
+index f672231395..a6c9585ed1 100644
+--- a/pkg/kube/inject/testdata/inject/ready_live.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/ready_live.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -151,6 +151,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -205,6 +207,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/ready_only.yaml.injected b/pkg/kube/inject/testdata/inject/ready_only.yaml.injected
+index e0ea3d093e..808728bc68 100644
+--- a/pkg/kube/inject/testdata/inject/ready_only.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/ready_only.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -133,6 +133,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -187,6 +189,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/replicaset.yaml.injected b/pkg/kube/inject/testdata/inject/replicaset.yaml.injected
+index 2aa768339f..0c13fb8000 100644
+--- a/pkg/kube/inject/testdata/inject/replicaset.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/replicaset.yaml.injected
+@@ -16,7 +16,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -122,6 +122,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -176,6 +178,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/replicationcontroller.yaml.injected b/pkg/kube/inject/testdata/inject/replicationcontroller.yaml.injected
+index e2d1308208..94878b39c7 100644
+--- a/pkg/kube/inject/testdata/inject/replicationcontroller.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/replicationcontroller.yaml.injected
+@@ -15,7 +15,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: nginx
+@@ -121,6 +121,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -175,6 +177,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/resource_annotations.yaml.injected b/pkg/kube/inject/testdata/inject/resource_annotations.yaml.injected
+index 69bd61110c..c875487c03 100644
+--- a/pkg/kube/inject/testdata/inject/resource_annotations.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/resource_annotations.yaml.injected
+@@ -21,7 +21,7 @@ spec:
+         sidecar.istio.io/proxyCPULimit: 1000m
+         sidecar.istio.io/proxyMemory: 1Gi
+         sidecar.istio.io/proxyMemoryLimit: 2Gi
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: resource
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -181,6 +183,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/startup_live.yaml.injected b/pkg/kube/inject/testdata/inject/startup_live.yaml.injected
+index ebb0533277..409231173e 100644
+--- a/pkg/kube/inject/testdata/inject/startup_live.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/startup_live.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -151,6 +151,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -205,6 +207,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/startup_only.yaml.injected b/pkg/kube/inject/testdata/inject/startup_only.yaml.injected
+index b99d964f03..e618514cc4 100644
+--- a/pkg/kube/inject/testdata/inject/startup_only.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/startup_only.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -133,6 +133,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -187,6 +189,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/startup_ready_live.yaml.injected b/pkg/kube/inject/testdata/inject/startup_ready_live.yaml.injected
+index 813c5fd4cf..aaab18e46b 100644
+--- a/pkg/kube/inject/testdata/inject/startup_ready_live.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/startup_ready_live.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -159,6 +159,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -213,6 +215,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/statefulset.yaml.injected b/pkg/kube/inject/testdata/inject/statefulset.yaml.injected
+index b42813d94d..0903be8212 100644
+--- a/pkg/kube/inject/testdata/inject/statefulset.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/statefulset.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -130,6 +130,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -184,6 +186,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/status_annotations.yaml.injected b/pkg/kube/inject/testdata/inject/status_annotations.yaml.injected
+index 23fb621f9d..fbc5739bfb 100644
+--- a/pkg/kube/inject/testdata/inject/status_annotations.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/status_annotations.yaml.injected
+@@ -21,7 +21,7 @@ spec:
+         readiness.status.sidecar.istio.io/failureThreshold: "300"
+         readiness.status.sidecar.istio.io/initialDelaySeconds: "100"
+         readiness.status.sidecar.istio.io/periodSeconds: "200"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         status.sidecar.istio.io/port: "123"
+       creationTimestamp: null
+       labels:
+@@ -128,6 +128,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -182,6 +184,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/status_annotations_zeroport.yaml.injected b/pkg/kube/inject/testdata/inject/status_annotations_zeroport.yaml.injected
+index a76ee29dca..93aaf1187f 100644
+--- a/pkg/kube/inject/testdata/inject/status_annotations_zeroport.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/status_annotations_zeroport.yaml.injected
+@@ -21,7 +21,7 @@ spec:
+         readiness.status.sidecar.istio.io/failureThreshold: "300"
+         readiness.status.sidecar.istio.io/initialDelaySeconds: "100"
+         readiness.status.sidecar.istio.io/periodSeconds: "200"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         status.sidecar.istio.io/port: "0"
+       creationTimestamp: null
+       labels:
+@@ -120,6 +120,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -174,6 +176,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/status_params.yaml.injected b/pkg/kube/inject/testdata/inject/status_params.yaml.injected
+index a2e885b4de..323e3767fe 100644
+--- a/pkg/kube/inject/testdata/inject/status_params.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/status_params.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: status
+@@ -123,6 +123,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -177,6 +179,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/tcp-probes-disabled.yaml.injected b/pkg/kube/inject/testdata/inject/tcp-probes-disabled.yaml.injected
+index 4108ec37fa..dece85a23c 100644
+--- a/pkg/kube/inject/testdata/inject/tcp-probes-disabled.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/tcp-probes-disabled.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -133,6 +133,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -187,6 +189,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/tcp-probes.yaml.injected b/pkg/kube/inject/testdata/inject/tcp-probes.yaml.injected
+index 853d31c3d4..90f55e0ef2 100644
+--- a/pkg/kube/inject/testdata/inject/tcp-probes.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/tcp-probes.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -137,6 +137,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -191,6 +193,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/traffic-annotations-empty-includes.yaml.injected b/pkg/kube/inject/testdata/inject/traffic-annotations-empty-includes.yaml.injected
+index 7a2088d3bf..ca0a160328 100644
+--- a/pkg/kube/inject/testdata/inject/traffic-annotations-empty-includes.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/traffic-annotations-empty-includes.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         traffic.sidecar.istio.io/excludeInboundPorts: 4,5,6
+         traffic.sidecar.istio.io/excludeOutboundIPRanges: 10.96.0.2/24,10.96.0.3/24
+         traffic.sidecar.istio.io/includeInboundPorts: ""
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -181,6 +183,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/traffic-annotations-wildcards.yaml.injected b/pkg/kube/inject/testdata/inject/traffic-annotations-wildcards.yaml.injected
+index 8ce9a2ce93..ac8fc1608f 100644
+--- a/pkg/kube/inject/testdata/inject/traffic-annotations-wildcards.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/traffic-annotations-wildcards.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         traffic.sidecar.istio.io/excludeInboundPorts: 4,5,6
+         traffic.sidecar.istio.io/excludeOutboundIPRanges: 10.96.0.2/24,10.96.0.3/24
+         traffic.sidecar.istio.io/includeInboundPorts: '*'
+@@ -127,6 +127,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -181,6 +183,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/traffic-annotations.yaml.injected b/pkg/kube/inject/testdata/inject/traffic-annotations.yaml.injected
+index ef4a0b9b28..7c970f46f1 100644
+--- a/pkg/kube/inject/testdata/inject/traffic-annotations.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/traffic-annotations.yaml.injected
+@@ -24,7 +24,7 @@ spec:
+             FOO: bar
+             ISTIO_META_TLS_CLIENT_KEY: /etc/identity2/client/keys/client-key.pem
+         sidecar.istio.io/proxyCPU: 4000m
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+         traffic.sidecar.istio.io/excludeInboundPorts: 4,5,6
+         traffic.sidecar.istio.io/excludeOutboundIPRanges: 10.96.0.2/24,10.96.0.3/24
+         traffic.sidecar.istio.io/excludeOutboundPorts: 7,8,9
+@@ -135,6 +135,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -192,6 +194,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/traffic-params-empty-includes.yaml.injected b/pkg/kube/inject/testdata/inject/traffic-params-empty-includes.yaml.injected
+index 43d0a98416..2bba484418 100644
+--- a/pkg/kube/inject/testdata/inject/traffic-params-empty-includes.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/traffic-params-empty-includes.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: traffic
+@@ -123,6 +123,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -177,6 +179,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/traffic-params.yaml.injected b/pkg/kube/inject/testdata/inject/traffic-params.yaml.injected
+index a455ef9ba8..51ea36277e 100644
+--- a/pkg/kube/inject/testdata/inject/traffic-params.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/traffic-params.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: traffic
+@@ -115,6 +115,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -169,6 +171,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/two_container.yaml.injected b/pkg/kube/inject/testdata/inject/two_container.yaml.injected
+index 5d77be618f..babaedb106 100644
+--- a/pkg/kube/inject/testdata/inject/two_container.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/two_container.yaml.injected
+@@ -17,7 +17,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+       creationTimestamp: null
+       labels:
+         app: hello
+@@ -142,6 +142,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -196,6 +198,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/pkg/kube/inject/testdata/inject/user-volume.yaml.injected b/pkg/kube/inject/testdata/inject/user-volume.yaml.injected
+index 9b35146f93..f71bbb1ba2 100644
+--- a/pkg/kube/inject/testdata/inject/user-volume.yaml.injected
++++ b/pkg/kube/inject/testdata/inject/user-volume.yaml.injected
+@@ -19,7 +19,7 @@ spec:
+         prometheus.io/path: /stats/prometheus
+         prometheus.io/port: "15020"
+         prometheus.io/scrape: "true"
+-        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert","user-volume-1","user-volume-2"],"imagePullSecrets":null,"revision":"default"}'
++        sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-identity","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert","user-volume-1","user-volume-2"],"imagePullSecrets":null,"revision":"default"}'
+         sidecar.istio.io/userVolume: '{"user-volume-1":{"persistentVolumeClaim":{"claimName":"pvc-claim"}},"user-volume-2":{"configMap":{"name":"configmap-volume","items":[{"key":"some-key","path":"/some-path"}]}}}'
+         sidecar.istio.io/userVolumeMount: '{"user-volume-1":{"mountPath":"/mnt/volume-1","readOnly":true},"user-volume-2":{"mountPath":"/mnt/volume-2"}}'
+       creationTimestamp: null
+@@ -129,6 +129,8 @@ spec:
+           runAsNonRoot: true
+           runAsUser: 1337
+         volumeMounts:
++        - mountPath: /var/run/secrets/workload-identity
++          name: workload-identity
+         - mountPath: /var/run/secrets/istio
+           name: istiod-ca-cert
+         - mountPath: /var/lib/istio/data
+@@ -188,6 +190,7 @@ spec:
+       securityContext:
+         fsGroup: 1337
+       volumes:
++      - name: workload-identity
+       - emptyDir:
+           medium: Memory
+         name: istio-envoy
+diff --git a/security/pkg/nodeagent/caclient/credentials_test.go b/security/pkg/nodeagent/caclient/credentials_test.go
+index dfddc36fda..3bbc1cf6c2 100644
+--- a/security/pkg/nodeagent/caclient/credentials_test.go
++++ b/security/pkg/nodeagent/caclient/credentials_test.go
+@@ -58,7 +58,6 @@ func TestGetTokenForXDS(t *testing.T) {
+ 		PilotCertProvider:              "istiod",
+ 		OutputKeyCertToDir:             "",
+ 		ProvCert:                       "",
+-		WorkloadUDSPath:                "./etc/istio/proxy/SDS",
+ 		ClusterID:                      "",
+ 		FileMountedCerts:               false,
+ 		WorkloadNamespace:              "",
+diff --git a/security/pkg/nodeagent/sds/sdsservice_test.go b/security/pkg/nodeagent/sds/sdsservice_test.go
+index 7f9346f61d..f84332eec8 100644
+--- a/security/pkg/nodeagent/sds/sdsservice_test.go
++++ b/security/pkg/nodeagent/sds/sdsservice_test.go
+@@ -15,6 +15,7 @@ package sds
+ 
+ import (
+ 	"fmt"
++	"istio.io/istio/pkg/config/constants"
+ 	"net"
+ 	"strings"
+ 	"testing"
+@@ -24,7 +25,6 @@ import (
+ 	"golang.org/x/net/context"
+ 	"google.golang.org/grpc"
+ 	"google.golang.org/grpc/credentials/insecure"
+-	"k8s.io/apimachinery/pkg/util/uuid"
+ 
+ 	"istio.io/istio/pilot/pkg/xds"
+ 	"istio.io/istio/pilot/test/xdstest"
+@@ -109,9 +109,7 @@ func setupSDS(t *testing.T) *TestServer {
+ 		ResourceName: ca2.RootCertReqResourceName,
+ 	})
+ 
+-	opts := &ca2.Options{
+-		WorkloadUDSPath: fmt.Sprintf("/tmp/workload_gotest%s.sock", string(uuid.NewUUID())),
+-	}
++	opts := &ca2.Options{}
+ 	server := NewServer(opts, st)
+ 	t.Cleanup(func() {
+ 		server.Stop()
+@@ -120,7 +118,7 @@ func setupSDS(t *testing.T) *TestServer {
+ 		t:       t,
+ 		server:  server,
+ 		store:   st,
+-		udsPath: opts.WorkloadUDSPath,
++		udsPath: constants.WorkloadIdentitySocketPath,
+ 	}
+ }
+ 
+diff --git a/security/pkg/nodeagent/sds/server.go b/security/pkg/nodeagent/sds/server.go
+index ac4e78a0a2..ebbb45b01c 100644
+--- a/security/pkg/nodeagent/sds/server.go
++++ b/security/pkg/nodeagent/sds/server.go
+@@ -15,6 +15,7 @@
+ package sds
+ 
+ import (
++	"istio.io/istio/pkg/config/constants"
+ 	"net"
+ 	"time"
+ 
+@@ -46,7 +47,7 @@ type Server struct {
+ func NewServer(options *security.Options, workloadSecretCache security.SecretManager) *Server {
+ 	s := &Server{stopped: atomic.NewBool(false)}
+ 	s.workloadSds = newSDSService(workloadSecretCache, options)
+-	s.initWorkloadSdsService(options)
++	s.initWorkloadSdsService()
+ 	sdsServiceLog.Infof("SDS server for workload certificates started, listening on %q", options.WorkloadUDSPath)
+ 	return s
+ }
+@@ -81,12 +82,12 @@ func (s *Server) Stop() {
+ 	}
+ }
+ 
+-func (s *Server) initWorkloadSdsService(options *security.Options) {
++func (s *Server) initWorkloadSdsService() {
+ 	s.grpcWorkloadServer = grpc.NewServer(s.grpcServerOptions()...)
+ 	s.workloadSds.register(s.grpcWorkloadServer)
+ 
+ 	var err error
+-	s.grpcWorkloadListener, err = uds.NewListener(options.WorkloadUDSPath)
++	s.grpcWorkloadListener, err = uds.NewListener(constants.WorkloadIdentitySocketPath)
+ 	if err != nil {
+ 		sdsServiceLog.Errorf("Failed to set up UDS path: %v", err)
+ 	}
+@@ -102,7 +103,7 @@ func (s *Server) initWorkloadSdsService(options *security.Options) {
+ 			serverOk := true
+ 			setUpUdsOK := true
+ 			if s.grpcWorkloadListener == nil {
+-				if s.grpcWorkloadListener, err = uds.NewListener(options.WorkloadUDSPath); err != nil {
++				if s.grpcWorkloadListener, err = uds.NewListener(constants.WorkloadIdentitySocketPath); err != nil {
+ 					sdsServiceLog.Errorf("SDS grpc server for workload proxies failed to set up UDS: %v", err)
+ 					setUpUdsOK = false
+ 				}
+diff --git a/security/pkg/nodeagent/test/setup.go b/security/pkg/nodeagent/test/setup.go
+index 2f07dcdcad..06e8f7faef 100644
+--- a/security/pkg/nodeagent/test/setup.go
++++ b/security/pkg/nodeagent/test/setup.go
+@@ -161,7 +161,6 @@ func (e *Env) StartProxy(t *testing.T) {
+ // StartSDSServer starts SDS server
+ func (e *Env) StartSDSServer(t *testing.T) {
+ 	serverOptions := &security.Options{
+-		WorkloadUDSPath: e.ProxySetup.SDSPath(),
+ 		JWTPath:         proxyTokenPath,
+ 		CAEndpoint:      fmt.Sprintf("127.0.0.1:%d", e.ProxySetup.Ports().ExtraPort),
+ 	}
+diff --git a/tools/packaging/common/envoy_bootstrap.json b/tools/packaging/common/envoy_bootstrap.json
+index be5b65b179..bca00764d6 100644
+--- a/tools/packaging/common/envoy_bootstrap.json
++++ b/tools/packaging/common/envoy_bootstrap.json
+@@ -245,7 +245,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "{{ .config.ConfigPath }}/SDS"
++                    "path": "./var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }

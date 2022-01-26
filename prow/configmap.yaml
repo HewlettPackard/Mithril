@@ -28,11 +28,14 @@ data:
         - lens:
             name: junit
           required_files:
-          - .*/junit.*\.xml
+          - .*/junit.xml
         - lens:
             name: podinfo
           required_files:
           - podinfo.json
+      branding:
+        header_color: '#404b5c'
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Hewlett_Packard_Enterprise_logo.svg/400px-Hewlett_Packard_Enterprise_logo.svg.png'
 
     plank:
       job_url_prefix_config:
@@ -61,16 +64,16 @@ data:
 
     tide:
       queries:
-      - labels:
-        - lgtm
-        - approved
+      - repos:
+        - HewlettPackard/Mithril
+        labels:
+        - nao-aprova-nao
         missingLabels:
-        - needs-rebase
+        - do-not-merge
         - do-not-merge/hold
         - do-not-merge/work-in-progress
-        - do-not-merge/invalid-owners-file
-        orgs:
-        - HewlettPackard
+        - needs-ok-to-test
+        - needs-rebase
 
     decorate_all_jobs: true
     periodics:
@@ -243,7 +246,7 @@ data:
         extra_refs:
         - org: HewlettPackard
           repo: prow
-          base_ref: master
+          base_ref: main
           workdir: false
           clone_uri: "git@github.com:HewlettPackard/Mithril.git"
       name: ls-hpe
@@ -254,23 +257,3 @@ data:
         - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
           command: ["/bin/bash", "-c", "ls"]
 
-    # presubmits:
-    #   HewlettPackard/prow:
-    #   - name: create-istio-images # As for periodics.
-    #     decorate: true # As for periodics.
-    #     decoration_config:
-    #       ssh_key_secrets:
-    #       - ssh-key-secret
-    #     extra_refs:
-    #       - org: HewlettPackard
-    #         clone_uri: "git@github.com:HewlettPackard/prow.git"
-    #         repo: prow
-    #         base_ref: initial
-    #     always_run: true # Run for every PR, or only when requested.
-    #     skip_report: false # Whether to skip setting a status on GitHub.
-    #     spec:
-    #       containers:
-    #       - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
-    #         command: ["/bin/sh", "/mithril/prow-files/istio-images.sh"]
-    #       imagePullSecrets:
-    #       - name: secret-registry

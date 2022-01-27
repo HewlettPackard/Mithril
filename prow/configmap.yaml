@@ -78,16 +78,16 @@ data:
     decorate_all_jobs: true
     periodics:
     - name: master-istio-unit-test
-      interval: 900m
+      interval: 1m
       agent: kubernetes
       decoration_config:
         ssh_key_secrets:
         - ssh-key-secret
-        extra_refs:
-        - org: HewlettPackard
-          repo: Mithril
-          base_ref: main
-          clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+      extra_refs:
+      - org: HewlettPackard
+        repo: Mithril
+        base_ref: istio-spire
+        clone_uri: "git@github.com:HewlettPackard/Mithril.git"
       spec:
         imagePullSecrets:
         - name: secret-registry
@@ -168,13 +168,13 @@ data:
             configMap:
               name: prow-files
 
-    - interval: 1m
+    - name: build-test
+      interval: 900m
       agent: kubernetes
       decorate: true
       decoration_config:
         ssh_key_secrets:
         - ssh-key-secret
-      name: build-test
       extra_refs:
         - org: HewlettPackard
           clone_uri: "git@github.com:HewlettPackard/Mithril.git"
@@ -298,11 +298,11 @@ data:
       decoration_config:
         ssh_key_secrets:
         - ssh-key-secret
-        extra_refs:
-        - org: HewlettPackard
-          repo: Mithril
-          base_ref: main
-          clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+      extra_refs:
+      - org: HewlettPackard
+        repo: Mithril
+        base_ref: main
+        clone_uri: "git@github.com:HewlettPackard/Mithril.git"
       name: ls-hpe
       spec:
         imagePullSecrets:

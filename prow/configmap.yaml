@@ -77,18 +77,66 @@ data:
 
     decorate_all_jobs: true
     periodics:
-    - interval: 100m
+    - name: master-istio-unit-test
+      interval: 900m
       agent: kubernetes
-      name: istio-unit-test
+      decoration_config:
+        ssh_key_secrets:
+        - ssh-key-secret
+        extra_refs:
+        - org: HewlettPackard
+          repo: Mithril
+          base_ref: main
+          clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
+          command: ["/bin/bash", "-c", "sleep 240"]
+          env:
+          - name: BRANCH
+            value: master
+          volumeMounts:
+          - name: config-volume
+            mountPath: /mithril/prow-files
+        volumes:
+          - name: config-volume
+            configMap:
+              name: prow-files
+
+    - name: release-1.11-istio-unit-test
+      interval: 900m
+      agent: kubernetes
       spec:
         imagePullSecrets:
         - name: secret-registry
         containers:
         - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
           command: ["/bin/bash", "/mithril/prow-files/istio-unit-tests.sh"]
-          envFrom:
-          - secretRef:
-              name: aws-secret
+          env:
+          - name: BRANCH
+            value: release-1.11
+          volumeMounts:
+          - name: config-volume
+            mountPath: /mithril/prow-files
+        volumes:
+          - name: config-volume
+            configMap:
+              name: prow-files
+
+    - name: release-1.12-istio-unit-test
+      interval: 900m
+      agent: kubernetes
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+          command: ["/bin/bash", "/mithril/prow-files/istio-unit-tests.sh"]
+          env:
+          - name: BRANCH
+            value: release-1.12
           volumeMounts:
           - name: config-volume
             mountPath: /mithril/prow-files
@@ -119,6 +167,23 @@ data:
           - name: config-volume
             configMap:
               name: prow-files
+
+    - interval: 1m
+      agent: kubernetes
+      decorate: true
+      decoration_config:
+        ssh_key_secrets:
+        - ssh-key-secret
+      name: build-test
+      extra_refs:
+        - org: HewlettPackard
+          clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+          repo: Mithril
+          base_ref: istio-spire
+      spec:
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
+          command: ["/bin/bash", "-c", "ls"]
 
     #depends on create-istio-images-and-push-ecr
     - interval: 24h
@@ -227,7 +292,7 @@ data:
             configMap:
               name: prow-files
 
-    - interval: 5m
+    - interval: 100m
       agent: kubernetes
       decorate: true
       decoration_config:
@@ -237,12 +302,11 @@ data:
         - org: HewlettPackard
           repo: Mithril
           base_ref: main
-          workdir: false
           clone_uri: "git@github.com:HewlettPackard/Mithril.git"
       name: ls-hpe
       spec:
         imagePullSecrets:
         - name: secret-registry
         containers:
-        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
           command: ["/bin/bash", "-c", "ls terraform/istio-unit-tests"]

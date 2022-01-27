@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: app
+spec:
+  hosts:
+    - istio-ingressgateway.istio-system.svc
+  ports:
+    - number: 8000
+      name: http-port
+      protocol: HTTP
+      targetPort: 8000
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: app
+spec:
+  host: istio-ingressgateway.istio-system.svc
+  trafficPolicy:
+    portLevelSettings:
+      - port:
+          number: 8000
+        tls:
+          mode: ISTIO_MUTUAL # initiates HTTPS when accessing istio-ingressgateway.istio-system.svc

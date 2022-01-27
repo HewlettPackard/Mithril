@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-workload-registrar
+  namespace: spire
+data:
+  k8s-workload-registrar.conf: |
+    trust_domain = "example.org"
+    server_socket_path = "/run/spire/sockets/server.sock"
+    cluster = "demo-cluster"
+    mode = "crd"
+    metrics_bind_addr = "0"

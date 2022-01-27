@@ -1,0 +1,15 @@
+---
+# This remains empty but needs to be present because of istio-agent injection
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-ca-root-cert
+  namespace: default
+---
+# This remains empty but needs to be present because of istio-agent injection
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-ca-root-cert
+  namespace: istio-system
+---

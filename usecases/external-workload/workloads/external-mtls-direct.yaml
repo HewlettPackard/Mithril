@@ -1,0 +1,80 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: external-svc
+spec:
+  hosts:
+  - example.org
+  tls:
+  - match:
+    - port: 9443
+      sniHosts:
+      - example.org
+    route:
+    - destination:
+        host: example.org
+        port:
+          number: 9443
+      weight: 100
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: redirect-80-to-9443-external
+spec:
+  hosts:
+  - example.org
+  gateways:
+  - mesh
+  http:
+  - match:
+    - gateways:
+      - mesh
+      port: 80
+    route:
+    - destination:
+        host: example.org
+        port:
+          number: 9443
+      weight: 100
+  tls:
+  - match:
+    - port: 9443
+      sniHosts:
+      - example.org
+    route:
+    - destination:
+        host: example.org
+        port:
+          number: 9443
+      weight: 100
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: originate-mtls-for-external-svc
+spec:
+  host: example.org
+  trafficPolicy:
+    portLevelSettings:
+    - port:
+        number: 9443
+      tls:
+        mode: ISTIO_MUTUAL 
+        sni: spiffe://example.org/my-sni
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: external-mtls-svc
+spec:
+  hosts:
+  - example.org
+  ports:
+  - number: 9443
+    name: https
+    protocol: TLS
+  resolution: STATIC
+  endpoints:
+    - address:
+        10.0.1.50

@@ -77,8 +77,6 @@ data:
 
     decorate_all_jobs: true
     periodics:
-
-    #TODO: replicate for different tags and go versions
     - interval: 100m
       agent: kubernetes
       name: istio-unit-test
@@ -102,14 +100,6 @@ data:
     - interval: 24h
       agent: kubernetes
       decorate: true
-      # decoration_config:
-      #   ssh_key_secrets:
-      #   - ssh-key-secret
-      # extra_refs:
-      #   - org: HewlettPackard
-      #     clone_uri: "git@github.com:HewlettPackard/prow.git"
-      #     repo: prow
-      #     base_ref: initial
       name: create-istio-images-and-push-ecr
       spec:
         imagePullSecrets:
@@ -237,7 +227,7 @@ data:
             configMap:
               name: prow-files
 
-    - interval: 100m
+    - interval: 5m
       agent: kubernetes
       decorate: true
       decoration_config:
@@ -245,7 +235,7 @@ data:
         - ssh-key-secret
         extra_refs:
         - org: HewlettPackard
-          repo: prow
+          repo: Mithril
           base_ref: main
           workdir: false
           clone_uri: "git@github.com:HewlettPackard/Mithril.git"
@@ -255,5 +245,4 @@ data:
         - name: secret-registry
         containers:
         - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
-          command: ["/bin/bash", "-c", "ls"]
-
+          command: ["/bin/bash", "-c", "ls terraform/istio-unit-tests"]

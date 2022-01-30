@@ -1,0 +1,521 @@
+diff --git a/manifests/charts/gateways/istio-egress/templates/deployment.yaml b/manifests/charts/gateways/istio-egress/templates/deployment.yaml
+index 8c71ea1890..fec4323520 100644
+--- a/manifests/charts/gateways/istio-egress/templates/deployment.yaml
++++ b/manifests/charts/gateways/istio-egress/templates/deployment.yaml
+@@ -225,6 +225,8 @@ spec:
+           - name: ISTIO_META_CLUSTER_ID
+             value: "{{ $.Values.global.multiCluster.clusterName | default `Kubernetes` }}"
+           volumeMounts:
++          - name: workload-identity
++            mountPath: /var/run/secrets/workload-identity
+           - name: istio-envoy
+             mountPath: /etc/istio/proxy
+           - name: config-volume
+@@ -264,7 +266,9 @@ spec:
+ {{ toYaml $gateway.additionalContainers | indent 8 }}
+ {{- end }}
+       volumes:
+-{{- if eq .Values.global.pilotCertProvider "istiod" }}
++      - emptyDir:
++        name: workload-identity
++  {{- if eq .Values.global.pilotCertProvider "istiod" }}
+       - name: istiod-ca-cert
+         configMap:
+           name: istio-ca-root-cert
+diff --git a/manifests/charts/gateways/istio-ingress/templates/deployment.yaml b/manifests/charts/gateways/istio-ingress/templates/deployment.yaml
+index 45d7695a40..64f0173e53 100644
+--- a/manifests/charts/gateways/istio-ingress/templates/deployment.yaml
++++ b/manifests/charts/gateways/istio-ingress/templates/deployment.yaml
+@@ -225,6 +225,8 @@ spec:
+           - name: ISTIO_META_CLUSTER_ID
+             value: "{{ $.Values.global.multiCluster.clusterName | default `Kubernetes` }}"
+           volumeMounts:
++          - name: workload-identity
++            mountPath: /var/run/secrets/workload-identity
+           - name: istio-envoy
+             mountPath: /etc/istio/proxy
+           - name: config-volume
+@@ -264,6 +266,8 @@ spec:
+ {{ toYaml $gateway.additionalContainers | indent 8 }}
+ {{- end }}
+       volumes:
++      - emptyDir:
++        name: workload-identity
+ {{- if eq .Values.global.pilotCertProvider "istiod" }}
+       - name: istiod-ca-cert
+         configMap:
+diff --git a/manifests/charts/gateways/istio-ingress/templates/injected-deployment.yaml b/manifests/charts/gateways/istio-ingress/templates/injected-deployment.yaml
+index 1115d18dd5..a0522c072b 100644
+--- a/manifests/charts/gateways/istio-ingress/templates/injected-deployment.yaml
++++ b/manifests/charts/gateways/istio-ingress/templates/injected-deployment.yaml
+@@ -102,6 +102,8 @@ spec:
+             value: {{ $val }}
+           {{- end }}
+           volumeMounts:
++          - name: workload-identity
++            mountPath: /var/run/secrets/workload-identity
+           {{- range $gateway.secretVolumes }}
+           - name: {{ .name }}
+             mountPath: {{ .mountPath | quote }}
+@@ -118,6 +120,8 @@ spec:
+ {{ toYaml $gateway.additionalContainers | indent 8 }}
+ {{- end }}
+       volumes:
++      - emptyDir:
++        name: workload-identity
+       {{- range $gateway.secretVolumes }}
+       - name: {{ .name }}
+         secret:
+diff --git a/manifests/charts/istio-control/istio-discovery/files/gateway-injection-template.yaml b/manifests/charts/istio-control/istio-discovery/files/gateway-injection-template.yaml
+index d91e17f7df..4f3dc16d55 100644
+--- a/manifests/charts/istio-control/istio-discovery/files/gateway-injection-template.yaml
++++ b/manifests/charts/istio-control/istio-discovery/files/gateway-injection-template.yaml
+@@ -131,6 +131,8 @@ spec:
+       timeoutSeconds: 3
+       failureThreshold: {{ .Values.global.proxy.readinessFailureThreshold }}
+     volumeMounts:
++    - name: workload-identity
++      mountPath: /var/run/secrets/workload-identity
+     {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+     - name: gke-workload-certificate
+       mountPath: /var/run/secrets/workload-spiffe-credentials
+@@ -158,6 +160,8 @@ spec:
+     - name: istio-podinfo
+       mountPath: /etc/istio/pod
+   volumes:
++  - emptyDir:
++    name: workload-identity
+   {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+   - name: gke-workload-certificate
+     csi:
+diff --git a/manifests/charts/istio-control/istio-discovery/files/gen-istio.yaml b/manifests/charts/istio-control/istio-discovery/files/gen-istio.yaml
+index c5201dffed..11bf5bd58b 100644
+--- a/manifests/charts/istio-control/istio-discovery/files/gen-istio.yaml
++++ b/manifests/charts/istio-control/istio-discovery/files/gen-istio.yaml
+@@ -616,6 +616,8 @@ data:
+               {{ end }}
+               {{- end }}
+           volumes:
++          - emptyDir:
++            name: workload-identity
+           {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+           - name: gke-workload-certificate
+             csi:
+@@ -822,6 +824,8 @@ data:
+               timeoutSeconds: 3
+               failureThreshold: {{ .Values.global.proxy.readinessFailureThreshold }}
+             volumeMounts:
++            - name: workload-identity
++              mountPath: /var/run/secrets/workload-identity
+             {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+             - name: gke-workload-certificate
+               mountPath: /var/run/secrets/workload-spiffe-credentials
+diff --git a/manifests/charts/istio-control/istio-discovery/files/grpc-agent.yaml b/manifests/charts/istio-control/istio-discovery/files/grpc-agent.yaml
+index 182e39b713..824d0573b0 100644
+--- a/manifests/charts/istio-control/istio-discovery/files/grpc-agent.yaml
++++ b/manifests/charts/istio-control/istio-discovery/files/grpc-agent.yaml
+@@ -177,6 +177,8 @@ spec:
+     {{- end }}
+   {{- end }}
+     volumeMounts:
++    - name: workload-identity
++      mountPath: /var/run/secrets/workload-identity
+     {{- if eq .Values.global.pilotCertProvider "istiod" }}
+     - mountPath: /var/run/secrets/istio
+       name: istiod-ca-cert
+@@ -199,6 +201,8 @@ spec:
+     {{ end }}
+     {{- end }}
+   volumes:
++  - emptyDir:
++    name: workload-identity
+   # UDS channel between istioagent and gRPC client for XDS/SDS
+   - emptyDir:
+       medium: Memory
+diff --git a/manifests/charts/istio-control/istio-discovery/files/injection-template.yaml b/manifests/charts/istio-control/istio-discovery/files/injection-template.yaml
+index dbe7708093..cee0ecf6e6 100644
+--- a/manifests/charts/istio-control/istio-discovery/files/injection-template.yaml
++++ b/manifests/charts/istio-control/istio-discovery/files/injection-template.yaml
+@@ -356,6 +356,8 @@ spec:
+     resources:
+   {{ template "resources" . }}
+     volumeMounts:
++    - name: workload-identity
++      mountPath: /var/run/secrets/workload-identity
+     {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+     - name: gke-workload-certificate
+       mountPath: /var/run/secrets/workload-spiffe-credentials
+@@ -398,6 +400,8 @@ spec:
+       {{ end }}
+       {{- end }}
+   volumes:
++  - emptyDir:
++    name: workload-identity
+   {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+   - name: gke-workload-certificate
+     csi:
+diff --git a/manifests/charts/istiod-remote/files/gateway-injection-template.yaml b/manifests/charts/istiod-remote/files/gateway-injection-template.yaml
+index d91e17f7df..4f3dc16d55 100644
+--- a/manifests/charts/istiod-remote/files/gateway-injection-template.yaml
++++ b/manifests/charts/istiod-remote/files/gateway-injection-template.yaml
+@@ -131,6 +131,8 @@ spec:
+       timeoutSeconds: 3
+       failureThreshold: {{ .Values.global.proxy.readinessFailureThreshold }}
+     volumeMounts:
++    - name: workload-identity
++      mountPath: /var/run/secrets/workload-identity
+     {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+     - name: gke-workload-certificate
+       mountPath: /var/run/secrets/workload-spiffe-credentials
+@@ -158,6 +160,8 @@ spec:
+     - name: istio-podinfo
+       mountPath: /etc/istio/pod
+   volumes:
++  - emptyDir:
++    name: workload-identity
+   {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+   - name: gke-workload-certificate
+     csi:
+diff --git a/manifests/charts/istiod-remote/files/injection-template.yaml b/manifests/charts/istiod-remote/files/injection-template.yaml
+index dbe7708093..cee0ecf6e6 100644
+--- a/manifests/charts/istiod-remote/files/injection-template.yaml
++++ b/manifests/charts/istiod-remote/files/injection-template.yaml
+@@ -356,6 +356,8 @@ spec:
+     resources:
+   {{ template "resources" . }}
+     volumeMounts:
++    - name: workload-identity
++      mountPath: /var/run/secrets/workload-identity
+     {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+     - name: gke-workload-certificate
+       mountPath: /var/run/secrets/workload-spiffe-credentials
+@@ -398,6 +400,8 @@ spec:
+       {{ end }}
+       {{- end }}
+   volumes:
++  - emptyDir:
++    name: workload-identity
+   {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+   - name: gke-workload-certificate
+     csi:
+diff --git a/pilot/cmd/pilot-agent/options/security.go b/pilot/cmd/pilot-agent/options/security.go
+index 0a15a08ed6..7801a34f8d 100644
+--- a/pilot/cmd/pilot-agent/options/security.go
++++ b/pilot/cmd/pilot-agent/options/security.go
+@@ -17,7 +17,6 @@ package options
+ import (
+ 	"fmt"
+ 	"os"
+-	"path/filepath"
+ 	"strings"
+ 
+ 	meshconfig "istio.io/api/mesh/v1alpha1"
+@@ -40,7 +39,6 @@ func NewSecurityOptions(proxyConfig *meshconfig.ProxyConfig, stsPort int, tokenM
+ 		PilotCertProvider:              features.PilotCertProvider,
+ 		OutputKeyCertToDir:             outputKeyCertToDir,
+ 		ProvCert:                       provCert,
+-		WorkloadUDSPath:                filepath.Join(proxyConfig.ConfigPath, "SDS"),
+ 		ClusterID:                      clusterIDVar.Get(),
+ 		FileMountedCerts:               fileMountedCertsEnv,
+ 		WorkloadNamespace:              PodNamespaceVar.Get(),
+diff --git a/pkg/config/constants/constants.go b/pkg/config/constants/constants.go
+index 77b0956925..4b536b88e7 100644
+--- a/pkg/config/constants/constants.go
++++ b/pkg/config/constants/constants.go
+@@ -42,6 +42,21 @@ const (
+ 	// ConfigPathDir config directory for storing envoy json config files.
+ 	ConfigPathDir = "./etc/istio/proxy"
+ 
++	// WorkloadIdentityPath is the path to the folder where workload identity materials are placed
++	WorkloadIdentityPath = "./var/run/secrets/workload-identity/"
++
++	// WorkloadIdentitySocketPath is the path to the Unix Domain Socket for SDS
++	WorkloadIdentitySocketPath = WorkloadIdentityPath + "socket"
++
++	// WorkloadIdentityCertChainPath is path to an existing workload certificate chain file
++	WorkloadIdentityCertChainPath = WorkloadIdentityPath + "cert-chain.pem"
++
++	// WorkloadIdentityKeyPath is path to an existing workload key file
++	WorkloadIdentityKeyPath = WorkloadIdentityPath + "key.pem"
++
++	// WorkloadIdentityRootCertPath is path to an existing workload root certificate file
++	WorkloadIdentityRootCertPath = WorkloadIdentityPath + "root-cert.pem"
++
+ 	// IstioDataDir is the directory to store binary data such as envoy core dump, profile, and downloaded Wasm modules.
+ 	IstioDataDir = "/var/lib/istio/data"
+ 
+diff --git a/pkg/istio-agent/agent.go b/pkg/istio-agent/agent.go
+index c4f6cad222..913a0d0827 100644
+--- a/pkg/istio-agent/agent.go
++++ b/pkg/istio-agent/agent.go
+@@ -400,13 +400,34 @@ func (a *Agent) Run(ctx context.Context) (func(), error) {
+ 		return nil, fmt.Errorf("failed to start local DNS server: %v", err)
+ 	}
+ 
+-	a.secretCache, err = a.newSecretManager()
+-	if err != nil {
+-		return nil, fmt.Errorf("failed to start workload secret manager %v", err)
+-	}
++	socketExists := socketFileExists(constants.WorkloadIdentitySocketPath)
++
++	if !socketExists {
++		log.Info("SDS socket not detected, creating own SDS Server")
++
++		if workloadCertFilesExist() {
++			log.Info("workload identity cert files detected, creating secret manager without caClient")
++			a.secOpts.RootCertFilePath = constants.WorkloadIdentityRootCertPath
++			a.secOpts.CertChainFilePath = constants.WorkloadIdentityCertChainPath
++			a.secOpts.KeyFilePath = constants.WorkloadIdentityKeyPath
++
++			a.secretCache, err = cache.NewSecretManagerClient(nil, a.secOpts)
++			if err != nil {
++				return nil, fmt.Errorf("failed to start workload secret manager %v", err)
++			}
++		} else {
++			log.Info("workload identity cert files not found, create secret manager with caClient")
++			a.secretCache, err = a.newSecretManager()
++			if err != nil {
++				return nil, fmt.Errorf("failed to start workload secret manager %v", err)
++			}
++		}
+ 
+-	a.sdsServer = sds.NewServer(a.secOpts, a.secretCache)
+-	a.secretCache.SetUpdateCallback(a.sdsServer.UpdateCallback)
++		a.sdsServer = sds.NewServer(a.secOpts, a.secretCache)
++		a.secretCache.SetUpdateCallback(a.sdsServer.UpdateCallback)
++	} else {
++		log.Info("SDS socket detected, don't start SDS Server")
++	}
+ 
+ 	a.xdsProxy, err = initXdsProxy(a)
+ 	if err != nil {
+@@ -596,6 +617,20 @@ func fileExists(path string) bool {
+ 	return false
+ }
+ 
++func socketFileExists(path string) bool {
++	if fi, err := os.Stat(path); err == nil && !fi.Mode().IsRegular() {
++		return true
++	}
++	return false
++}
++
++func workloadCertFilesExist() bool {
++	rootCertExists := fileExists(constants.WorkloadIdentityRootCertPath)
++	certChainExists := fileExists(constants.WorkloadIdentityCertChainPath)
++	keyExists := fileExists(constants.WorkloadIdentityKeyPath)
++	return rootCertExists && certChainExists && keyExists
++}
++
+ // Find the root CA to use when connecting to the CA (Istiod or external).
+ func (a *Agent) FindRootCAForCA() (string, error) {
+ 	var rootCAPath string
+diff --git a/pkg/istio-agent/agent_test.go b/pkg/istio-agent/agent_test.go
+index 020104ed3e..d35e500cfe 100644
+--- a/pkg/istio-agent/agent_test.go
++++ b/pkg/istio-agent/agent_test.go
+@@ -20,6 +20,9 @@ import (
+ 	"crypto/x509"
+ 	"encoding/json"
+ 	"fmt"
++	"istio.io/istio/pkg/config/constants"
++	"istio.io/istio/security/pkg/nodeagent/cache"
++	"istio.io/istio/security/pkg/nodeagent/sds"
+ 	"net"
+ 	"os"
+ 	"path"
+@@ -259,6 +262,47 @@ func TestAgent(t *testing.T) {
+ 			return a
+ 		}).Check(t, security.WorkloadKeyCertResourceName, security.RootCertReqResourceName)
+ 	})
++	t.Run("External SDS socket", func(t *testing.T) {
++
++		dir := mktemp()
++		copyCerts(t, dir)
++
++		secOpts := &security.Options {}
++		secOpts.RootCertFilePath = dir + "/root-cert.pem"
++		secOpts.CertChainFilePath = dir + "/cert-chain.pem"
++		secOpts.KeyFilePath = dir + "/key.pem"
++
++		secretCache, err := cache.NewSecretManagerClient(nil, secOpts)
++		if err != nil {
++			t.Fatal(err)
++		}
++		defer secretCache.Close()
++
++		// this SDS Server listens on the fixed socket path serving the certs copied to the temp directory,
++		// and acts as the external SDS Server that the Agent will detect at startup
++		sdsServer := sds.NewServer(secOpts, secretCache)
++		defer sdsServer.Stop()
++
++		Setup(t).Check(t, security.WorkloadKeyCertResourceName, security.RootCertReqResourceName)
++
++		t.Cleanup(func() {
++			_ = os.RemoveAll(dir)
++		})
++	})
++	t.Run("Workload certificates", func(t *testing.T) {
++
++		dir := constants.WorkloadIdentityPath
++		if err := os.MkdirAll(dir, 0o755); err != nil {
++			t.Fatal(err)
++		}
++		copyCerts(t, dir)
++
++		Setup(t).Check(t, security.WorkloadKeyCertResourceName, security.RootCertReqResourceName)
++
++		t.Cleanup(func() {
++			_ = os.RemoveAll(dir)
++		})
++	})
+ 	t.Run("VMs", func(t *testing.T) {
+ 		// Bootstrap sets up a short lived JWT token and root certificate. The initial run will fetch
+ 		// a certificate and write it to disk. This will be used (by mTLS authenticator) for future
+@@ -515,7 +559,6 @@ func Setup(t *testing.T, opts ...func(a AgentTest) AgentTest) *AgentTest {
+ 	}
+ 	ca := setupCa(t, resp.CaAuthenticator)
+ 	resp.Security = security.Options{
+-		WorkloadUDSPath:   filepath.Join(d, "SDS"),
+ 		CAEndpoint:        ca.URL,
+ 		CAProviderName:    "Citadel",
+ 		TrustDomain:       "cluster.local",
+@@ -593,7 +636,7 @@ func (a *AgentTest) Check(t *testing.T, expectedSDS ...string) map[string]*xds.A
+ 	sdsStreams := map[string]*xds.AdsTest{}
+ 	gotKeys := []string{}
+ 	for _, res := range xdstest.ExtractSecretResources(t, resp.Resources) {
+-		sds := xds.NewSdsTest(t, setupDownstreamConnectionUDS(t, a.Security.WorkloadUDSPath)).
++		sds := xds.NewSdsTest(t, setupDownstreamConnectionUDS(t, constants.WorkloadIdentitySocketPath)).
+ 			WithMetadata(meta).
+ 			WithTimeout(time.Second * 20) // CSR can be extremely slow with race detection enabled due to 2048 RSA
+ 		sds.RequestResponseAck(t, &discovery.DiscoveryRequest{ResourceNames: []string{res}})
+diff --git a/pkg/security/security.go b/pkg/security/security.go
+index c1cf9b48f6..2a60e60552 100644
+--- a/pkg/security/security.go
++++ b/pkg/security/security.go
+@@ -114,9 +114,6 @@ const (
+ // TODO: ProxyConfig should have most of those, and be passed to all components
+ // (as source of truth)
+ type Options struct {
+-	// WorkloadUDSPath is the unix domain socket through which SDS server communicates with workload proxies.
+-	WorkloadUDSPath string
+-
+ 	// CAEndpoint is the CA endpoint to which node agent sends CSR request.
+ 	CAEndpoint string
+ 
+diff --git a/security/pkg/nodeagent/caclient/credentials_test.go b/security/pkg/nodeagent/caclient/credentials_test.go
+index dfddc36fda..3bbc1cf6c2 100644
+--- a/security/pkg/nodeagent/caclient/credentials_test.go
++++ b/security/pkg/nodeagent/caclient/credentials_test.go
+@@ -58,7 +58,6 @@ func TestGetTokenForXDS(t *testing.T) {
+ 		PilotCertProvider:              "istiod",
+ 		OutputKeyCertToDir:             "",
+ 		ProvCert:                       "",
+-		WorkloadUDSPath:                "./etc/istio/proxy/SDS",
+ 		ClusterID:                      "",
+ 		FileMountedCerts:               false,
+ 		WorkloadNamespace:              "",
+diff --git a/security/pkg/nodeagent/sds/sdsservice_test.go b/security/pkg/nodeagent/sds/sdsservice_test.go
+index 7f9346f61d..0e84983aa6 100644
+--- a/security/pkg/nodeagent/sds/sdsservice_test.go
++++ b/security/pkg/nodeagent/sds/sdsservice_test.go
+@@ -15,6 +15,7 @@ package sds
+ 
+ import (
+ 	"fmt"
++	"istio.io/istio/pkg/config/constants"
+ 	"net"
+ 	"strings"
+ 	"testing"
+@@ -109,9 +110,7 @@ func setupSDS(t *testing.T) *TestServer {
+ 		ResourceName: ca2.RootCertReqResourceName,
+ 	})
+ 
+-	opts := &ca2.Options{
+-		WorkloadUDSPath: fmt.Sprintf("/tmp/workload_gotest%s.sock", string(uuid.NewUUID())),
+-	}
++	opts := &ca2.Options{}
+ 	server := NewServer(opts, st)
+ 	t.Cleanup(func() {
+ 		server.Stop()
+@@ -120,7 +119,7 @@ func setupSDS(t *testing.T) *TestServer {
+ 		t:       t,
+ 		server:  server,
+ 		store:   st,
+-		udsPath: opts.WorkloadUDSPath,
++		udsPath: constants.WorkloadIdentitySocketPath,
+ 	}
+ }
+ 
+diff --git a/security/pkg/nodeagent/sds/server.go b/security/pkg/nodeagent/sds/server.go
+index ac4e78a0a2..0ae86bbf9a 100644
+--- a/security/pkg/nodeagent/sds/server.go
++++ b/security/pkg/nodeagent/sds/server.go
+@@ -15,6 +15,7 @@
+ package sds
+ 
+ import (
++	"istio.io/istio/pkg/config/constants"
+ 	"net"
+ 	"time"
+ 
+@@ -46,8 +47,8 @@ type Server struct {
+ func NewServer(options *security.Options, workloadSecretCache security.SecretManager) *Server {
+ 	s := &Server{stopped: atomic.NewBool(false)}
+ 	s.workloadSds = newSDSService(workloadSecretCache, options)
+-	s.initWorkloadSdsService(options)
+-	sdsServiceLog.Infof("SDS server for workload certificates started, listening on %q", options.WorkloadUDSPath)
++	s.initWorkloadSdsService()
++	sdsServiceLog.Infof("SDS server for workload certificates started, listening on %q", constants.WorkloadIdentitySocketPath)
+ 	return s
+ }
+ 
+@@ -81,12 +82,12 @@ func (s *Server) Stop() {
+ 	}
+ }
+ 
+-func (s *Server) initWorkloadSdsService(options *security.Options) {
++func (s *Server) initWorkloadSdsService() {
+ 	s.grpcWorkloadServer = grpc.NewServer(s.grpcServerOptions()...)
+ 	s.workloadSds.register(s.grpcWorkloadServer)
+ 
+ 	var err error
+-	s.grpcWorkloadListener, err = uds.NewListener(options.WorkloadUDSPath)
++	s.grpcWorkloadListener, err = uds.NewListener(constants.WorkloadIdentitySocketPath)
+ 	if err != nil {
+ 		sdsServiceLog.Errorf("Failed to set up UDS path: %v", err)
+ 	}
+@@ -102,7 +103,7 @@ func (s *Server) initWorkloadSdsService(options *security.Options) {
+ 			serverOk := true
+ 			setUpUdsOK := true
+ 			if s.grpcWorkloadListener == nil {
+-				if s.grpcWorkloadListener, err = uds.NewListener(options.WorkloadUDSPath); err != nil {
++				if s.grpcWorkloadListener, err = uds.NewListener(constants.WorkloadIdentitySocketPath); err != nil {
+ 					sdsServiceLog.Errorf("SDS grpc server for workload proxies failed to set up UDS: %v", err)
+ 					setUpUdsOK = false
+ 				}
+diff --git a/security/pkg/nodeagent/test/setup.go b/security/pkg/nodeagent/test/setup.go
+index 2f07dcdcad..06e8f7faef 100644
+--- a/security/pkg/nodeagent/test/setup.go
++++ b/security/pkg/nodeagent/test/setup.go
+@@ -161,7 +161,6 @@ func (e *Env) StartProxy(t *testing.T) {
+ // StartSDSServer starts SDS server
+ func (e *Env) StartSDSServer(t *testing.T) {
+ 	serverOptions := &security.Options{
+-		WorkloadUDSPath: e.ProxySetup.SDSPath(),
+ 		JWTPath:         proxyTokenPath,
+ 		CAEndpoint:      fmt.Sprintf("127.0.0.1:%d", e.ProxySetup.Ports().ExtraPort),
+ 	}
+diff --git a/tools/packaging/common/envoy_bootstrap.json b/tools/packaging/common/envoy_bootstrap.json
+index be5b65b179..5d26f1b3dd 100644
+--- a/tools/packaging/common/envoy_bootstrap.json
++++ b/tools/packaging/common/envoy_bootstrap.json
+@@ -245,7 +245,7 @@
+               "endpoint": {
+                 "address":{
+                   "pipe": {
+-                    "path": "{{ .config.ConfigPath }}/SDS"
++                    "path": "/var/run/secrets/workload-identity/socket"
+                   }
+                 }
+               }

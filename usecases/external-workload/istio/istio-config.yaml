@@ -1,0 +1,124 @@
+# apiVersion: install.istio.io/v1alpha1
+apiVersion: operator.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+spec:
+  profile: default
+  meshConfig:
+    trustDomain: example.org
+    accessLogFile: /dev/stdout
+    outboundTrafficPolicy:
+     mode: REGISTRY_ONLY # disallow calls for unknown hosts
+  values:
+    global:
+      hub: 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril
+      tag: latest
+      imagePullPolicy: "Always"
+      imagePullSecrets:
+        - secret-registry
+    sidecarInjectorWebhook:
+      rewriteAppHTTPProbe: true # helps debbuging 503 errors 
+      templates:
+        spire: |
+          spec:
+            containers:
+            - name: istio-proxy
+              env:
+              - name: CA_PROVIDER
+                value: "spiffe"
+              - name: SPIFFE_ENDPOINT_SOCKET
+                value: "unix:///run/spire/sockets/agent.sock"
+              volumeMounts:
+              - name: spire-agent-socket
+                mountPath: /run/spire/sockets
+                readOnly: true
+            volumes:
+              - name: spire-agent-socket
+                csi:
+                  driver: "csi.spiffe.io"
+  components:
+    pilot:
+      k8s:
+        env:
+          # Disable istiod CA Sever functionality
+          - name: ENABLE_CA_SERVER
+            value: "false"
+          # Check that istio-agent's namespace and service account match the ones in the JWT token presented in the connection
+          - name: PILOT_ENABLE_XDS_IDENTITY_CHECK
+            value: "true"
+          # Configure the SPIFFE Workload API as the cert provider for istiod
+          - name: PILOT_CERT_PROVIDER
+            value: "spiffe"
+          - name: SPIFFE_ENDPOINT_SOCKET
+            value: "unix:///run/spire/sockets/agent.sock"
+        overlays:
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: istiod
+            patches:
+              - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
+                value:
+                  name: spire-agent-socket
+                  mountPath: "/run/spire/sockets"
+                  readOnly: true
+              - path: spec.template.spec.volumes[7]
+                value:
+                  name: spire-agent-socket
+                  csi:
+                    driver: "csi.spiffe.io"
+    ingressGateways:
+      - name: istio-ingressgateway
+        enabled: true
+        k8s:
+          overlays:
+            - apiVersion: apps/v1
+              kind: Deployment
+              name: istio-ingressgateway
+              patches:
+                - path: spec.template.spec.volumes[8]
+                  value:
+                    name: spire-agent-socket
+                    csi:
+                      driver: "csi.spiffe.io"
+                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
+                  value:
+                    name: spire-agent-socket
+                    mountPath: "/run/spire/sockets"
+                    readOnly: true
+          env:
+            - name: CA_PROVIDER
+              value: "spiffe"
+            - name: SPIFFE_ENDPOINT_SOCKET
+              value: "unix:///run/spire/sockets/agent.sock"
+    egressGateways:
+      - name: istio-egressgateway
+        enabled: true
+        k8s:
+          overlays:
+            - apiVersion: apps/v1
+              kind: Deployment
+              name: istio-egressgateway
+              patches:
+                - path: spec.template.spec.volumes[8]
+                  value:
+                    name: spire-agent-socket
+                    csi:
+                      driver: "csi.spiffe.io"
+                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
+                  value:
+                    name: spire-agent-socket
+                    mountPath: "/run/spire/sockets"
+                    readOnly: true
+                # If using ALLOW_ANY for outboundTrafficPolicy.Mode (the default value) this configuration
+                #  can be used to replace the ServiceEntry that is required for both (direct/egress) use cases
+                # - path: spec.template.spec.hostAliases
+                #   value:
+                #     - ip: 10.0.1.50
+                #       hostnames:
+                #       - "example.org"
+          env:
+            - name: CA_PROVIDER
+              value: "spiffe"
+            - name: SPIFFE_ENDPOINT_SOCKET
+              value: "unix:///run/spire/sockets/agent.sock"

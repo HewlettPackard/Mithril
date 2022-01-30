@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sleep
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sleep
+  labels:
+    app: sleep
+    service: sleep
+spec:
+  ports:
+  - port: 80
+    name: http
+  selector:
+    app: sleep
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sleep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sleep
+  template:
+    metadata:
+      labels:
+        app: sleep
+      annotations:
+        inject.istio.io/templates: "sidecar,spire"
+    spec:
+      terminationGracePeriodSeconds: 0
+      serviceAccountName: sleep
+      hostAliases:
+        - ip: "10.0.1.50"
+          hostnames:
+            - "istio-ingressgateway.istio-system.svc"
+      initContainers:
+        - name: fetch-config
+          image: gcr.io/spiffe-io/spire-agent:1.1.1
+          command: [ "/bin/sh" ]
+          args:
+            - "-c"
+            - |
+              /opt/spire/bin/spire-agent api fetch \
+              -socketPath /run/spire/sockets/agent.sock -write . && ls /sleep-certs/ &&
+              mv svid.0.key /sleep-certs/sleep-key.pem && \
+              mv svid.0.pem /sleep-certs/sleep-svid.pem && \
+              mv bundle.0.pem /sleep-certs/root-cert.pem && \
+              chmod 644 /sleep-certs/*
+          volumeMounts:
+            - name: sleep-certs
+              mountPath: /sleep-certs
+            - name: spire-agent-socket
+              mountPath: /run/spire/sockets
+              readOnly: false
+      containers:
+      - name: sleep
+        image: curlimages/curl
+        command: ["/bin/sleep", "3650d"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /etc/sleep/tls
+          name: secret-volume
+        - name: tmp
+          mountPath: /tmp
+        - name: sleep-certs
+          mountPath: /sleep-certs
+        - name: spire-agent-socket
+          mountPath: /run/spire/sockets
+          readOnly: true
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: sleep-secret
+          optional: true
+      - name: tmp
+        emptyDir: {}
+      - name: sleep-certs
+        emptyDir: {}
+---

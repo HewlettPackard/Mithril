@@ -1,0 +1,118 @@
+# apiVersion: install.istio.io/v1alpha1
+apiVersion: operator.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+spec:
+  profile: default
+  meshConfig:
+    trustDomain: example.org
+  values:
+    global:
+      hub: localhost:5000
+      tag: my-build
+      imagePullPolicy: "Always"
+      imagePullSecrets:
+        - secret-registry
+    sidecarInjectorWebhook:
+      templates:
+        spire: |
+          spec:
+            containers:
+            - name: istio-proxy
+              env:
+              - name: CA_PROVIDER
+                value: "spiffe"
+              - name: SPIFFE_ENDPOINT_SOCKET
+                value: "unix:///run/spire/sockets/agent.sock"
+              volumeMounts:
+              - name: spire-agent-socket
+                mountPath: /run/spire/sockets
+                readOnly: true
+            volumes:
+              - name: spire-agent-socket
+                csi:
+                  driver: "csi.spiffe.io"
+  components:
+    pilot:
+      k8s:
+        env:
+          # Disable istiod CA Sever functionality
+          - name: ENABLE_CA_SERVER
+            value: "false"
+          # Check that istio-agent's namespace and service account match the ones in the JWT token presented in the connection
+          - name: PILOT_ENABLE_XDS_IDENTITY_CHECK
+            value: "true"
+          # Configure the SPIFFE Workload API as the cert provider for istiod
+          - name: PILOT_CERT_PROVIDER
+            value: "spiffe"
+          - name: SPIFFE_ENDPOINT_SOCKET
+            value: "unix:///run/spire/sockets/agent.sock"
+        overlays:
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: istiod
+            patches:
+              - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
+                value:
+                  name: spire-agent-socket
+                  mountPath: "/run/spire/sockets"
+                  readOnly: true
+              - path: spec.template.spec.volumes[7]
+                value:
+                  name: spire-agent-socket
+                  csi:
+                    driver: "csi.spiffe.io"
+    ingressGateways:
+      - name: istio-ingressgateway
+        enabled: true
+        label:
+          istio: ingressgateway
+        k8s:
+          overlays:
+            - apiVersion: apps/v1
+              kind: Deployment
+              name: istio-ingressgateway
+              patches:
+                - path: spec.template.spec.volumes[8]
+                  value:
+                    name: spire-agent-socket
+                    csi:
+                      driver: "csi.spiffe.io"
+                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
+                  value:
+                    name: spire-agent-socket
+                    mountPath: "/run/spire/sockets"
+                    readOnly: true
+          env:
+            - name: CA_PROVIDER
+              value: "spiffe"
+            - name: SPIFFE_ENDPOINT_SOCKET
+              value: "unix:///run/spire/sockets/agent.sock"
+      - name: istio-ingressgateway-mtls
+        enabled: true
+        label:
+          istio: ingressgateway-mtls
+        k8s:
+          podAnnotations:
+            spiffe.io/federatesWith: "domain.test"
+          overlays:
+            - apiVersion: apps/v1
+              kind: Deployment
+              name: istio-ingressgateway-mtls
+              patches:
+                - path: spec.template.spec.volumes[8]
+                  value:
+                    name: spire-agent-socket
+                    csi:
+                      driver: "csi.spiffe.io"
+                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
+                  value:
+                    name: spire-agent-socket
+                    mountPath: "/run/spire/sockets"
+                    readOnly: true
+          env:
+            - name: CA_PROVIDER
+              value: "spiffe"
+            - name: SPIFFE_ENDPOINT_SOCKET
+              value: "unix:///run/spire/sockets/agent.sock"

@@ -173,7 +173,7 @@ data:
           command: ["/bin/bash", "-c", "ls"]
 
     #depends on create-istio-images-and-push-ecr
-    - interval: 24h
+    - interval: 1m
       agent: kubernetes
       name: tag-latest
       spec:
@@ -181,19 +181,12 @@ data:
         - name: secret-registry
         containers:
         - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
-          command: ["/bin/bash", "/mithril/prow-files/tag-latest-images.sh"]
+          command: ["/bin/bash", "prow/prowjobs/tag-latest-images.sh"]
           envFrom:
           - secretRef:
               name: aws-secret
           securityContext:
             privileged: true
-          volumeMounts:
-          - name: config-volume
-            mountPath: /mithril/prow-files
-        volumes:
-          - name: config-volume
-            configMap:
-              name: prow-files
 
     #postsubmit
     - interval: 24h

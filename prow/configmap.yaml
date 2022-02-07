@@ -6,7 +6,7 @@ metadata:
 data:
   config.yaml: |
     prowjob_namespace: prow
-    pod_namespace: test-pods-3 #TODO: Change to name of pod_namespace
+    pod_namespace: test-pods-4 #TODO: Change to name of pod_namespace
 
     in_repo_config:
       enabled:
@@ -57,7 +57,7 @@ data:
             sidecar: gcr.io/k8s-prow/sidecar:v20211210-dfd4c4dd7d
 
     sinker:
-      max_pod_age: 10m
+      max_pod_age: 24h
       max_prowjob_age: 24h
       resync_period: 300m
 
@@ -138,6 +138,36 @@ data:
           env:
           - name: BRANCH
             value: release-1.12
+    - name: integ-pilot-istio
+      interval: 45m
+      agent: kubernetes
+      decoration_config:
+        ssh_key_secrets:
+        - ssh-key-secret
+      extra_refs:
+      - org: HewlettPackard
+        repo: istio
+        base_ref: master
+        clone_uri: "git@github.com:HewlettPackard/istio.git"
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril/prow:latest"
+          command: ["/bin/bash", "-c", "prow/integ-suite-kind.sh test.integration.pilot.kube"]
+          volumeMounts:
+          - name: docker-volume
+            mountPath: /var/run/docker.sock
+            readOnly: true
+          - name: kube-volume
+            mountPath: $(HOME)/.kube/config
+        volumes:
+          - name: docker-volume
+            hostPath:
+              path: /var/run/docker.sock
+          - name: kube-volume
+            hostPath:
+              path: $(HOME)/.kube/config
 
     presubmit:
     - interval: 24h

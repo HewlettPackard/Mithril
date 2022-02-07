@@ -157,133 +157,175 @@ data:
         - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril/prow:latest"
           command: ["/bin/bash", "-c", "prow/integ-suite-kind.sh test.integration.pilot.kube"]
           volumeMounts:
-          - name: docker-volume
+          - name: docker-vol
             mountPath: /var/run/docker.sock
             readOnly: true
-        volumes:
-          - name: docker-volume
-            hostPath:
-              path: /var/run/docker.sock
+          - name: kube-vol
+            mountPath: /$(HOME)/.kube/config
+        volumes:  
+        - name: docker-vol
+          hostPath:
+          path: /var/run/docker.sock
+        - name: kube-vol
+          hostPath:
+          path: /$(HOME)/.kube/config
 
-    presubmit:
-    - name: create-istio-images-and-push-ecr  
-      agent: kubernetes
-      decorate: true
-      decoration_config:
-        ssh_key_secrets:
-        - ssh-key-secret
-      extra_refs:
-      - org: HewlettPackard
-        repo: Mithril
-        clone_uri: "git@github.com:HewlettPackard/Mithril.git"
-      spec:
-        imagePullSecrets:
-        - name: secret-registry
-        containers:
-        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
-          command: ["/bin/bash", "prow/prowjobs/istio-images.sh"]
-          envFrom:
-          - secretRef:
-              name: aws-secret
-          securityContext:
-            privileged: true
+    presubmits:
+      HewlettPackard/Mithril:
+      - name: date           
+        decorate: true           
+        always_run: true         
+        skip_report: false        
+        max_concurrency: 10     
+        spec:
+          containers:
+          - image: alpine
+            command: ["/bin/date"]
+        branches: 
+        - ^main$
+        - ^prow$
+        skip_branches:        
+        - ^release-.*$
+        trigger: "date" 
+        rerun_command: "date"  
 
-    - name: analyze-integration-tests
-      agent: kubernetes
-      decorate: true
-      decoration_config:
-        ssh_key_secrets:
-        - ssh-key-secret
-      extra_refs:
-      - org: HewlettPackard
-        repo: Mithril
-        clone_uri: "git@github.com:HewlettPackard/Mithril.git"
-      spec:
-        imagePullSecrets:
-        - name: secret-registry
-        containers:
-        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
-          command: ["/bin/bash", "prow/prowjobs/analyze-integration-tests.sh"]
-          envFrom:
-          - secretRef:
-              name: aws-secretx
+    postsubmits:
+      HewlettPackard/Mithril:
+      - name: date           
+        decorate: true           
+        always_run: true         
+        skip_report: false        
+        max_concurrency: 10     
+        spec:
+          containers:
+          - image: alpine
+            command: ["/bin/date"]
+        branches: 
+        - ^main$
+        - ^prow$
+        skip_branches:        
+        - ^release-.*$
+        trigger: "date" 
+        rerun_command: "date"  
 
-    - name: integration-tests
-      agent: kubernetes
-      decorate: true
-      decoration_config:
-        ssh_key_secrets:
-        - ssh-key-secret
-      extra_refs:
-      - org: HewlettPackard
-        repo: Mithril
-        clone_uri: "git@github.com:HewlettPackard/Mithril.git"
-      spec:
-        imagePullSecrets:
-        - name: secret-registry
-        containers:
-        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
-          command: ["/bin/bash", "prow/prowjobs/integration-tests.sh"]
-          envFrom:
-          - secretRef:
-              name: aws-secret
+    # - name: create-istio-images-and-push-ecr  
+    #   agent: kubernetes
+    #   decorate: true
+    #   decoration_config:
+    #     ssh_key_secrets:
+    #     - ssh-key-secret
+    #   extra_refs:
+    #   - org: HewlettPackard
+    #     repo: Mithril
+    #     clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+    #   spec:
+    #     imagePullSecrets:
+    #     - name: secret-registry
+    #     containers:
+    #     - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+    #       command: ["/bin/bash", "prow/prowjobs/istio-images.sh"]
+    #       envFrom:
+    #       - secretRef:
+    #           name: aws-secret
+    #       securityContext:
+    #         privileged: true
 
-    postsubmit:
-    - name: distribute-patches
-      agent: kubernetes
-      decoration_config:
-        ssh_key_secrets:
-        - ssh-key-secret
-      extra_refs:
-      - org: HewlettPackard
-        repo: Mithril
-        clone_uri: "git@github.com:HewlettPackard/Mithril.git"
-      spec:
-        imagePullSecrets:
-        - name: secret-registry
-        containers:
-        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
-          command: ["/bin/sh", "prow/prowjobs/distribute-patches.sh"]
-          envFrom:
-          - secretRef:
-              name: aws-secret
+    # - name: analyze-integration-tests
+    #   agent: kubernetes
+    #   decorate: true
+    #   decoration_config:
+    #     ssh_key_secrets:
+    #     - ssh-key-secret
+    #   extra_refs:
+    #   - org: HewlettPackard
+    #     repo: Mithril
+    #     clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+    #   spec:
+    #     imagePullSecrets:
+    #     - name: secret-registry
+    #     containers:
+    #     - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
+    #       command: ["/bin/bash", "prow/prowjobs/analyze-integration-tests.sh"]
+    #       envFrom:
+    #       - secretRef:
+    #           name: aws-secretx
 
-    - name: distribute-assets
-      agent: kubernetes
-      decoration_config:
-        ssh_key_secrets:
-        - ssh-key-secret
-      extra_refs:
-      - org: HewlettPackard
-        repo: Mithril
-        clone_uri: "git@github.com:HewlettPackard/Mithril.git"
-      spec:
-        imagePullSecrets:
-        - name: secret-registry
-        containers:
-        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
-          command: ["/bin/sh", "prow/prowjobs/distribute-assets.sh"]
-          envFrom:
-          - secretRef:
-              name: aws-secret
+    # - name: integration-tests
+    #   agent: kubernetes
+    #   decorate: true
+    #   decoration_config:
+    #     ssh_key_secrets:
+    #     - ssh-key-secret
+    #   extra_refs:
+    #   - org: HewlettPackard
+    #     repo: Mithril
+    #     clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+    #   spec:
+    #     imagePullSecrets:
+    #     - name: secret-registry
+    #     containers:
+    #     - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
+    #       command: ["/bin/bash", "prow/prowjobs/integration-tests.sh"]
+    #       envFrom:
+    #       - secretRef:
+    #           name: aws-secret
 
-    - name: tag-latest
-      agent: kubernetes
-      decoration_config:
-        ssh_key_secrets:
-        - ssh-key-secret
-      extra_refs:
-      - org: HewlettPackard
-        repo: Mithril
-        clone_uri: "git@github.com:HewlettPackard/Mithril.git"
-      spec:
-        imagePullSecrets:
-        - name: secret-registry
-        containers:
-        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
-          command: ["/bin/bash", "-c", "prow/prowjobs/tag-latest-images.sh"]
-          envFrom:
-          - secretRef:
-              name: aws-secret
-          securityContext:
-            privileged: true
+    # postsubmits:
+    # - name: distribute-patches
+    #   agent: kubernetes
+    #   decoration_config:
+    #     ssh_key_secrets:
+    #     - ssh-key-secret
+    #   extra_refs:
+    #   - org: HewlettPackard
+    #     repo: Mithril
+    #     clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+    #   spec:
+    #     imagePullSecrets:
+    #     - name: secret-registry
+    #     containers:
+    #     - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
+    #       command: ["/bin/sh", "prow/prowjobs/distribute-patches.sh"]
+    #       envFrom:
+    #       - secretRef:
+    #           name: aws-secret
+
+    # - name: distribute-assets
+    #   agent: kubernetes
+    #   decoration_config:
+    #     ssh_key_secrets:
+    #     - ssh-key-secret
+    #   extra_refs:
+    #   - org: HewlettPackard
+    #     repo: Mithril
+    #     clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+    #   spec:
+    #     imagePullSecrets:
+    #     - name: secret-registry
+    #     containers:
+    #     - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
+    #       command: ["/bin/sh", "prow/prowjobs/distribute-assets.sh"]
+    #       envFrom:
+    #       - secretRef:
+    #           name: aws-secret
+
+    # - name: tag-latest
+    #   agent: kubernetes
+    #   decoration_config:
+    #     ssh_key_secrets:
+    #     - ssh-key-secret
+    #   extra_refs:
+    #   - org: HewlettPackard
+    #     repo: Mithril
+    #     clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+    #   spec:
+    #     imagePullSecrets:
+    #     - name: secret-registry
+    #     containers:
+    #     - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril-deps:latest"
+    #       command: ["/bin/bash", "-c", "prow/prowjobs/tag-latest-images.sh"]
+    #       envFrom:
+    #       - secretRef:
+    #           name: aws-secret
+    #       securityContext:
+    #         privileged: true

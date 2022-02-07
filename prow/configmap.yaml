@@ -159,15 +159,10 @@ data:
           - name: docker-volume
             mountPath: /var/run/docker.sock
             readOnly: true
-          - name: kube-volume
-            mountPath: $(HOME)/.kube/config
         volumes:
           - name: docker-volume
             hostPath:
               path: /var/run/docker.sock
-          - name: kube-volume
-            hostPath:
-              path: $(HOME)/.kube/config
 
     presubmit:
     - interval: 24h

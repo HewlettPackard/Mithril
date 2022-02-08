@@ -230,6 +230,9 @@ data:
         - main
         - prow
         decorate: true
+        decoration_config:
+          ssh_key_secrets:
+          - ssh-key-secret
         always_run: true
         spec:
           containers:

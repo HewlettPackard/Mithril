@@ -233,6 +233,11 @@ data:
         decoration_config:
           ssh_key_secrets:
           - ssh-key-secret
+        extra_refs:
+        - org: HewlettPackard
+          repo: Mithril
+          base_ref: prow
+          clone_uri: "git@github.com:HewlettPackard/Mithril.git"
         always_run: true
         spec:
           containers:

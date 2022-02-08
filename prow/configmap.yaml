@@ -209,10 +209,10 @@ data:
         decoration_config:
           ssh_key_secrets:
           - ssh-key-secret
-        extra_refs:
-        - org: HewlettPackard
-          repo: Mithril
-          clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+        # extra_refs:
+        # - org: HewlettPackard
+        #   repo: Mithril
+        #   clone_uri: "git@github.com:HewlettPackard/Mithril.git"
         spec:
           imagePullSecrets:
           - name: secret-registry

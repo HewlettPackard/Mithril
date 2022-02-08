@@ -225,6 +225,7 @@ data:
             securityContext:
               privileged: true
 
+      HewlettPackard/Mithril:
       - name: ls
         branches:
         - main
@@ -233,11 +234,10 @@ data:
         decoration_config:
           ssh_key_secrets:
           - ssh-key-secret
-        name: build-test
-        extra_refs:
-          - org: HewlettPackard
-            clone_uri: "git@github.com:HewlettPackard/Mithril.git"
-            repo: Mithril
+        # extra_refs:
+        #   - org: HewlettPackard
+        #     clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+        #     repo: Mithril
         spec:
           containers:
           - image: alpine

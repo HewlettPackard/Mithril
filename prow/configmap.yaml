@@ -139,7 +139,7 @@ data:
           - name: BRANCH
             value: release-1.12
             
-    - name: integ-pilot-istio-HOME-kube
+    - name: integ-pilot-istio-HOME-root-user
       interval: 100m
       agent: kubernetes
       decoration_config:
@@ -153,14 +153,14 @@ data:
       spec:
         imagePullSecrets:
         - name: secret-registry
+        securityContext:
+          runAsUser: 0
         containers:
         - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril/prow:latest"
           command:
           - /bin/bash
           args:
           - "-c"
-          - "chown $(id -u):$(id -g) $HOME/.kube/"
-          - "chown $(id -u):$(id -g) $HOME/.kube/config"
           - "prow/integ-suite-kind.sh test.integration.pilot.kube"
           volumeMounts:
           - name: docker-vol
@@ -225,7 +225,6 @@ data:
             securityContext:
               privileged: true
 
-      HewlettPackard/Mithril:
       - name: ls
         branches:
         - main

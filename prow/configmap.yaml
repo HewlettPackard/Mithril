@@ -238,7 +238,6 @@ data:
           - org: HewlettPackard
             clone_uri: "git@github.com:HewlettPackard/Mithril.git"
             repo: Mithril
-            base_ref: main
         spec:
           containers:
           - image: alpine

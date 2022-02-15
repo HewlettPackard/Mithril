@@ -224,24 +224,20 @@ data:
         #       privileged: true
         
     postsubmits:
-      HewlettPackard/Mithril:
-      - name: ls
-        branches:
-        - main
-        - prow
-        always_run: true
-        decorate: true
-        decoration_config:
-          ssh_key_secrets:
-          - ssh-key-secret
-        extra_refs:
-        - org: HewlettPackard
-          repo: Mithril
-          clone_uri: "ssh@github.com:HewlettPackard/Mithril.git"
-        spec:
-          containers:
-          - image: alpine
-            command: ["ls"]
+    - name: ls
+      branches:
+      - main
+      - prow
+      always_run: true
+      decorate: true
+      decoration_config:
+        ssh_key_secrets:
+        - ssh-key-secret
+      clone_uri: "ssh@github.com:HewlettPackard/Mithril.git"
+      spec:
+        containers:
+        - image: alpine
+          command: ["ls"]
 
     # - name: analyze-integration-tests
     #   agent: kubernetes

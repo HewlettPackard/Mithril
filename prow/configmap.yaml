@@ -234,10 +234,7 @@ data:
         decoration_config:
           ssh_key_secrets:
           - ssh-key-secret
-        extra_refs:
-        - org: HewlettPackard
-          repo: Mithril
-          clone_uri: "ssh@github.com:HewlettPackard/Mithril.git"
+        clone_uri: "ssh@github.com:HewlettPackard/Mithril.git"
         spec:
           containers:
           - image: alpine

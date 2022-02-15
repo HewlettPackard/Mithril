@@ -224,7 +224,7 @@ data:
         #       privileged: true
         
     postsubmits:
-      HewlettPackard/Mithril:
+      # HewlettPackard/Mithril:
       - name: ls
         branches:
         - main

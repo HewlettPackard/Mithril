@@ -139,28 +139,26 @@ data:
           - name: BRANCH
             value: release-1.12
             
-    # - name: integ-pilot-istio-HOME-root-user
-    #   interval: 100m
-    #   agent: kubernetes
-    #   decoration_config:
-    #     ssh_key_secrets:
-    #     - ssh-key-secret
-    #   extra_refs:
-    #   - org: HewlettPackard
-    #     repo: istio
-    #     base_ref: master
-    #     clone_uri: "git@github.com:HewlettPackard/istio.git"
-    #   spec:
-    #     imagePullSecrets:
-    #     - name: secret-registry
-    #     securityContext:
-    #       runAsUser: 0
-    #     containers:
-    #     - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril/prow:latest"
-    #       command:
-    #       - /bin/bash
-    #       args:
-    #       - "-c"
+    - name: integ-pilot-istio-HOME-root-user
+      interval: 900m
+      agent: kubernetes
+      decoration_config:
+        ssh_key_secrets:
+        - ssh-key-secret
+      extra_refs:
+      - org: HewlettPackard
+        repo: istio
+        base_ref: master
+        clone_uri: "git@github.com:HewlettPackard/istio.git"
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        securityContext:
+          runAsUser: 0
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril/prow:latest"
+          command: ["/bin/bash", "-c", "kind create cluster"]
+
     #       - "prow/integ-suite-kind.sh test.integration.pilot.kube"
     #       volumeMounts:
     #       - name: docker-vol
@@ -198,35 +196,40 @@ data:
         trigger: "date" 
         rerun_command: "date"  
 
+    # postsubmits:
+    #   HewlettPackard/Mithril:
+    #   - name: create-istio-images-and-push-ecr 
+    #     branches:
+    #     - main
+    #     - prow
+    #     always_run: true
+    #     decorate: true
+        # decoration_config:
+        #   ssh_key_secrets:
+        #   - ssh-key-secret
+        # extra_refs:
+        # - org: HewlettPackard
+        #   repo: Mithril
+        #   clone_uri: "git@github.com:HewlettPackard/Mithril.git"
+        # spec:
+        #   imagePullSecrets:
+        #   - name: secret-registry
+        #   containers:
+        #   - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
+        #     command: ["/bin/bash", "prow/prowjobs/istio-images.sh"]
+        #     envFrom:
+        #     - secretRef:
+        #         name: aws-secret
+        #     securityContext:
+        #       privileged: true
+        
     postsubmits:
       HewlettPackard/Mithril:
-      - name: create-istio-images-and-push-ecr 
+      - name: ls
         branches:
         - main
         - prow
         always_run: true
-        decorate: true
-        decoration_config:
-          ssh_key_secrets:
-          - ssh-key-secret
-        extra_refs:
-        - org: HewlettPackard
-          repo: Mithril
-          clone_uri: "git@github.com:HewlettPackard/Mithril.git"
-        spec:
-          imagePullSecrets:
-          - name: secret-registry
-          containers:
-          - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:04-01-2022-release-1.12-master-a04a4e6"
-            command: ["/bin/bash", "prow/prowjobs/istio-images.sh"]
-            envFrom:
-            - secretRef:
-                name: aws-secret
-            securityContext:
-              privileged: true
-
-      - name: ls
-        agent: kubernetes
         decorate: true
         decoration_config:
           ssh_key_secrets:

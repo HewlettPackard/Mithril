@@ -231,15 +231,12 @@ data:
         - prow
         always_run: true
         decorate: true
-        decoration_config:
-          ssh_key_secrets:
-          - ssh-key-secret
         clone_uri: "ssh@github.com:HewlettPackard/Mithril.git"
         spec:
           containers:
           - image: alpine
-            command: ["sleep 240"]
-
+            command: ["ls"]
+            
     # - name: analyze-integration-tests
     #   agent: kubernetes
     #   decorate: true

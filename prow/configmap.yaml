@@ -231,7 +231,13 @@ data:
         - prow
         always_run: true
         decorate: true
-        clone_uri: "ssh@github.com:HewlettPackard/Mithril.git"
+        decoration_config:
+          ssh_key_secrets:
+          - ssh-key-secret
+        extra_refs:
+        - org: HewlettPackard
+          repo: Mithril
+          clone_uri: "ssh@github.com:HewlettPackard/Mithril.git"
         spec:
           containers:
           - image: alpine

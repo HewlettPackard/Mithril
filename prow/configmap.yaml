@@ -50,6 +50,8 @@ data:
             bucket: s3://prow-logs
             path_strategy: explicit
           s3_credentials_secret: s3-credentials
+          ssh_key_secrets:
+            - ssh-secret
           utility_images:
             clonerefs: gcr.io/k8s-prow/clonerefs:v20211210-dfd4c4dd7d
             entrypoint: gcr.io/k8s-prow/entrypoint:v20211210-dfd4c4dd7d
@@ -139,43 +141,57 @@ data:
           - name: BRANCH
             value: release-1.12
             
-    - name: integ-pilot-istio-HOME-root-user
-      interval: 900m
-      agent: kubernetes
-      decoration_config:
-        ssh_key_secrets:
-        - ssh-key-secret
-      extra_refs:
-      - org: HewlettPackard
-        repo: istio
-        base_ref: master
-        clone_uri: "git@github.com:HewlettPackard/istio.git"
-      spec:
-        imagePullSecrets:
-        - name: secret-registry
-        securityContext:
-          runAsUser: 0
-        containers:
-        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril/prow:latest"
-          command: ["/bin/bash", "-c", "kind create cluster"]
-
-    #       - "prow/integ-suite-kind.sh test.integration.pilot.kube"
+    # - name: integ-pilot-istio
+    #   interval: 5m
+    #   agent: kubernetes
+    #   decoration_config:
+    #     ssh_key_secrets:
+    #     - ssh-key-secret
+    #   extra_refs:
+    #   - org: HewlettPackard
+    #     repo: istio
+    #     base_ref: master
+    #     clone_uri: "git@github.com:HewlettPackard/istio.git"
+    #   spec:
+    #     imagePullSecrets:
+    #     - name: secret-registry
+    #     securityContext:
+    #       privileged: true
+    #     containers:
+    #     - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril/prow:latest"
+    #       command: ["/bin/bash", "-c", "sleep 20000"]
     #       volumeMounts:
-    #       - name: docker-vol
-    #         mountPath: /var/run/docker.sock
-    #         readOnly: true
-    #       - name: kube-vol
-    #         mountPath: /root/.kube
-    #         readOnly: false
-    #       securityContext:
-    #         privileged: true
+    #         - name: docker-vol
+    #           mountPath: /var/lib/docker
+    #           readOnly: true
+    #         - name: docker-sock
+    #           mountPath: /var/run/docker.sock
+    #           readOnly: true
+    #         - name: cgroup
+    #           mountPath: /sys/fs/cgroup
+    #           readOnly: true
+    #         - name: modules
+    #           mountPath: /lib/modules
+    #           readOnly: true
+    #         - name: aws-vol
+    #           mountPath: /home/prow/go/src/github.com/HewlettPackard/istio/setup-kube-config.sh
+    #           subPath: setup-kube-config.sh
+    #     hostNetwork: true
     #     volumes:  
     #     - name: docker-vol
+    #       emptyDir: {}
+    #     - name: docker-sock
     #       hostPath:
     #         path: /var/run/docker.sock
-    #     - name: kube-vol
+    #     - name: aws-vol
     #       configMap:
-    #         name: kube-config
+    #         name: aws-config
+    #     - name: modules
+    #       hostPath:
+    #         path: /lib/modules
+    #     - name: cgroup
+    #       hostPath:
+    #         path: /sys/fs/cgroup
 
     presubmits:
       HewlettPackard/Mithril:
@@ -224,7 +240,7 @@ data:
         #       privileged: true
         
     postsubmits:
-      # HewlettPackard/Mithril:
+      HewlettPackard/Mithril:
       - name: ls
         branches:
         - main

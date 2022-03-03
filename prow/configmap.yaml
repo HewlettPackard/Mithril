@@ -264,7 +264,7 @@ data:
         spec:
           containers:
           - image: alpine
-            command: ["sleep 240"]
+            command: ["/bin/bash", "-c", "sleep 240"]
 
     # - name: analyze-integration-tests
     #   agent: kubernetes

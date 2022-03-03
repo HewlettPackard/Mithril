@@ -50,8 +50,6 @@ data:
             bucket: s3://prow-logs
             path_strategy: explicit
           s3_credentials_secret: s3-credentials
-          ssh_key_secrets:
-            - ssh-secret
           utility_images:
             clonerefs: gcr.io/k8s-prow/clonerefs:v20211210-dfd4c4dd7d
             entrypoint: gcr.io/k8s-prow/entrypoint:v20211210-dfd4c4dd7d

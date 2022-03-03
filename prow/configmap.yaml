@@ -259,7 +259,7 @@ data:
         decorate: true
         decoration_config:
           ssh_key_secrets:
-          - ssh-key-secret-postsubmits
+          - ssh-key-secret-postsubmit
         clone_uri: "ssh://git@github.com/HewlettPackard/Mithril.git"
         spec:
           containers:

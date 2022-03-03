@@ -141,57 +141,69 @@ data:
           - name: BRANCH
             value: release-1.12
             
-    # - name: integ-pilot-istio
-    #   interval: 5m
-    #   agent: kubernetes
-    #   decoration_config:
-    #     ssh_key_secrets:
-    #     - ssh-key-secret
-    #   extra_refs:
-    #   - org: HewlettPackard
-    #     repo: istio
-    #     base_ref: master
-    #     clone_uri: "git@github.com:HewlettPackard/istio.git"
-    #   spec:
-    #     imagePullSecrets:
-    #     - name: secret-registry
-    #     securityContext:
-    #       privileged: true
-    #     containers:
-    #     - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril/prow:latest"
-    #       command: ["/bin/bash", "-c", "sleep 20000"]
-    #       volumeMounts:
-    #         - name: docker-vol
-    #           mountPath: /var/lib/docker
-    #           readOnly: true
-    #         - name: docker-sock
-    #           mountPath: /var/run/docker.sock
-    #           readOnly: true
-    #         - name: cgroup
-    #           mountPath: /sys/fs/cgroup
-    #           readOnly: true
-    #         - name: modules
-    #           mountPath: /lib/modules
-    #           readOnly: true
-    #         - name: aws-vol
-    #           mountPath: /home/prow/go/src/github.com/HewlettPackard/istio/setup-kube-config.sh
-    #           subPath: setup-kube-config.sh
-    #     hostNetwork: true
-    #     volumes:  
-    #     - name: docker-vol
-    #       emptyDir: {}
-    #     - name: docker-sock
-    #       hostPath:
-    #         path: /var/run/docker.sock
-    #     - name: aws-vol
-    #       configMap:
-    #         name: aws-config
-    #     - name: modules
-    #       hostPath:
-    #         path: /lib/modules
-    #     - name: cgroup
-    #       hostPath:
-    #         path: /sys/fs/cgroup
+    - name: integ-pilot-istio
+      interval: 5m
+      agent: kubernetes
+      decoration_config:
+        ssh_key_secrets:
+        - ssh-key-secret
+      extra_refs:
+      - org: HewlettPackard
+        repo: istio
+        base_ref: master
+        clone_uri: "git@github.com:HewlettPackard/istio.git"
+      spec:
+        imagePullSecrets:
+        - name: secret-registry
+        securityContext:
+          privileged: true
+        containers:
+        - image: "529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril/prow:latest"
+          command: ["/bin/bash", "-c", "sleep 2000"]
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secret
+                  key: aws_access_key_id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secret
+                  key: aws_secret_access_key
+            - name: AWS_DEFAULT_REGION
+              value: us-east-1
+          volumeMounts:
+            - name: docker-vol
+              mountPath: /var/lib/docker
+              readOnly: true
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+              readOnly: true
+            # - name: cgroup
+            #   mountPath: /sys/fs/cgroup
+            #   readOnly: true
+            # - name: modules
+            #   mountPath: /lib/modules
+            #   readOnly: true
+            - name: tf-vol
+              mountPath: /terraform
+        # hostNetwork: true
+        volumes:  
+        - name: docker-vol
+          emptyDir: {}
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+        - name: tf-vol
+          configMap:
+            name: tf-config
+        # - name: modules
+        #   hostPath:
+        #     path: /lib/modules
+        # - name: cgroup
+        #   hostPath:
+        #     path: /sys/fs/cgroup
 
     presubmits:
       HewlettPackard/Mithril:

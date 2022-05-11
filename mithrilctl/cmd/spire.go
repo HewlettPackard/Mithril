@@ -6,11 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"io"
-	"io/ioutil"
-	apps "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	rbac "k8s.io/api/rbac/v1"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -51,6 +46,9 @@ to quickly create a Cobra application.`,
 		var command string
 		var cmdArgs []string
 		for i, _ := range kubeArgs {
+			if kubeArgs[i][len(kubeArgs[i])-3:] == ".sh" {
+				continue
+			}
 			command = fmt.Sprintf("apply -f %s", filepath.Join(args[0], kubeArgs[i]))
 			cmdArgs = strings.Fields(command)
 			spireInstall := exec.Command("kubectl", cmdArgs[0:]...)
@@ -95,116 +93,116 @@ func UnmarshalAllYamls(in []byte, out *[]interface{}) error {
 	return nil
 }
 
-func old() {
-	yfile, err := ioutil.ReadFile("/mnt/c/Users/alvino/GolandProjects/Mithril/mithrilctl/spire-server.yaml")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var out []interface{}
-	err3 := UnmarshalAllYamls(yfile, &out)
-	if err3 != nil {
-		fmt.Println("error unmarshilng all yamls err: ", err3.Error())
-	}
-
-	var namespace v1.Namespace
-	var serviceAccount v1.ServiceAccount
-	var clusterRole rbac.ClusterRole
-	var clusterRoleBinding rbac.ClusterRoleBinding
-	var service v1.Service
-	//var statefulSet entity.StatefulSet
-	var test apps.Deployment
-	//err = yaml.Unmarshal(yb, &namespace)
-	//yb, err = yaml.Marshal(namespace)
-	all := ""
-	for i, _ := range out {
-		//fmt.Printf("%v\n", y)
-		yb, err := yaml.Marshal(out[i])
-		if err != nil {
-			fmt.Println("err yaml marsh err: ", err.Error())
-		}
-		if i == 0 {
-			err = yaml.Unmarshal(yb, &namespace)
-			if err != nil {
-				fmt.Println("error unmarshaling namespace")
-			}
-			yb, err = yaml.Marshal(namespace)
-			if err != nil {
-				fmt.Println("error marshaling namespace")
-			}
-			all += "\n" + "---\n" + string(yb)
-			//fmt.Printf("namespace \n%v\n", string(yb))
-		}
-		if i == 1 {
-			err = yaml.Unmarshal(yb, &serviceAccount)
-			if err != nil {
-				fmt.Println("error unmarshaling serviceAccount")
-			}
-			yb, err = yaml.Marshal(serviceAccount)
-			if err != nil {
-				fmt.Println("error marshaling serviceAccount")
-			}
-			all += "\n" + "---\n" + string(yb)
-			//fmt.Printf("serviceAccount \n%v\n", string(yb))
-		}
-		if i == 2 {
-			err = yaml.Unmarshal(yb, &clusterRole)
-			if err != nil {
-				fmt.Println("error unmarshaling clusterRole")
-			}
-			yb, err = yaml.Marshal(clusterRole)
-			if err != nil {
-				fmt.Println("error marshaling clusterRole")
-			}
-			all += "\n" + "---\n" + string(yb)
-			//fmt.Printf("clusterRole \n%v\n", string(yb))
-		}
-		if i == 3 {
-			err = yaml.Unmarshal(yb, &clusterRoleBinding)
-			if err != nil {
-				fmt.Println("error unmarshaling clusterRoleBinding")
-			}
-			yb, err = yaml.Marshal(clusterRoleBinding)
-			if err != nil {
-				fmt.Println("error marshaling clusterRoleBinding")
-			}
-			all += "\n" + "---\n" + string(yb)
-			//fmt.Printf("clusterRoleBinding \n%v\n", string(yb))
-		}
-		if i == 4 {
-			err = yaml.Unmarshal(yb, &service)
-			if err != nil {
-				fmt.Println("error unmarshaling service")
-			}
-			yb, err = yaml.Marshal(service)
-			if err != nil {
-				fmt.Println("error marshaling service")
-			}
-			all += "\n" + "---\n" + string(yb)
-			//fmt.Printf("service \n%v\n", string(yb))
-		}
-		if i == 5 {
-			//err = yaml.Unmarshal(yb, &statefulSet)
-			//if err != nil {
-			//	fmt.Println("error unmarshaling statefulSet")
-			//}
-			//yb, err = yaml.Marshal(statefulSet)
-			//if err != nil {
-			//	fmt.Println("error marshaling statefulSet")
-			//}
-			//all += "\n" + "---\n" + string(yb)
-			err = yaml.Unmarshal(yb, &test)
-			if err != nil {
-				fmt.Println("error unmarshaling statefulSet")
-			}
-			yb, err = yaml.Marshal(test)
-			if err != nil {
-				fmt.Println("error marshaling statefulSet")
-			}
-			all += "\n" + "---\n" + string(yb)
-			//fmt.Printf("statefulSet \n%v\n", string(yb))
-		}
-	}
-	fmt.Printf("%v\n", all)
-}
+//func old() {
+//	yfile, err := ioutil.ReadFile("/mnt/c/Users/alvino/GolandProjects/Mithril/mithrilctl/spire-server.yaml")
+//
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	var out []interface{}
+//	err3 := UnmarshalAllYamls(yfile, &out)
+//	if err3 != nil {
+//		fmt.Println("error unmarshilng all yamls err: ", err3.Error())
+//	}
+//
+//	var namespace v1.Namespace
+//	var serviceAccount v1.ServiceAccount
+//	var clusterRole rbac.ClusterRole
+//	var clusterRoleBinding rbac.ClusterRoleBinding
+//	var service v1.Service
+//	//var statefulSet entity.StatefulSet
+//	var test apps.Deployment
+//	//err = yaml.Unmarshal(yb, &namespace)
+//	//yb, err = yaml.Marshal(namespace)
+//	all := ""
+//	for i, _ := range out {
+//		//fmt.Printf("%v\n", y)
+//		yb, err := yaml.Marshal(out[i])
+//		if err != nil {
+//			fmt.Println("err yaml marsh err: ", err.Error())
+//		}
+//		if i == 0 {
+//			err = yaml.Unmarshal(yb, &namespace)
+//			if err != nil {
+//				fmt.Println("error unmarshaling namespace")
+//			}
+//			yb, err = yaml.Marshal(namespace)
+//			if err != nil {
+//				fmt.Println("error marshaling namespace")
+//			}
+//			all += "\n" + "---\n" + string(yb)
+//			//fmt.Printf("namespace \n%v\n", string(yb))
+//		}
+//		if i == 1 {
+//			err = yaml.Unmarshal(yb, &serviceAccount)
+//			if err != nil {
+//				fmt.Println("error unmarshaling serviceAccount")
+//			}
+//			yb, err = yaml.Marshal(serviceAccount)
+//			if err != nil {
+//				fmt.Println("error marshaling serviceAccount")
+//			}
+//			all += "\n" + "---\n" + string(yb)
+//			//fmt.Printf("serviceAccount \n%v\n", string(yb))
+//		}
+//		if i == 2 {
+//			err = yaml.Unmarshal(yb, &clusterRole)
+//			if err != nil {
+//				fmt.Println("error unmarshaling clusterRole")
+//			}
+//			yb, err = yaml.Marshal(clusterRole)
+//			if err != nil {
+//				fmt.Println("error marshaling clusterRole")
+//			}
+//			all += "\n" + "---\n" + string(yb)
+//			//fmt.Printf("clusterRole \n%v\n", string(yb))
+//		}
+//		if i == 3 {
+//			err = yaml.Unmarshal(yb, &clusterRoleBinding)
+//			if err != nil {
+//				fmt.Println("error unmarshaling clusterRoleBinding")
+//			}
+//			yb, err = yaml.Marshal(clusterRoleBinding)
+//			if err != nil {
+//				fmt.Println("error marshaling clusterRoleBinding")
+//			}
+//			all += "\n" + "---\n" + string(yb)
+//			//fmt.Printf("clusterRoleBinding \n%v\n", string(yb))
+//		}
+//		if i == 4 {
+//			err = yaml.Unmarshal(yb, &service)
+//			if err != nil {
+//				fmt.Println("error unmarshaling service")
+//			}
+//			yb, err = yaml.Marshal(service)
+//			if err != nil {
+//				fmt.Println("error marshaling service")
+//			}
+//			all += "\n" + "---\n" + string(yb)
+//			//fmt.Printf("service \n%v\n", string(yb))
+//		}
+//		if i == 5 {
+//			//err = yaml.Unmarshal(yb, &statefulSet)
+//			//if err != nil {
+//			//	fmt.Println("error unmarshaling statefulSet")
+//			//}
+//			//yb, err = yaml.Marshal(statefulSet)
+//			//if err != nil {
+//			//	fmt.Println("error marshaling statefulSet")
+//			//}
+//			//all += "\n" + "---\n" + string(yb)
+//			err = yaml.Unmarshal(yb, &test)
+//			if err != nil {
+//				fmt.Println("error unmarshaling statefulSet")
+//			}
+//			yb, err = yaml.Marshal(test)
+//			if err != nil {
+//				fmt.Println("error marshaling statefulSet")
+//			}
+//			all += "\n" + "---\n" + string(yb)
+//			//fmt.Printf("statefulSet \n%v\n", string(yb))
+//		}
+//	}
+//	fmt.Printf("%v\n", all)
+//}

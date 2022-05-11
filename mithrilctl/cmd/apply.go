@@ -42,16 +42,11 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 		client, _, err := createClientGo()
-		//_, _, err := createClientGo()
 		if err != nil {
 			fmt.Println("error creating k8s client err: ", err.Error())
 		}
-		//var serviceList entity.
 		for _, serviceFilePath := range args {
-			//_, err := os.Stat(filepath.Join(os.Getenv("PWD"), serviceFilePath))
-			//if err == nil {
-			//	serviceFilePath = filepath.Join(os.Getenv("PWD"), serviceFilePath)
-			//}
+
 			yfile, err := ioutil.ReadFile(filepath.Join(serviceFilePath))
 
 			if err != nil {
@@ -69,62 +64,12 @@ to quickly create a Cobra application.`,
 				yb, _ := yaml.Marshal(y)
 				objs = append(objs, fmt.Sprintf("%v", string(yb)))
 			}
-			//var app appsv1.Deployment
-			////var nm v1.Namespace
-			//for _, y := range out {
-			//	//fmt.Printf("%v\n", y)
-			//	//yb, _ := yaml.Marshal(y)
-			//	println(string(yb))
-			//	err = app.Unmarshal(yb)
-			//	if err != nil {
-			//		println(err.Error())
-			//	}
-			//	//err = yaml.Unmarshal(yb, &app)
-			//	//println(fmt.Sprintf("%v", app))
-			//	//bb, _ := yaml.Marshal(app)
-			//	//println(fmt.Sprintf("%v", string(bb)))
-			//	//if err != nil {
-			//	//	println(err.Error())
-			//	//}
-			//	println("nm", app.Namespace)
-			//	if app.Namespace != "" && !contains(nms, app.Namespace) {
-			//		nms = append(nms, app.Namespace)
-			//	}
-			//
-			//}
-			//deploymentsClient := client.AppsV1().Deployments(apiv1.NamespaceDefault)
-			//var cm v1.ConfigMap
-			//for _, n := range nms {
-			//	cm = v1.ConfigMap{
-			//		TypeMeta: metav1.TypeMeta{
-			//			Kind:       "ConfigMap",
-			//			APIVersion: "v1",
-			//		},
-			//		ObjectMeta: metav1.ObjectMeta{
-			//			Name:      "istio-ca-root-cert",
-			//			Namespace: n,
-			//		},
-			//	}
-			//	create, err := client.CoreV1().ConfigMaps(n).Create(context.Background(), &cm, metav1.CreateOptions{})
-			//	if err != nil {
-			//		fmt.Println("error creating configmap err: ", err.Error())
-			//		os.Exit(1)
-			//	}
-			//	fmt.Printf(fmt.Sprintf("configmap/%s created\n", create.Name))
-			//}
 
 			var nms []string
 			for _, f := range objs {
-				println(f)
 				decode := scheme.Codecs.UniversalDeserializer().Decode
 				obj, _, _ := decode([]byte(f), nil, nil)
-				//println(groupVersionKind)
-				//if err != nil {
-				//	log.Fatal(fmt.Sprintf("Error while decoding YAML object. Err was: %s", err))
-				//}
-
-				// now use switch over the type of the object
-				// and match each type-case
+				println(f)
 				switch o := obj.(type) {
 				case *apps.Deployment:
 					// o is the Deployment
@@ -150,17 +95,11 @@ to quickly create a Cobra application.`,
 							},
 						}
 						createNm, err := client.CoreV1().Namespaces().Create(context.Background(), &n, metav1.CreateOptions{})
-						if err != nil {
-							//fmt.Println("error creating configmap err: ", err.Error())
-							//os.Exit(1)
-						} else {
+						if err == nil {
 							fmt.Printf(fmt.Sprintf("namespace/%s created\n", createNm.Name))
 						}
 						createCfg, err := client.CoreV1().ConfigMaps(o.Namespace).Create(context.Background(), &cm, metav1.CreateOptions{})
-						if err != nil {
-							//fmt.Println("error creating configmap err: ", err.Error())
-							//os.Exit(1)
-						} else {
+						if err == nil {
 							fmt.Printf(fmt.Sprintf("configmap/%s created\n", createCfg.Name))
 						}
 					}
@@ -177,26 +116,15 @@ to quickly create a Cobra application.`,
 			}
 			command := fmt.Sprintf("kube-inject --filename %s | kubectl apply -f -", filepath.Join(args[0]))
 			cmdArgs := strings.Fields(command)
-			//println(command)
-			spireInstall := exec.Command("istioctl", cmdArgs[0:]...)
-			//stderr, _ := spireInstall.StdoutPipe()
-			//spireInstall.Start()
-			//
-			//scanner := bufio.NewScanner(stderr)
-			//if scanner.Scan() {
-			//	for scanner.Scan() {
-			//		fmt.Println(scanner.Text())
-			//	}
-			//}
-			//
-			//if err := scanner.Err(); err != nil {
-			//	fmt.Println(err)
-			//}
-			oute, err := spireInstall.CombinedOutput()
+			println(command)
+			wlInstall := exec.Command("istioctl", cmdArgs[0:]...)
+
+			oute, err := wlInstall.CombinedOutput()
 			if err != nil {
 				println(err.Error())
+			} else {
+				print(string(oute))
 			}
-			print(string(oute))
 		}
 	},
 }

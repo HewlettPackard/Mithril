@@ -1,0 +1,9 @@
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: istiod
+spec:
+  spiffeIDTemplate: spiffe://example.org/istiod.istio-system.svc.cluster.local
+  podSelector:
+    matchLabels:
+      spire.spiffe.io/spiffeid: istiod.istio-system.svc.cluster.local

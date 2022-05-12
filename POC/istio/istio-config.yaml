@@ -8,8 +8,8 @@ spec:
     trustDomain: example.org
   values:
     global:
-      hub: localhost:5000
-      tag: my-build
+      hub: public.ecr.aws/e4m8j0n8/mithril
+      tag: latest-release-1.13
       imagePullPolicy: "Always"
       imagePullSecrets:
         - secret-registry

@@ -3,6 +3,3 @@ kind: ConfigMap
 metadata:
   name: trust-bundle
   namespace: spire
-  annotations:
-    synator/sync: 'yes'
-    synator/include-namespaces: 'istio-system,default'

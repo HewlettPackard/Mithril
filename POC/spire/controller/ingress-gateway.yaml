@@ -1,0 +1,10 @@
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: greeter-server
+spec:
+  spiffeIDTemplate: spiffe://example.org/istio-ingressgateway.istio-system.svc
+  podSelector:
+    matchLabels:
+      spire.spiffe.io/spiffeid: istio-ingressgateway.istio-system.svc
+#  federatesWith: ["cluster2.demo"]

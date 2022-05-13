@@ -2336,7 +2336,7 @@ spec:
     metadata:
       labels:
         app: istiod
-        spire.spiffe.io/spiffeid: istiod.istio-system.svc.cluster.local
+        spire.spiffe.io/spiffeid: istiod.istio-system.svc
         istio.io/rev: default
         install.operator.istio.io/owning-resource: unknown
         sidecar.istio.io/inject: "false"
@@ -2473,7 +2473,7 @@ spec:
         csi:
           driver: "csi.spiffe.io"
 ---
-apiVersion: policy/v1beta1
+apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: istiod

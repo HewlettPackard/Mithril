@@ -3,7 +3,7 @@ kind: ClusterSPIFFEID
 metadata:
   name: istiod
 spec:
-  spiffeIDTemplate: spiffe://example.org/istiod.istio-system.svc.cluster.local
+  spiffeIDTemplate: spiffe://example.org/istiod.istio-system.svc
   podSelector:
     matchLabels:
-      spire.spiffe.io/spiffeid: istiod.istio-system.svc.cluster.local
+      spire.spiffe.io/spiffeid: istiod.istio-system.svc

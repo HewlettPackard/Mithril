@@ -4,15 +4,17 @@ kind: Kustomization
 namespace: spire
 
 resources:
-- spire-namespace.yaml
-- agent-account.yaml
-- agent-cluster-role.yaml
-- agent-configmap.yaml
-- agent-daemonset.yaml
-- server-account.yaml
-- server-cluster-role.yaml
-- server-configmap.yaml
-- server-service.yaml
-- server-statefulset.yaml
-- spire-bundle-configmap.yaml
-
+  - spiffe-csi-driver.yaml
+  - k8s-workload-registrar-crd-cluster-role.yaml
+  - k8s-workload-registrar-crd-configmap.yaml
+  - spiffeid.spiffe.io_spiffeids.yaml
+  - server-account.yaml
+  - spire-bundle-configmap.yaml
+  - server-cluster-role.yaml
+  - server-configmap.yaml
+  - server-statefulset.yaml
+  - server-service.yaml
+  - agent-account.yaml
+  - agent-cluster-role.yaml
+  - agent-configmap.yaml
+  - agent-daemonset.yaml

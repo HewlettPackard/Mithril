@@ -64,16 +64,22 @@ to quickly create a Cobra application.`,
 				yb, _ := yaml.Marshal(y)
 				objs = append(objs, fmt.Sprintf("%v", string(yb)))
 			}
+			//println(fmt.Sprintf("%+v", objs))
 
 			var nms []string
 			for _, f := range objs {
 				decode := scheme.Codecs.UniversalDeserializer().Decode
 				obj, _, _ := decode([]byte(f), nil, nil)
-				println(f)
+				//println(f)
 				switch o := obj.(type) {
 				case *apps.Deployment:
 					// o is the Deployment
-					if !contains(nms, o.Namespace) {
+					//ob, _ := yaml.Marshal(o)
+					//println(fmt.Sprintf("%+v", string(ob)))
+					if o.Namespace == "" {
+						o.Namespace = "default"
+					}
+					if !Contains(nms, o.Namespace) {
 						nms = append(nms, o.Namespace)
 						cm := v1.ConfigMap{
 							TypeMeta: metav1.TypeMeta{
@@ -116,15 +122,17 @@ to quickly create a Cobra application.`,
 			}
 			command := fmt.Sprintf("kube-inject --filename %s | kubectl apply -f -", filepath.Join(args[0]))
 			cmdArgs := strings.Fields(command)
-			println(command)
+			//println(command)
+			//for _, m := range cmdArgs {
+			//	println(m)
+			//}
 			wlInstall := exec.Command("istioctl", cmdArgs[0:]...)
 
 			oute, err := wlInstall.CombinedOutput()
 			if err != nil {
 				println(err.Error())
-			} else {
-				print(string(oute))
 			}
+			print(string(oute))
 		}
 	},
 }
@@ -140,7 +148,7 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	applyCmd.Flags().BoolP("file", "f", false, "for passing a deployment k8s file as input")
+	//applyCmd.Flags().BoolP("file", "f", false, "for passing a deployment k8s file as input")
 }
 
 func createClientGo() (*kubernetes.Clientset, *rest.Config, error) {
@@ -165,7 +173,7 @@ func createClientGo() (*kubernetes.Clientset, *rest.Config, error) {
 	return clientset, config, err
 }
 
-func contains(s []string, str string) bool {
+func Contains(s []string, str string) bool {
 	for _, v := range s {
 		if v == str {
 			return true

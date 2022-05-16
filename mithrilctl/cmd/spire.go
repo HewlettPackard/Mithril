@@ -45,8 +45,21 @@ to quickly create a Cobra application.`,
 		kubeArgs := strings.Fields(string(stdout))
 		var command string
 		var cmdArgs []string
+
+		if Contains(kubeArgs, "kustomization.yaml") {
+			command = fmt.Sprintf("apply -k %s", filepath.Join(args[0]))
+			cmdArgs = strings.Fields(command)
+			spireInstall := exec.Command("kubectl", cmdArgs[0:]...)
+
+			out, err := spireInstall.CombinedOutput()
+			if err != nil {
+				println(err.Error())
+			}
+			print(string(out))
+		}
+
 		for i, _ := range kubeArgs {
-			if kubeArgs[i][len(kubeArgs[i])-3:] == ".sh" {
+			if kubeArgs[i][len(kubeArgs[i])-3:] == ".sh" || kubeArgs[i] == "kustomization.yaml" {
 				continue
 			}
 			command = fmt.Sprintf("apply -f %s", filepath.Join(args[0], kubeArgs[i]))

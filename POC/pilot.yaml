@@ -2336,7 +2336,7 @@ spec:
     metadata:
       labels:
         app: istiod
-        spire.spiffe.io/spiffeid: istiod.istio-system.svc
+        spire.spiffe.io/spiffeid: istiod
         istio.io/rev: default
         install.operator.istio.io/owning-resource: unknown
         sidecar.istio.io/inject: "false"

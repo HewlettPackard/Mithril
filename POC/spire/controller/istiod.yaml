@@ -3,7 +3,30 @@ kind: ClusterSPIFFEID
 metadata:
   name: istiod
 spec:
-  spiffeIDTemplate: spiffe://example.org/istiod.istio-system.svc
+  spiffeIDTemplate: spiffe://example.org/ns/istio-system/sa/istiod
   podSelector:
     matchLabels:
-      spire.spiffe.io/spiffeid: istiod.istio-system.svc
+      spire.spiffe.io/spiffeid: istiod
+---
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: ingress
+spec:
+  spiffeIDTemplate: spiffe://example.org/ns/istio-system/sa/istio-ingressgateway-service-account
+  podSelector:
+    matchLabels:
+      spire.spiffe.io/spiffeid: ingress
+#  federatesWith: ["cluster2.demo"]
+---
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: wl
+spec:
+  spiffeIDTemplate: spiffe://example.org/wl
+  podSelector:
+    matchLabels:
+      spire.spiffe.io/spiffeid: wl
+#  federatesWith: ["cluster2.demo"]
+

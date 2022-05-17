@@ -36,7 +36,7 @@ spec:
     metadata:
       labels:
         app: istio-ingressgateway
-        spire.spiffe.io/spiffeid: istio-ingressgateway.istio-system.svc
+        spire.spiffe.io/spiffeid: ingress
         istio: ingressgateway
         heritage: Tiller
         release: istio

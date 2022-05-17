@@ -7,7 +7,7 @@ kubectl apply -k spire/controller
 kubectl rollout status statefulset -n spire spire-server
 kubectl rollout status daemonset -n spire spire-agent
 kubectl apply -f spire/controller/istiod.yaml
-kubectl apply -f spire/controller/ingress-gateway.yaml
+#kubectl apply -f spire/controller/ingress-gateway.yaml
 #(cd spire ; ./deploy-spire.sh)
 
 #(cd istio ; ./deploy-istio.sh)

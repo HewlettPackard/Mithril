@@ -1,15 +1,14 @@
-#generatorOptions:
-#  disableNameSuffixHash: true
-#
-#configMapGenerator:
-#  - name: spire-controller-manager-config
-#    namespace: spire
-#    files:
-#      - spire/spire-controller-manager-config.yaml
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: spire-controller-manager-config
+    namespace: spire
+    files:
+      - spire/spire-controller-manager-config.yaml
 
 resources:
 - spire/spiffe-csi-driver.yaml
-#- spire/spire-namespace.yaml
 - crd/spire.spiffe.io_clusterfederatedtrustdomains.yaml
 - crd/spire.spiffe.io_clusterspiffeids.yaml
 - crd-rbac/role.yaml
@@ -19,12 +18,3 @@ resources:
 - spire/spire-server.yaml
 - spire/spire-agent.yaml
 - spire/spire-controller-manager-webhook.yaml
-
-generatorOptions:
-  disableNameSuffixHash: true
-
-configMapGenerator:
-  - name: spire-controller-manager-config
-    namespace: spire
-    files:
-      - spire/spire-controller-manager-config.yaml

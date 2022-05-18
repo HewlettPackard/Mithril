@@ -41,7 +41,7 @@ data:
       log_level = "DEBUG"
       server_address = "spire-server"
       server_port = "8081"
-      socket_path = "/run/spire/sockets/agent.sock"
+      socket_path = "/run/secrets/workload-spiffe-uds/socket"
       trust_bundle_path = "/run/spire/bundle/root-cert.pem"
       trust_domain = "example.org"
     }
@@ -122,7 +122,7 @@ spec:
             - name: spire-bundle
               mountPath: /run/spire/bundle
             - name: spire-agent-socket-dir
-              mountPath: /run/spire/sockets
+              mountPath: /run/secrets/workload-spiffe-uds
             - name: spire-token
               mountPath: /var/run/secrets/tokens
           livenessProbe:

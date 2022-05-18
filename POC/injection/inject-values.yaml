@@ -15,7 +15,7 @@
     },
     "enabled": true,
     "externalIstiod": false,
-    "hub": "public.ecr.aws/e4m8j0n8/mithril",
+    "hub": "localhost:5000",
     "imagePullPolicy": "",
     "imagePullSecrets": [],
     "istioNamespace": "istio-system",
@@ -94,7 +94,7 @@
     "sts": {
       "servicePort": 0
     },
-    "tag": "latest-release-1.13",
+    "tag": "sdsv2",
     "tracer": {
       "datadog": {
         "address": "$(HOST_IP):8126"
@@ -131,7 +131,7 @@
     },
     "rewriteAppHTTPProbe": true,
     "templates": {
-      "spire": "spec:\n  containers:\n  - name: istio-proxy\n    env:\n    - name: CA_PROVIDER\n      value: \"spiffe\"\n    - name: SPIFFE_ENDPOINT_SOCKET\n      value: \"unix:///run/spire/sockets/agent.sock\"\n    volumeMounts:\n    - name: spire-agent-socket\n      mountPath: /run/spire/sockets\n      readOnly: true\n  volumes:\n    - name: spire-agent-socket\n      csi:\n        driver: \"csi.spiffe.io\"\n"
+      "spire": "spec:\n containers:\n - name: istio-proxy\n volumes:\n - name: workload-socket\n csi:\n driver: \"csi.spiffe.io\"\n"
     }
   }
 }

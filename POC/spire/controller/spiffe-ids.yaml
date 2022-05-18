@@ -3,7 +3,7 @@ kind: ClusterSPIFFEID
 metadata:
   name: istiod
 spec:
-  spiffeIDTemplate: spiffe://example.org/istiod
+  spiffeIDTemplate: spiffe://example.org/istiod/{{ .PodMeta.Name }}
   dnsNameTemplates:
     - istiod.istio-system.svc
   podSelector:
@@ -15,7 +15,7 @@ kind: ClusterSPIFFEID
 metadata:
   name: ingress
 spec:
-  spiffeIDTemplate: spiffe://example.org/ns/ingress
+  spiffeIDTemplate: spiffe://example.org/ns/ingress/{{ .PodMeta.Name }}
   podSelector:
     matchLabels:
       spire.spiffe.io/spiffeid: ingress

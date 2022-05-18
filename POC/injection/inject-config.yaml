@@ -9,6 +9,32 @@ injectedAnnotations:
 template: "{{ Template_Version_And_Istio_Version_Mismatched_Check_Installation }}"
 templates:
   sidecar: |
+    {{- define "resources"  }}
+      {{- if or (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit`) }}
+        {{- if or (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory`) }}
+          requests:
+            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU`) -}}
+            cpu: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU` }}"
+            {{ end }}
+            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory`) -}}
+            memory: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory` }}"
+            {{ end }}
+        {{- end }}
+        {{- if or (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit`) }}
+          limits:
+            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit`) -}}
+            cpu: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit` }}"
+            {{ end }}
+            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit`) -}}
+            memory: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit` }}"
+            {{ end }}
+        {{- end }}
+      {{- else }}
+        {{- if .Values.global.proxy.resources }}
+          {{ toYaml .Values.global.proxy.resources | indent 6 }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
     {{- $containers := list }}
     {{- range $index, $container := .Spec.Containers }}{{ if not (eq $container.Name "istio-proxy") }}{{ $containers = append $containers $container.Name }}{{end}}{{- end}}
     metadata:
@@ -28,7 +54,7 @@ templates:
         sidecar.istio.io/interceptionMode: "{{ annotation .ObjectMeta `sidecar.istio.io/interceptionMode` .ProxyConfig.InterceptionMode }}",
         {{ with annotation .ObjectMeta `traffic.sidecar.istio.io/includeOutboundIPRanges` .Values.global.proxy.includeIPRanges }}traffic.sidecar.istio.io/includeOutboundIPRanges: "{{.}}",{{ end }}
         {{ with annotation .ObjectMeta `traffic.sidecar.istio.io/excludeOutboundIPRanges` .Values.global.proxy.excludeIPRanges }}traffic.sidecar.istio.io/excludeOutboundIPRanges: "{{.}}",{{ end }}
-        traffic.sidecar.istio.io/includeInboundPorts: "{{ annotation .ObjectMeta `traffic.sidecar.istio.io/includeInboundPorts` `*` }}",
+        {{ with annotation .ObjectMeta `traffic.sidecar.istio.io/includeInboundPorts` .Values.global.proxy.includeInboundPorts }}traffic.sidecar.istio.io/includeInboundPorts: "{{.}}",{{ end }}
         traffic.sidecar.istio.io/excludeInboundPorts: "{{ excludeInboundPort (annotation .ObjectMeta `status.sidecar.istio.io/port` .Values.global.proxy.statusPort) (annotation .ObjectMeta `traffic.sidecar.istio.io/excludeInboundPorts` .Values.global.proxy.excludeInboundPorts) }}",
         {{ if or (isset .ObjectMeta.Annotations `traffic.sidecar.istio.io/includeOutboundPorts`) (ne (valueOrDefault .Values.global.proxy.includeOutboundPorts "") "") }}
         traffic.sidecar.istio.io/includeOutboundPorts: "{{ annotation .ObjectMeta `traffic.sidecar.istio.io/includeOutboundPorts` .Values.global.proxy.includeOutboundPorts }}",
@@ -51,7 +77,7 @@ templates:
       {{- if contains "/" (annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy_init.image) }}
         image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy_init.image }}"
       {{- else }}
-        image: "{{ .Values.global.hub }}/{{ .Values.global.proxy_init.image }}:{{ .Values.global.tag }}"
+        image: "{{ .ProxyImage }}"
       {{- end }}
         args:
         - istio-iptables
@@ -68,7 +94,7 @@ templates:
         - "-x"
         - "{{ annotation .ObjectMeta `traffic.sidecar.istio.io/excludeOutboundIPRanges` .Values.global.proxy.excludeIPRanges }}"
         - "-b"
-        - "{{ annotation .ObjectMeta `traffic.sidecar.istio.io/includeInboundPorts` `*` }}"
+        - "{{ annotation .ObjectMeta `traffic.sidecar.istio.io/includeInboundPorts` .Values.global.proxy.includeInboundPorts }}"
         - "-d"
       {{- if excludeInboundPort (annotation .ObjectMeta `status.sidecar.istio.io/port` .Values.global.proxy.statusPort) (annotation .ObjectMeta `traffic.sidecar.istio.io/excludeInboundPorts` .Values.global.proxy.excludeInboundPorts) }}
         - "15090,15021,{{ excludeInboundPort (annotation .ObjectMeta `status.sidecar.istio.io/port` .Values.global.proxy.statusPort) (annotation .ObjectMeta `traffic.sidecar.istio.io/excludeInboundPorts` .Values.global.proxy.excludeInboundPorts) }}"
@@ -100,30 +126,7 @@ templates:
         {{- end }}
       {{- end }}
         resources:
-      {{- if or (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit`) }}
-        {{- if or (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory`) }}
-          requests:
-            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU`) -}}
-            cpu: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU` }}"
-            {{ end }}
-            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory`) -}}
-            memory: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory` }}"
-            {{ end }}
-        {{- end }}
-        {{- if or (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit`) }}
-          limits:
-            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit`) -}}
-            cpu: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit` }}"
-            {{ end }}
-            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit`) -}}
-            memory: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit` }}"
-            {{ end }}
-        {{- end }}
-      {{- else }}
-        {{- if .Values.global.proxy.resources }}
-          {{ toYaml .Values.global.proxy.resources | indent 6 }}
-        {{- end }}
-      {{- end }}
+      {{ template "resources" . }}
         securityContext:
           allowPrivilegeEscalation: {{ .Values.global.proxy.privileged }}
           privileged: {{ .Values.global.proxy.privileged }}
@@ -158,10 +161,11 @@ templates:
       {{- if contains "/" (annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy_init.image) }}
         image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy_init.image }}"
       {{- else }}
-        image: "{{ .Values.global.hub }}/{{ .Values.global.proxy_init.image }}:{{ .Values.global.tag }}"
+        image: "{{ .ProxyImage }}"
       {{- end }}
         {{with .Values.global.imagePullPolicy }}imagePullPolicy: "{{.}}"{{end}}
-        resources: {}
+        resources:
+      {{ template "resources" . }}
         securityContext:
           allowPrivilegeEscalation: true
           capabilities:
@@ -180,7 +184,7 @@ templates:
       {{- if contains "/" (annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy.image) }}
         image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy.image }}"
       {{- else }}
-        image: "{{ .Values.global.hub }}/{{ .Values.global.proxy.image }}:{{ .Values.global.tag }}"
+        image: "{{ .ProxyImage }}"
       {{- end }}
         ports:
         - containerPort: 15090
@@ -361,37 +365,17 @@ templates:
           {{- end }}
           {{- end }}
         resources:
-      {{- if or (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit`) }}
-        {{- if or (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory`) }}
-          requests:
-            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU`) -}}
-            cpu: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyCPU` }}"
-            {{ end }}
-            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory`) -}}
-            memory: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyMemory` }}"
-            {{ end }}
-        {{- end }}
-        {{- if or (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit`) (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit`) }}
-          limits:
-            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit`) -}}
-            cpu: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyCPULimit` }}"
-            {{ end }}
-            {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit`) -}}
-            memory: "{{ index .ObjectMeta.Annotations `sidecar.istio.io/proxyMemoryLimit` }}"
-            {{ end }}
-        {{- end }}
-      {{- else }}
-        {{- if .Values.global.proxy.resources }}
-          {{ toYaml .Values.global.proxy.resources | indent 6 }}
-        {{- end }}
-      {{- end }}
+      {{ template "resources" . }}
         volumeMounts:
-        - name: istio-sds
-          mountPath: /var/run/secrets/sds
-      {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
-        - name: gke-workload-certificate
+        - name: workload-socket
+          mountPath: /var/run/secrets/workload-spiffe-uds
+        {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
+        - name: workload-certs
           mountPath: /var/run/secrets/workload-spiffe-credentials
           readOnly: true
+        {{- else }}
+        - name: workload-certs
+          mountPath: /var/run/secrets/workload-spiffe-credentials
         {{- end }}
         {{- if eq .Values.global.pilotCertProvider "istiod" }}
         - mountPath: /var/run/secrets/istio
@@ -431,11 +415,14 @@ templates:
           {{- end }}
       volumes:
       - emptyDir:
-        name: istio-sds
+        name: workload-socket
       {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
-      - name: gke-workload-certificate
+      - name: workload-certs
         csi:
           driver: workloadcertificates.security.cloud.google.com
+      {{- else }}
+      - emptyDir:
+        name: workload-certs
       {{- end }}
       {{- if (isset .ObjectMeta.Annotations `sidecar.istio.io/bootstrapOverride`) }}
       - name: custom-bootstrap-volume
@@ -524,7 +511,7 @@ templates:
       {{- if contains "/" .Values.global.proxy.image }}
         image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy.image }}"
       {{- else }}
-        image: "{{ .Values.global.hub }}/{{ .Values.global.proxy.image }}:{{ .Values.global.tag }}"
+        image: "{{ .ProxyImage }}"
       {{- end }}
         ports:
         - containerPort: 15090
@@ -638,10 +625,15 @@ templates:
           timeoutSeconds: 3
           failureThreshold: {{ .Values.global.proxy.readinessFailureThreshold }}
         volumeMounts:
+        - name: workload-socket
+          mountPath: /var/run/secrets/workload-spiffe-uds
         {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
-        - name: gke-workload-certificate
-          mountPath: /var/run/secrets/workload-spiffe-credentials
+        - name: workload-certs
+          mountpath: /var/run/secrets/workload-spiffe-credentials
           readOnly: true
+        {{- else }}
+        - name: workload-certs
+          mountpath: /var/run/secrets/workload-spiffe-credentials
         {{- end }}
         {{- if eq .Values.global.pilotCertProvider "istiod" }}
         - mountPath: /var/run/secrets/istio
@@ -665,10 +657,15 @@ templates:
         - name: istio-podinfo
           mountPath: /etc/istio/pod
       volumes:
+      - emptyDir:
+        name: workload-socket
       {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
-      - name: gke-workload-certificate
+      - name: workload-certs
         csi:
           driver: workloadcertificates.security.cloud.google.com
+      {{- else}}
+      - emptyDir:
+        name: workload-certs
       {{- end }}
       # SDS channel between istioagent and Envoy
       - emptyDir:
@@ -789,6 +786,9 @@ templates:
     {{- $containers := list }}
     {{- range $index, $container := .Spec.Containers }}{{ if not (eq $container.Name "istio-proxy") }}{{ $containers = append $containers $container.Name }}{{end}}{{- end}}
     metadata:
+      labels:
+        service.istio.io/canonical-name: {{ index .ObjectMeta.Labels `service.istio.io/canonical-name` | default (index .ObjectMeta.Labels `app.kubernetes.io/name`) | default (index .ObjectMeta.Labels `app`) | default .DeploymentMeta.Name  | quote }}
+        service.istio.io/canonical-revision: {{ index .ObjectMeta.Labels `service.istio.io/canonical-revision` | default (index .ObjectMeta.Labels `app.kubernetes.io/version`) | default (index .ObjectMeta.Labels `version`) | default "latest"  | quote }}
       annotations: {
         {{- if eq (len $containers) 1 }}
         kubectl.kubernetes.io/default-logs-container: "{{ index $containers 0 }}",
@@ -818,7 +818,7 @@ templates:
       {{- if contains "/" (annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy.image) }}
         image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy.image }}"
       {{- else }}
-        image: "{{ .Values.global.hub }}/{{ .Values.global.proxy.image }}:{{ .Values.global.tag }}"
+        image: "{{ .ProxyImage }}"
       {{- end }}
         args:
         - proxy
@@ -962,8 +962,6 @@ templates:
         {{- end }}
       {{- end }}
         volumeMounts:
-        - name: istio-sds
-          mountPath: /var/run/secrets/sds
         {{- if eq .Values.global.pilotCertProvider "istiod" }}
         - mountPath: /var/run/secrets/istio
           name: istiod-ca-cert
@@ -986,8 +984,6 @@ templates:
         {{ end }}
         {{- end }}
       volumes:
-      - emptyDir:
-        name: istio-sds
       # UDS channel between istioagent and gRPC client for XDS/SDS
       - emptyDir:
           medium: Memory
@@ -1027,16 +1023,7 @@ templates:
     spec:
       containers:
       - name: istio-proxy
-        env:
-        - name: CA_PROVIDER
-          value: "spiffe"
-        - name: SPIFFE_ENDPOINT_SOCKET
-          value: "unix:///run/spire/sockets/agent.sock"
-        volumeMounts:
-        - name: spire-agent-socket
-          mountPath: /run/spire/sockets
-          readOnly: true
       volumes:
-        - name: spire-agent-socket
+        - name: workload-socket
           csi:
             driver: "csi.spiffe.io"

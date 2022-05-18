@@ -68,7 +68,7 @@ spec:
       labels:
         app: details
         version: v1
-        spire.spiffe.io/spiffeid: wl
+        spire.spiffe.io/spiffeid: workloads
       annotations:        
         inject.istio.io/templates: "sidecar,spire"
     spec:
@@ -124,7 +124,7 @@ spec:
       labels:
         app: ratings
         version: v1
-        spire.spiffe.io/spiffeid: wl
+        spire.spiffe.io/spiffeid: workloads
       annotations:        
         inject.istio.io/templates: "sidecar,spire"
     spec:
@@ -180,7 +180,7 @@ spec:
       labels:
         app: reviews
         version: v1
-        spire.spiffe.io/spiffeid: wl
+        spire.spiffe.io/spiffeid: workloads
       annotations:        
         inject.istio.io/templates: "sidecar,spire"
     spec:
@@ -225,7 +225,7 @@ spec:
       labels:
         app: reviews
         version: v2
-        spire.spiffe.io/spiffeid: wl
+        spire.spiffe.io/spiffeid: workloads
       annotations:
         inject.istio.io/templates: "sidecar,spire"
     spec:
@@ -270,7 +270,7 @@ spec:
       labels:
         app: reviews
         version: v3
-        spire.spiffe.io/spiffeid: wl
+        spire.spiffe.io/spiffeid: workloads
       annotations:
         inject.istio.io/templates: "sidecar,spire"
     spec:
@@ -339,7 +339,7 @@ spec:
       labels:
         app: productpage
         version: v1
-        spire.spiffe.io/spiffeid: wl
+        spire.spiffe.io/spiffeid: workloads
       annotations:
         inject.istio.io/templates: "sidecar,spire"
     spec:

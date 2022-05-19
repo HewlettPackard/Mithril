@@ -8,6 +8,7 @@ configMapGenerator:
       - spire/spire-controller-manager-config.yaml
 
 resources:
+- spire/spire-namespace.yaml
 - spire/spiffe-csi-driver.yaml
 - crd/spire.spiffe.io_clusterfederatedtrustdomains.yaml
 - crd/spire.spiffe.io_clusterspiffeids.yaml

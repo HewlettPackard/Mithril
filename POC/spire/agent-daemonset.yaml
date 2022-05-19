@@ -59,10 +59,16 @@ spec:
           image: ghcr.io/spiffe/spiffe-csi-driver:0.1.0
           imagePullPolicy: IfNotPresent
           args: [
-              "-node-id", "CSI_NODE",
               "-workload-api-socket-dir", "/spire-agent-socket",
               "-csi-socket-path", "/spiffe-csi/csi.sock",
           ]
+          env:
+            # The CSI driver needs a unique node ID. The node name can be
+            # used for this purpose.
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           volumeMounts:
             # The volume containing the SPIRE agent socket. The SPIFFE CSI
             # driver will mount this directory into containers.

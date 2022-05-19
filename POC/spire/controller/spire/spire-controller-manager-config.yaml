@@ -10,8 +10,4 @@ leaderElection:
   resourceNamespace: spire
 clusterName: demo-cluster
 trustDomain: example.org
-ignoreNamespaces:
-  - kube-system
-  - kube-public
-  - spire
-  - local-path-storage
+ignoreNamespaces: ["kube-system", "kube-public", "local-path-storage", "spire"]

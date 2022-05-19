@@ -1,12 +1,10 @@
----
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  creationTimestamp: null
+#  creationTimestamp: null todo necessary?
   name: spire-controller-manager-webhook
 webhooks:
-- admissionReviewVersions:
-  - v1
+- admissionReviewVersions: ["v1"]
   clientConfig:
     service:
       name: spire-controller-manager-webhook-service
@@ -15,18 +13,12 @@ webhooks:
   failurePolicy: Fail
   name: vclusterfederatedtrustdomain.kb.io
   rules:
-  - apiGroups:
-    - spire.spiffe.io
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - clusterfederatedtrustdomains
+  - apiGroups: ["spire.spiffe.io"]
+    apiVersions: ["v1alpha1"]
+    operations: ["CREATE", "UPDATE"]
+    resources: ["clusterfederatedtrustdomains"]
   sideEffects: None
-- admissionReviewVersions:
-  - v1
+- admissionReviewVersions: ["v1"]
   clientConfig:
     service:
       name: spire-controller-manager-webhook-service
@@ -35,13 +27,8 @@ webhooks:
   failurePolicy: Fail
   name: vclusterspiffeid.kb.io
   rules:
-  - apiGroups:
-    - spire.spiffe.io
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - clusterspiffeids
+  - apiGroups: ["spire.spiffe.io"]
+    apiVersions: ["v1alpha1"]
+    operations: ["CREATE", "UPDATE"]
+    resources: ["clusterspiffeids"]
   sideEffects: None

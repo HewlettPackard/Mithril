@@ -1,4 +1,4 @@
-apiVersion: operator.istio.io/v1alpha1
+apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 metadata:
   namespace: istio-system
@@ -8,9 +8,9 @@ spec:
     trustDomain: example.org
   values:
     global:
-      hub: public.ecr.aws/e4m8j0n8/mithril
-      tag: latest-release-1.13
-      imagePullPolicy: "Always"
+      hub: localhost:5000
+      tag: sdsv2
+      imagePullPolicy: "IfNotPresent"
       imagePullSecrets:
         - secret-registry
     # This is used to customize the sidecar template
@@ -20,72 +20,34 @@ spec:
           spec:
             containers:
             - name: istio-proxy
-              env:
-              - name: CA_PROVIDER
-                value: "spiffe"
-              - name: SPIFFE_ENDPOINT_SOCKET
-                value: "unix:///run/spire/sockets/agent.sock"
-              volumeMounts:
-              - name: spire-agent-socket
-                mountPath: /run/spire/sockets
-                readOnly: true
             volumes:
-              - name: spire-agent-socket
-                csi:
-                  driver: "csi.spiffe.io"
+            - name: workload-socket
+              csi:
+                driver: "csi.spiffe.io"
   components:
     pilot:
       k8s:
         env:
           # Disable istiod CA Sever functionality
           - name: ENABLE_CA_SERVER
-            value: "false"
+            value: "true"
           # Check that istio-agent's namespace and service account match the ones in the JWT token presented in the connection
           - name: PILOT_ENABLE_XDS_IDENTITY_CHECK
             value: "true"
-          # Configure the SPIFFE Workload API as the cert provider for istiod
-          - name: PILOT_CERT_PROVIDER
-            value: "spiffe"
-          - name: SPIFFE_ENDPOINT_SOCKET
-            value: "unix:///run/spire/sockets/agent.sock"
-        overlays:
-          - apiVersion: apps/v1
-            kind: Deployment
-            name: istiod
-            patches:
-              - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
-                value:
-                  name: spire-agent-socket
-                  mountPath: "/run/spire/sockets"
-                  readOnly: true
-              - path: spec.template.spec.volumes[7]
-                value:
-                  name: spire-agent-socket
-                  csi:
-                    driver: "csi.spiffe.io"
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
         label:
           istio: ingressgateway
+          spire.spiffe.io/spiffeid: ingress
         k8s:
           overlays:
             - apiVersion: apps/v1
               kind: Deployment
               name: istio-ingressgateway
               patches:
-                - path: spec.template.spec.volumes[8]
+                - path: spec.template.spec.volumes.[name:workload-socket]
                   value:
-                    name: spire-agent-socket
+                    name: workload-socket
                     csi:
                       driver: "csi.spiffe.io"
-                - path: spec.template.spec.containers.[name:istio-proxy].volumeMounts[8]
-                  value:
-                    name: spire-agent-socket
-                    mountPath: "/run/spire/sockets"
-                    readOnly: true
-          env:
-            - name: CA_PROVIDER
-              value: "spiffe"
-            - name: SPIFFE_ENDPOINT_SOCKET
-              value: "unix:///run/spire/sockets/agent.sock"

@@ -5,7 +5,8 @@ metadata:
 spec:
   spiffeIDTemplate: spiffe://example.org/istiod/{{ .PodMeta.Name }}
   dnsNameTemplates:
-    - istiod.istio-system.svc
+    - "{{ .PodMeta.Labels.app }}.{{ .PodMeta.Namespace }}.svc"
+    - "{{ .PodMeta.Name }}"
   podSelector:
     matchLabels:
       spire.spiffe.io/spiffeid: istiod
@@ -15,7 +16,10 @@ kind: ClusterSPIFFEID
 metadata:
   name: ingress
 spec:
-  spiffeIDTemplate: spiffe://example.org/ns/ingress/{{ .PodMeta.Name }}
+  spiffeIDTemplate: spiffe://example.org/ingress/{{ .PodMeta.Name }}
+  dnsNameTemplates:
+    - "{{ .PodMeta.Labels.app }}.{{ .PodMeta.Namespace }}.svc"
+    - "{{ .PodMeta.Name }}"
   podSelector:
     matchLabels:
       spire.spiffe.io/spiffeid: ingress
@@ -26,9 +30,11 @@ kind: ClusterSPIFFEID
 metadata:
   name: workloads
 spec:
-  spiffeIDTemplate: spiffe://example.org/{{ .PodMeta.Name }}
+  spiffeIDTemplate: spiffe://example.org/ns/default/sa/{{ .PodSpec.ServiceAccountName }}
+  dnsNameTemplates:
+    - "{{ .PodMeta.Name }}"
+    - "{{ .PodMeta.Labels.app }}.{{ .PodMeta.Namespace }}.svc"
   podSelector:
     matchLabels:
       spire.spiffe.io/spiffeid: workloads
 #  federatesWith: ["cluster2.demo"]
-

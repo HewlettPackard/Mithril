@@ -23,7 +23,7 @@ spec:
   podSelector:
     matchLabels:
       spire.spiffe.io/spiffeid: ingress
-#  federatesWith: ["cluster2.demo"]
+  federatesWith: ["domain.test"]
 ---
 apiVersion: spire.spiffe.io/v1alpha1
 kind: ClusterSPIFFEID
@@ -37,4 +37,4 @@ spec:
   podSelector:
     matchLabels:
       spire.spiffe.io/spiffeid: workloads
-#  federatesWith: ["cluster2.demo"]
+  federatesWith: ["domain.test"]

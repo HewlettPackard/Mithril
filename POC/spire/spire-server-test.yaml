@@ -1,3 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spire
+---
 # ServiceAccount used by the SPIRE server.
 apiVersion: v1
 kind: ServiceAccount
@@ -5,10 +10,7 @@ metadata:
   name: spire-server
   namespace: spire
 ---
-# ConfigMap containing the latest trust bundle for the trust domain. It is
-# updated by SPIRE using the k8sbundle notifier plugin. SPIRE agents mount
-# this config map and use the certificate to bootstrap trust with the SPIRE
-# server during attestation.
+# Trust bundle used by to bootstrap SPIRE agent.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -21,14 +23,14 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: spire-server-cluster-role
 rules:
-- apiGroups: [""]
-  resources: ["nodes"]
-  verbs: ["get"]
-  # allow TokenReview requests (to verify service account tokens for PSAT
-  # attestation)
-- apiGroups: ["authentication.k8s.io"]
-  resources: ["tokenreviews"]
-  verbs: ["get", "create"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get"]
+    # allow TokenReview requests (to verify service account tokens for PSAT
+    # attestation)
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["tokenreviews"]
+    verbs: ["get", "create"]
 ---
 # Binds above cluster role to spire-server service account
 kind: ClusterRoleBinding
@@ -37,9 +39,9 @@ metadata:
   name: spire-server-cluster-role-binding
   namespace: spire
 subjects:
-- kind: ServiceAccount
-  name: spire-server
-  namespace: spire
+  - kind: ServiceAccount
+    name: spire-server
+    namespace: spire
 roleRef:
   kind: ClusterRole
   name: spire-server-cluster-role
@@ -53,15 +55,15 @@ metadata:
   name: spire-server-role
 rules:
   # allow "get" access to pods (to resolve selectors for PSAT attestation)
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get"]
-  # allow access to "get" and "patch" the spire-bundle ConfigMap (for SPIRE
-  # agent bootstrapping, see the spire-bundle ConfigMap below)
-- apiGroups: [""]
-  resources: ["configmaps"]
-  resourceNames: ["spire-bundle"]
-  verbs: ["get", "patch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get"]
+    # allow access to "get" and "patch" the spire-bundle ConfigMap (for SPIRE
+    # agent bootstrapping, see the spire-bundle ConfigMap below)
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["spire-bundle"]
+    verbs: ["get", "patch"]
 ---
 # RoleBinding granting the spire-server-role to the SPIRE server
 # service account.
@@ -71,9 +73,9 @@ metadata:
   name: spire-server-role-binding
   namespace: spire
 subjects:
-- kind: ServiceAccount
-  name: spire-server
-  namespace: spire
+  - kind: ServiceAccount
+    name: spire-server
+    namespace: spire
 roleRef:
   kind: Role
   name: spire-server-role
@@ -83,11 +85,11 @@ roleRef:
 # updated by SPIRE using the k8sbundle notifier plugin. SPIRE agents mount
 # this config map and use the certificate to bootstrap trust with the SPIRE
 # server during attestation.
-#apiVersion: v1
-#kind: ConfigMap
-#metadata:
-#  name: spire-bundle
-#  namespace: spire
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spire-bundle
+  namespace: spire
 ---
 # ConfigMap containing the SPIRE server configuration.
 apiVersion: v1
@@ -101,25 +103,24 @@ data:
       bind_address = "0.0.0.0"
       bind_port = "8081"
       socket_path = "/run/spire/sockets/api.sock"
-      trust_domain = "example.org"
+      trust_domain = "domain.test"
       data_dir = "/run/spire/server/data"
       log_level = "DEBUG"
       ca_key_type = "rsa-2048"
-  
-  
+    
       federation {
         bundle_endpoint {
-          address = "0.0.0.0"
-          port = 8443
+            address = "0.0.0.0"
+            port = 8443
         }
-        federates_with "domain.test" {
-          bundle_endpoint_url = "https://192.168.0.16:4002"
+        federates_with "example.org" {
+          bundle_endpoint_url = "https://192.168.0.16:4001"
           bundle_endpoint_profile "https_spiffe" {
-          endpoint_spiffe_id = "spiffe://domain.test/spire/server"
+            endpoint_spiffe_id = "spiffe://example.org/spire/server"
           }
         }
       }
-      
+    
       default_svid_ttl = "1h"
       ca_subject = {
         country = ["US"],
@@ -153,14 +154,8 @@ data:
           keys_path = "/run/spire/data/keys.json"
         }
       }
-
-      Notifier "k8sbundle" {
-        plugin_data {
-          namespace = "spire"
-          config_map = "trust-bundle"
-          config_map_key = "root-cert.pem"    
-        }
-      }
+    
+    
     }
 
     health_checks {
@@ -222,20 +217,20 @@ spec:
             - name: spire-registration-socket
               mountPath: /run/spire/sockets
               readOnly: false
-        - name: spire-controller-manager
-          image: ghcr.io/spiffe/spire-controller-manager:nightly
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 9443
-          args:
-            - "--config=spire-controller-manager-config.yaml"
-          volumeMounts:
-            - name: spire-registration-socket
-              mountPath: /spire-server
-              readOnly: true
-            - name: spire-controller-manager-config
-              mountPath: /spire-controller-manager-config.yaml
-              subPath: spire-controller-manager-config.yaml
+      #        - name: spire-controller-manager
+      #          image: ghcr.io/spiffe/spire-controller-manager:nightly
+      #          imagePullPolicy: IfNotPresent
+      #          ports:
+      #            - containerPort: 9443
+      #          args:
+      #            - "--config=spire-controller-manager-config.yaml"
+      #          volumeMounts:
+      #            - name: spire-registration-socket
+      #              mountPath: /spire-server
+      #              readOnly: true
+      #            - name: spire-controller-manager-config
+      #              mountPath: /spire-controller-manager-config.yaml
+      #              subPath: spire-controller-manager-config.yaml
       volumes:
         - name: spire-config
           configMap:
@@ -244,9 +239,9 @@ spec:
           hostPath:
             path: /run/spire/server-sockets
             type: DirectoryOrCreate
-        - name: spire-controller-manager-config
-          configMap:
-            name: spire-controller-manager-config
+  #        - name: spire-controller-manager-config
+  #          configMap:
+  #            name: spire-controller-manager-config
   volumeClaimTemplates:
     - metadata:
         name: spire-data
@@ -289,16 +284,16 @@ spec:
   selector:
     app: spire-server
 ---
-# Service definition for SPIRE controller manager webhook
-apiVersion: v1
-kind: Service
-metadata:
-  name: spire-controller-manager-webhook-service
-  namespace: spire
-spec:
-  ports:
-    - port: 443
-      protocol: TCP
-      targetPort: 9443
-  selector:
-    app: spire-server
+## Service definition for SPIRE controller manager webhook
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: spire-controller-manager-webhook-service
+#  namespace: spire
+#spec:
+#  ports:
+#    - port: 443
+#      protocol: TCP
+#      targetPort: 9443
+#  selector:
+#    app: spire-server

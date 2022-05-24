@@ -43,6 +43,11 @@ data:
       socket_path = "/run/secrets/workload-spiffe-uds/socket"
       trust_bundle_path = "/run/spire/bundle/root-cert.pem"
       trust_domain = "example.org"
+    
+      sds = {
+        default_bundle_name = "null"
+        default_all_bundles_name = "ROOTCA"
+      }
     }
 
     plugins {

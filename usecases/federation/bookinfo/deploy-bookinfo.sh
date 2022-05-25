@@ -1,11 +1,7 @@
 #!/bin/bash
 
-DIR="../../../POC"
+DIR=$(cd ../../../POC; echo $PWD)
 
-if [[ "$1" ]]; then
-    DIR=$1
-fi
-
-istioctl kube-inject --filename $DIR/bookinfo/bookinfo.yaml | kubectl apply -f -
+istioctl --filename $DIR/bookinfo/bookinfo.yaml | kubectl apply -f -
 
 kubectl apply -f gateway.yaml

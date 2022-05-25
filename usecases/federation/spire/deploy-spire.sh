@@ -9,34 +9,15 @@ if [[ "$1" ]]; then
     DIR=$1
 fi
 
-# Create the k8s-workload-registrar crd, configmap and associated role bindingsspace
-kubectl apply \
-    -f $DIR/spire/k8s-workload-registrar-crd-cluster-role.yaml \
-    -f $DIR/spire/k8s-workload-registrar-crd-configmap.yaml \
-    -f $DIR/spire/spiffeid.spiffe.io_spiffeids.yaml
+kubectl apply -k ../../../POC/spire/
 
-# Create the server’s service account, configmap and associated role bindings
-kubectl apply \
-    -f $DIR/spire/server-account.yaml \
-    -f $DIR/spire/spire-bundle-configmap.yaml \
-    -f $DIR/spire/server-cluster-role.yaml
+kubectl apply -f server-configmap.yaml
 
-# Deploy the server configmap and statefulset
-kubectl apply \
-    -f server-configmap.yaml \
-    -f $DIR/spire/server-statefulset.yaml \
-    -f $DIR/spire/server-service.yaml
-
-# Configuring and deploying the SPIRE Agent
-kubectl apply \
-    -f $DIR/spire/agent-account.yaml \
-    -f $DIR/spire/agent-cluster-role.yaml
-
+# Re-deploy spire-server to reflect configmap update
+kubectl delete pod -n spire spire-server-0
 sleep 2
 
-kubectl apply \
-    -f agent-configmap.yaml \
-    -f $DIR/spire/agent-daemonset.yaml
+kubectl apply -f agent-configmap.yaml
 
-# Applying SPIFFE CSI Driver configuration
-kubectl apply -f $DIR/spire/spiffe-csi-driver.yaml
+# Re-deploy spire-agent to reflect configmap update
+kubectl delete pod -n spire -l app=spire-agent

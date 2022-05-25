@@ -8,8 +8,8 @@ spec:
     trustDomain: example.org
   values:
     global:
-      hub: public.ecr.aws/e4m8j0n8/mithril
-      tag: latest-release-1.13
+      hub: localhost:5000
+      tag: my-build
       imagePullPolicy: "Always"
       imagePullSecrets:
         - secret-registry
@@ -53,6 +53,8 @@ spec:
             kind: Deployment
             name: istiod
             patches:
+              - path: spec.template.metadata.labels.spireSpiffeid
+                value: istiod
               - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
                 value:
                   name: spire-agent-socket
@@ -68,6 +70,7 @@ spec:
         enabled: true
         label:
           istio: ingressgateway
+          spireSpiffeid: ingress
         k8s:
           overlays:
             - apiVersion: apps/v1

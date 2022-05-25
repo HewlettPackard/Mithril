@@ -30,6 +30,7 @@ spec:
     metadata:
       labels:
         app: sleep
+        spireSpiffeid: workloads
       annotations:
         inject.istio.io/templates: "sidecar,spire"
     spec:

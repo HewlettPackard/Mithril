@@ -26,3 +26,6 @@ kubectl create ns istio-system
 sleep 2
 istioctl install -f istio-config.yaml --skip-confirmation $args
 kubectl apply -f $DIR/istio/auth.yaml
+
+# apply cluster spiffe id definition to federate
+kubectl apply -f spiffe-ids.yaml

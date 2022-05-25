@@ -1,0 +1,14 @@
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: ingress-mtls
+spec:
+  spiffeIDTemplate: spiffe://example.org/ingress/{{ .PodMeta.Name }}
+  dnsNameTemplates:
+    - "{{ .PodMeta.Labels.app }}.{{ .PodMeta.Namespace }}.svc"
+    - "{{ .PodMeta.Name }}"
+  podSelector:
+    matchLabels:
+      spireSpiffeid: ingress-mtls
+  federatesWith: ["domain.test"]
+---

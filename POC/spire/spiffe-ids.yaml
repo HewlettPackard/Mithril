@@ -9,7 +9,7 @@ spec:
     - "{{ .PodMeta.Name }}"
   podSelector:
     matchLabels:
-      spire.spiffe.io/spiffeid: istiod
+      spireSpiffeid: istiod
 ---
 apiVersion: spire.spiffe.io/v1alpha1
 kind: ClusterSPIFFEID
@@ -22,8 +22,8 @@ spec:
     - "{{ .PodMeta.Name }}"
   podSelector:
     matchLabels:
-      spire.spiffe.io/spiffeid: ingress
-  federatesWith: ["domain.test"]
+      spireSpiffeid: ingress
+#  federatesWith: ["domain.test"]
 ---
 apiVersion: spire.spiffe.io/v1alpha1
 kind: ClusterSPIFFEID
@@ -36,5 +36,5 @@ spec:
     - "{{ .PodMeta.Labels.app }}.{{ .PodMeta.Namespace }}.svc"
   podSelector:
     matchLabels:
-      spire.spiffe.io/spiffeid: workloads
-  federatesWith: ["domain.test"]
+      spireSpiffeid: workloads
+#  federatesWith: ["domain.test"]

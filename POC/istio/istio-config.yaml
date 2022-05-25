@@ -9,7 +9,7 @@ spec:
   values:
     global:
       hub: localhost:5000
-      tag: sdsv2
+      tag: my-build
       imagePullPolicy: "IfNotPresent"
       imagePullSecrets:
         - secret-registry
@@ -34,12 +34,19 @@ spec:
           # Check that istio-agent's namespace and service account match the ones in the JWT token presented in the connection
           - name: PILOT_ENABLE_XDS_IDENTITY_CHECK
             value: "true"
+        overlays:
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: istiod
+            patches:
+              - path: spec.template.metadata.labels.spireSpiffeid
+                value: istiod
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
         label:
           istio: ingressgateway
-          spire.spiffe.io/spiffeid: ingress
+          spireSpiffeid: ingress
         k8s:
           overlays:
             - apiVersion: apps/v1

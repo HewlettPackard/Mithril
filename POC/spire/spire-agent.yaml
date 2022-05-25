@@ -1,3 +1,91 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spire-agent
+  namespace: spire
+---
+# Required cluster role to allow spire-agent to query k8s API server
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: spire-agent-cluster-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods","nodes","nodes/proxy"]
+    verbs: ["get"]
+---
+# Binds above cluster role to spire-agent service account
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: spire-agent-cluster-role-binding
+subjects:
+  - kind: ServiceAccount
+    name: spire-agent
+    namespace: spire
+roleRef:
+  kind: ClusterRole
+  name: spire-agent-cluster-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spire-agent
+  namespace: spire
+data:
+  agent.conf: |
+    agent {
+      data_dir = "/run/spire"
+      log_level = "DEBUG"
+      server_address = "spire-server"
+      server_port = "8081"
+      socket_path = "/run/secrets/workload-spiffe-uds/socket"
+      trust_bundle_path = "/run/spire/bundle/root-cert.pem"
+      trust_domain = "example.org"
+    
+      sds = {
+        default_bundle_name = "null"
+        default_all_bundles_name = "ROOTCA"
+      }
+    }
+
+    plugins {
+      NodeAttestor "k8s_psat" {
+        plugin_data {
+          # NOTE: Change this to your cluster name
+          cluster = "demo-cluster"
+        }
+      }
+
+      KeyManager "memory" {
+        plugin_data {
+        }
+      }
+
+      WorkloadAttestor "k8s" {
+        plugin_data {
+          # Defaults to the secure kubelet port by default.
+          # Minikube does not have a cert in the cluster CA bundle that
+          # can authenticate the kubelet cert, so skip validation.
+          skip_kubelet_verification = true
+        }
+      }
+
+      WorkloadAttestor "unix" {
+          plugin_data {
+          }
+      }
+    }
+
+    health_checks {
+      listener_enabled = true
+      bind_address = "0.0.0.0"
+      bind_port = "8080"
+      live_path = "/live"
+      ready_path = "/ready"
+    }
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -37,7 +125,7 @@ spec:
             - name: spire-bundle
               mountPath: /run/spire/bundle
             - name: spire-agent-socket-dir
-              mountPath: /run/spire/sockets
+              mountPath: /run/secrets/workload-spiffe-uds
             - name: spire-token
               mountPath: /var/run/secrets/tokens
           livenessProbe:
@@ -59,10 +147,16 @@ spec:
           image: ghcr.io/spiffe/spiffe-csi-driver:0.1.0
           imagePullPolicy: IfNotPresent
           args: [
-              "-node-id", "CSI_NODE",
-              "-workload-api-socket-dir", "/spire-agent-socket",
-              "-csi-socket-path", "/spiffe-csi/csi.sock",
+            "-workload-api-socket-dir", "/spire-agent-socket",
+            "-csi-socket-path", "/spiffe-csi/csi.sock",
           ]
+          env:
+            # The CSI driver needs a unique node ID. The node name can be
+            # used for this purpose.
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           volumeMounts:
             # The volume containing the SPIRE agent socket. The SPIFFE CSI
             # driver will mount this directory into containers.
@@ -86,8 +180,8 @@ spec:
           image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.4.0
           imagePullPolicy: IfNotPresent
           args: [
-              "-csi-address", "/spiffe-csi/csi.sock",
-              "-kubelet-registration-path", "/var/lib/kubelet/plugins/csi.spiffe.io/csi.sock",
+            "-csi-address", "/spiffe-csi/csi.sock",
+            "-kubelet-registration-path", "/var/lib/kubelet/plugins/csi.spiffe.io/csi.sock",
           ]
           volumeMounts:
             # The registrar needs access to the SPIFFE CSI driver socket

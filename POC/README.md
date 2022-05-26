@@ -195,7 +195,7 @@ spire                spire-server-0                               2/2     Runnin
 ![Structure for each Mithril cluster with the bookinfo example.](img/overview.png)
 
 ### SPIRE Entries
-When using [K8S Workload Registrar](https://github.com/spiffe/spire/tree/main/support/k8s/k8s-workload-registrar) for automatic workload registration within Kubernetes, you can check the created entries using the following command:
+When using the [SPIRE Controller Manager]([https://github.com/spiffe/spire/tree/main/support/k8s/k8s-workload-registrar](https://github.com/spiffe/spire-controller-manager) for automatic workload registration within Kubernetes, you can check the created entries using the following command:
 
 ```
 kubectl exec -i -t pod/spire-server-0 -n spire -c spire-server -- /bin/sh -c "bin/spire-server entry show -socketPath /run/spire/sockets/server.sock"

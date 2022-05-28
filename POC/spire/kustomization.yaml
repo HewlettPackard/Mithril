@@ -1,20 +1,21 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
+generatorOptions:
+  disableNameSuffixHash: true
 
-namespace: spire
+configMapGenerator:
+  - name: spire-controller-manager-config
+    namespace: spire
+    files:
+      - spire-controller-manager-config.yaml
 
 resources:
-  - spiffe-csi-driver.yaml
-  - k8s-workload-registrar-crd-cluster-role.yaml
-  - k8s-workload-registrar-crd-configmap.yaml
-  - spiffeid.spiffe.io_spiffeids.yaml
-  - server-account.yaml
-  - spire-bundle-configmap.yaml
-  - server-cluster-role.yaml
-  - server-configmap.yaml
-  - server-statefulset.yaml
-  - server-service.yaml
-  - agent-account.yaml
-  - agent-cluster-role.yaml
-  - agent-configmap.yaml
-  - agent-daemonset.yaml
+- spire-namespace.yaml
+- spiffe-csi-driver.yaml
+- crd/spire.spiffe.io-clusterfederatedtrustdomains.yaml
+- crd/spire.spiffe.io-clusterspiffeids.yaml
+- crd-rbac/role.yaml
+- crd-rbac/role-binding.yaml
+- crd-rbac/leader-election-role.yaml
+- crd-rbac/leader-election-role-binding.yaml
+- spire-server.yaml
+- spire-agent.yaml
+- spire-controller-manager-webhook.yaml

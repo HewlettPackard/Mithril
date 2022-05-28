@@ -4,7 +4,6 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
-#  creationTimestamp: null todo necessary?
   name: clusterspiffeids.spire.spiffe.io
 spec:
   group: spire.spiffe.io
@@ -211,11 +210,3 @@ spec:
         type: object
     served: true
     storage: true
-#    subresources: todo necessary?
-#      status: {}
-#status:
-#  acceptedNames:
-#    kind: ""
-#    plural: ""
-#  conditions: []
-#  storedVersions: []

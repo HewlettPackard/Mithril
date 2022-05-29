@@ -15,10 +15,10 @@ data:
       trust_bundle_path = "{{ .Values.configmaps.agentConfig.notifier.trustBundlePath }}"
       trust_domain = "{{ .Values.configmaps.agentConfig.trustDomain }}"
 
-      #sds = {
-      #  default_bundle_name = "null"
-      #  default_all_bundles_name = "ROOTCA"
-      #}
+      sds = {
+        default_bundle_name = "null"
+        default_all_bundles_name = "ROOTCA"
+      }
     }
 
     plugins {

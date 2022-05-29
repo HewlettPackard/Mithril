@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -31,6 +32,11 @@ to quickly create a Cobra application.`,
 			fmt.Println("error too many arguments")
 			os.Exit(1)
 		}
+		var writer io.Writer = os.Stderr
+		//fmt.Fprintf(&buf, "Size: %d MB.", 85)
+		spin := NewSpinner(writer)
+		//spin := &cli.Spinner{}
+		spin.Start()
 		nsArgs := strings.Fields("create namespace istio-system")
 		ns := exec.Command("kubectl", nsArgs...)
 		_, _ = ns.CombinedOutput()

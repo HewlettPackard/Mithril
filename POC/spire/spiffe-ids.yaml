@@ -34,6 +34,11 @@ spec:
   dnsNameTemplates:
     - "{{ .PodMeta.Name }}"
     - "{{ .PodMeta.Labels.app }}.{{ .PodMeta.Namespace }}.svc"
+  workloadSelectorTemplates:
+    - k8s:ns:default
+    - k8s:sa:{{ .PodSpec.ServiceAccountName }}
+    - k8s:node-name:kind-control-plane
+    - k8s:pod-image-count:2
   podSelector:
     matchLabels:
       spireSpiffeid: workloads

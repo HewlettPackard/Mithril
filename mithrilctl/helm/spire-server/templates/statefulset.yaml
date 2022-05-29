@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  serviceName: {{ .Values.name }}
+  template:
+    metadata:
+      namespace: {{ .Values.namespace }}
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      serviceAccountName: {{ .Values.name }}
+      shareProcessNamespace: true
+      containers:
+        - name: {{ .Values.name }}
+          image: gcr.io/spiffe-io/{{ .Values.tag }}
+          args: ["-config", "/run/spire/config/server.conf"]
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: 8080
+            failureThreshold: 2
+            initialDelaySeconds: 15
+            periodSeconds: 60
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          ports:
+            - containerPort: 8081
+          volumeMounts:
+            - name: spire-config
+              mountPath: /run/spire/config
+              readOnly: true
+            - name: spire-data
+              mountPath: /run/spire/data
+              readOnly: false
+            - name: spire-registration-socket
+              mountPath: /run/spire/sockets
+              readOnly: false
+        - name: spire-controller-manager
+          image: ghcr.io/spiffe/spire-controller-manager:nightly
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9443
+          args:
+            - "--config=spireControllerManagerConfig.yaml"
+          volumeMounts:
+            - name: spire-registration-socket
+              mountPath: /spire-server
+              readOnly: true
+            - name: spire-controller-manager-config
+              mountPath: /spireControllerManagerConfig.yaml
+              subPath: spireControllerManagerConfig.yaml
+      volumes:
+        - name: spire-config
+          configMap:
+            name: {{ .Values.name }}
+        - name: spire-registration-socket
+          hostPath:
+            path: /run/spire/server-sockets
+            type: DirectoryOrCreate
+        - name: spire-controller-manager-config
+          configMap:
+            name: spire-controller-manager-config
+  volumeClaimTemplates:
+    - metadata:
+        name: spire-data
+        namespace: spire
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

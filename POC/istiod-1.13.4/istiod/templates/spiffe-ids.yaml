@@ -1,1 +1,1 @@
-{{ $file := .Files.Get "files/cluster-spiffeid.yaml" }}
+{{ .Files.Get "files/cluster-spiffeid.yaml" }}

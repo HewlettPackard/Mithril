@@ -95,7 +95,7 @@ sidecarInjectorWebhook:
   # This enables injection of sidecar in all namespaces,
   # with the exception of namespaces with "istio-injection:disabled" annotation
   # Only one environment should have this enabled.
-  enableNamespacesByDefault: false
+  enableNamespacesByDefault: true
 
   # Enable objectSelector to filter out pods with no need for sidecar before calling istiod.
   # It is enabled by default as the minimum supported Kubernetes version is 1.15+

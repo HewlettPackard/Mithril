@@ -13,8 +13,17 @@ configmaps:
   serverConfig:
     socketPath: "/run/spire/sockets/api.sock"
     trustDomain: "example.org"
-    federatesWith: "domain.test"
-    federatesWithServer: 192.168.0.16:4002
+    federates: false
+    federation:
+        bundleEndpoint:
+          address: 0.0.0.0
+          port: 8443
+        federations:
+          - federatesWith: "domain.test"
+            bundleEndpointUrl: https://192.168.0.16:4002
+            bundleEndpointProfile:
+              profile: https_spiffe
+              endpointSpiffeId: spiffe://domain.test/spire/server
     ttl: "1h"
     notifier:
       configMap: "trust-bundle"

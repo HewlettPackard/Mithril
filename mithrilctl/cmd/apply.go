@@ -41,7 +41,7 @@ to quickly create a Cobra application.`,
 			cmd.Help()
 			os.Exit(1)
 		}
-		client, _, err := createClientGo()
+		client, _, err := CreateClientGo()
 		if err != nil {
 			fmt.Println("error creating k8s client err: ", err.Error())
 		}
@@ -151,7 +151,7 @@ func init() {
 	//applyCmd.Flags().BoolP("file", "f", false, "for passing a deployment k8s file as input")
 }
 
-func createClientGo() (*kubernetes.Clientset, *rest.Config, error) {
+func CreateClientGo() (*kubernetes.Clientset, *rest.Config, error) {
 	var kubeconfig *string
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")

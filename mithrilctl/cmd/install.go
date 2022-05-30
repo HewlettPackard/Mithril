@@ -1,30 +1,36 @@
 package cmd
 
 import (
-	"os"
-
+	"fmt"
 	"github.com/spf13/cobra"
+	"mithril/pkg/istio"
+	"mithril/pkg/spire"
+	"os"
 )
+
+var spinner = NewSpinner(os.Stderr)
 
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	Use:   "install",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Installs Mithril",
+	Long:  `Command used to install Istio integrated with SPIRE on a Kubernetes cluster`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			cmd.Help()
-			os.Exit(0)
-		} else if args[0] == "" {
-			cmd.Help()
-			os.Exit(1)
-		}
-
+		fmt.Println(fmt.Sprintf(" %s ", "Installing Mithril ⚒️ ..."))
+		spinner.SetSuffix(fmt.Sprintf(" %s ", "Deploying SPIRE 🗝️"))
+		go func() {
+			spinner.Start()
+		}()
+		spire.DeploySpire()
+		fmt.Fprint(spinner.writer, "\r")
+		successFormat := " \x1b[32m✓\x1b[0m %s\n"
+		fmt.Fprintf(spinner.writer, successFormat, "Deploying SPIRE 🗝️")
+		spinner.SetSuffix(fmt.Sprintf(" %s ", "Deploying Istio 🛡️"))
+		istio.DeployIstio()
+		fmt.Fprint(spinner.writer, "\r")
+		successFormat = " \x1b[32m✓\x1b[0m %s\n"
+		fmt.Fprintf(spinner.writer, successFormat, "Deploying Istio 🛡️")
+		spinner.Stop()
 	},
 }
 

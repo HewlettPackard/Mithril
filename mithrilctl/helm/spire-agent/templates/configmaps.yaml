@@ -14,11 +14,14 @@ data:
       socket_path = "{{ .Values.configmaps.agentConfig.socketPath }}"
       trust_bundle_path = "{{ .Values.configmaps.agentConfig.notifier.trustBundlePath }}"
       trust_domain = "{{ .Values.configmaps.agentConfig.trustDomain }}"
+      {{ if eq .Values.configmaps.agentConfig.federates true }}
 
       sds = {
         default_bundle_name = "null"
         default_all_bundles_name = "ROOTCA"
       }
+
+      {{ end }}
     }
 
     plugins {

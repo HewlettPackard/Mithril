@@ -14,6 +14,7 @@ configmaps:
   agentConfig:
     socketPath: "/run/secrets/workload-spiffe-uds/socket"
     trustDomain: "example.org"
+    federates: false
     notifier:
       configMap: "trust-bundle"
       trustBundlePath: "/run/spire/bundle/root-cert.pem"

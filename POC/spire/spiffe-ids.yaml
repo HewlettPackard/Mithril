@@ -30,7 +30,7 @@ kind: ClusterSPIFFEID
 metadata:
   name: workloads
 spec:
-  spiffeIDTemplate: spiffe://example.org/ns/default/sa/{{ .PodSpec.ServiceAccountName }}
+  spiffeIDTemplate: spiffe://example.org/ns/{{ .PodMeta.Namespace }}/sa/{{ .PodSpec.ServiceAccountName }}
   dnsNameTemplates:
     - "{{ .PodMeta.Name }}"
     - "{{ .PodMeta.Labels.app }}.{{ .PodMeta.Namespace }}.svc"

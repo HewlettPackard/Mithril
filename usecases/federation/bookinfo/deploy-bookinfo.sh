@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIR=$(cd ../../../POC; echo $PWD)
+DIR="../../../POC"
 
 istioctl --filename $DIR/bookinfo/bookinfo.yaml | kubectl apply -f -
 

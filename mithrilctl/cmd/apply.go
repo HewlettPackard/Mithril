@@ -26,13 +26,9 @@ import (
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Applies Kubernetes deployments",
+	Long: `Command used for applying k8s deployment definitions and creating their
+namespaces and required Istio configmaps.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			cmd.Help()
@@ -64,18 +60,13 @@ to quickly create a Cobra application.`,
 				yb, _ := yaml.Marshal(y)
 				objs = append(objs, fmt.Sprintf("%v", string(yb)))
 			}
-			//println(fmt.Sprintf("%+v", objs))
 
 			var nms []string
 			for _, f := range objs {
 				decode := scheme.Codecs.UniversalDeserializer().Decode
 				obj, _, _ := decode([]byte(f), nil, nil)
-				//println(f)
 				switch o := obj.(type) {
 				case *apps.Deployment:
-					// o is the Deployment
-					//ob, _ := yaml.Marshal(o)
-					//println(fmt.Sprintf("%+v", string(ob)))
 					if o.Namespace == "" {
 						o.Namespace = "default"
 					}
@@ -111,28 +102,18 @@ to quickly create a Cobra application.`,
 					}
 
 				case *v1.Pod:
-					// o is a pod
-				//case *v1beta1.RoleBinding:
-				//case *v1beta1.ClusterRole:
-				//case *v1beta1.ClusterRoleBinding:
 				case *v1.ServiceAccount:
 				default:
 					//o is unknown for us
 				}
 			}
-			command := fmt.Sprintf("kube-inject --filename %s | kubectl apply -f -", filepath.Join(args[0]))
+			command := fmt.Sprintf("apply -f %s", filepath.Join(args[0]))
 			cmdArgs := strings.Fields(command)
-			//println(command)
-			//for _, m := range cmdArgs {
-			//	println(m)
-			//}
-			wlInstall := exec.Command("istioctl", cmdArgs[0:]...)
 
-			oute, err := wlInstall.CombinedOutput()
-			if err != nil {
-				println(err.Error())
-			}
-			print(string(oute))
+			wlInstall := exec.Command("kubectl", cmdArgs[0:]...)
+
+			oute, _ := wlInstall.CombinedOutput()
+			fmt.Print(string(oute))
 		}
 	},
 }

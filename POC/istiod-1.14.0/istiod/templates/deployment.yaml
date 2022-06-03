@@ -39,6 +39,7 @@ spec:
         install.operator.istio.io/owning-resource: {{ .Values.ownerName | default "unknown" }}
         sidecar.istio.io/inject: "false"
         operator.istio.io/component: "Pilot"
+        spireSpiffeid: istiod
         {{- if ne .Values.revision "" }}
         istio: istiod
         {{- else }}

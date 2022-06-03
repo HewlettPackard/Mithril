@@ -182,3 +182,7 @@ type Spec struct {
 	Containers []Containers `json:"containers"`
 	Volumes    []Volumes    `json:"volumes"`
 }
+
+type Config struct {
+	MithrilPath string `yaml:"mithrilPath"`
+}

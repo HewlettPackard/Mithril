@@ -3,9 +3,12 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
+	"mithril/entity"
+	"mithril/util"
 	"os"
+	"path/filepath"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
@@ -23,7 +26,12 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			cmd.Help()
+			os.Exit(0)
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -41,7 +49,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.mithril.yaml)")
 
 	// Cobra also supports local flags, which will only run
@@ -51,26 +59,60 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
+	// Find home directory.
+	home := util.GetHomeDir()
+
+	_, err := os.Stat(filepath.Join(home, ".mithril", "config.yaml"))
+	if err != nil {
+		err = initializeConfigFile(home)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(fmt.Errorf("unable to initialize config file err: %s", err.Error()))
 			os.Exit(1)
 		}
-
-		// Search config in home directory with name ".mithril" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".mithril")
 	}
+
+	// Search config in home directory with name ".mithril" (without extension).
+	viper.AddConfigPath(filepath.Join(home, ".mithril"))
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
 
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	if err = viper.ReadInConfig(); err != nil {
+		fmt.Println("error reading config file err: ", err.Error())
 	}
+
+	mithrilPath := viper.GetString("mithrilPath")
+
+	if mithrilPath == "" {
+		fmt.Println("\033[31mPath for Mithril repository is not set!\033[0m")
+		fmt.Print("\n\033[34mEnter the path for your Mithril repository: \033[0m")
+		fmt.Scanf("%s", &mithrilPath)
+		newCfg := entity.Config{
+			MithrilPath: mithrilPath,
+		}
+		yb, _ := yaml.Marshal(newCfg)
+		err = os.WriteFile(filepath.Join(home, ".mithril", "config.yaml"), yb, 0777)
+		if err != nil {
+			fmt.Println("unable to set config file err: ", err.Error())
+			os.Exit(1)
+		}
+		fmt.Println("Mithril path set in config file", filepath.Join(home, ".mithril", "config.yaml"))
+		os.Exit(0)
+	}
+}
+
+func initializeConfigFile(home string) error {
+	_ = os.Mkdir(filepath.Join(home, ".mithril"), 0777)
+
+	cfg := entity.Config{
+		MithrilPath: "",
+	}
+	jb, _ := yaml.Marshal(cfg)
+	err := os.WriteFile(filepath.Join(home, ".mithril", "config.yaml"), jb, 0777)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -2,53 +2,55 @@ package istio
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"k8s.io/utils/exec"
 	"strings"
 )
 
 func DeployIstio() {
-	command := fmt.Sprintf("install -f /home/alexandre/Goland/fork/Mithril/POC/base-1.13.4/base/values.yaml base /home/alexandre/Goland/fork/Mithril/POC/base-1.13.4/base/")
+	mithrilPath := viper.GetString("mithrilPath")
+	command := fmt.Sprintf("install -f %s/POC/base-1.13.4/base/values.yaml base %s/POC/base-1.13.4/base/", mithrilPath, mithrilPath)
 	cmdArgs := strings.Fields(command)
 	cmd := exec.New()
-	spireInstall := cmd.Command("helm", cmdArgs[0:]...)
-	_, err := spireInstall.CombinedOutput()
+	istioInstall := cmd.Command("helm", cmdArgs[0:]...)
+	out, err := istioInstall.CombinedOutput()
 	if err != nil {
-		fmt.Printf("\nerror deploying istio base err: %s", err)
+		fmt.Printf("\n%s", out)
 	}
 
-	command = fmt.Sprintf("install -f /home/alexandre/Goland/fork/Mithril/POC/istiod-1.13.4/istiod/values.yaml istiod /home/alexandre/Goland/fork/Mithril/POC/istiod-1.13.4/istiod/ -n istio-system --wait --timeout 120s")
+	command = fmt.Sprintf("install -f %s/POC/istiod-1.13.4/istiod/values.yaml istiod %s/POC/istiod-1.13.4/istiod/ -n istio-system --wait --timeout 120s", mithrilPath, mithrilPath)
 	cmdArgs = strings.Fields(command)
 	cmd = exec.New()
-	spireInstall = cmd.Command("helm", cmdArgs[0:]...)
-	_, err = spireInstall.CombinedOutput()
+	istioInstall = cmd.Command("helm", cmdArgs[0:]...)
+	out, err = istioInstall.CombinedOutput()
 	if err != nil {
-		fmt.Printf("\nerror deploying istiod err: %s", err)
+		fmt.Printf("\n%s", out)
 	}
 
 	command = fmt.Sprintf("rollout status deployment -n istio-system istiod --timeout=300s")
 	cmdArgs = strings.Fields(command)
 	cmd = exec.New()
-	spireInstall = cmd.Command("kubectl", cmdArgs[0:]...)
-	_, err = spireInstall.CombinedOutput()
+	istioInstall = cmd.Command("kubectl", cmdArgs[0:]...)
+	out, err = istioInstall.CombinedOutput()
 	if err != nil {
-		fmt.Printf("%s", err)
+		fmt.Printf("\n%s", out)
 	}
 
-	command = fmt.Sprintf("install -f /home/alexandre/Goland/fork/Mithril/POC/gateway-1.13.4/gateway/values.yaml ingressgateway /home/alexandre/Goland/fork/Mithril/POC/gateway-1.13.4/gateway/ -n istio-system")
+	command = fmt.Sprintf("install -f %s/POC/gateway-1.13.4/gateway/values.yaml ingressgateway %s/POC/gateway-1.13.4/gateway/ -n istio-system", mithrilPath, mithrilPath)
 	cmdArgs = strings.Fields(command)
 	cmd = exec.New()
-	spireInstall = cmd.Command("helm", cmdArgs[0:]...)
-	_, err = spireInstall.CombinedOutput()
+	istioInstall = cmd.Command("helm", cmdArgs[0:]...)
+	out, err = istioInstall.CombinedOutput()
 	if err != nil {
-		fmt.Printf("\nerror deploying ingressgateway err: %s", err)
+		fmt.Printf("\n%s", out)
 	}
 
 	command = fmt.Sprintf("rollout status deployment -n istio-system ingressgateway --timeout=300s")
 	cmdArgs = strings.Fields(command)
 	cmd = exec.New()
-	spireInstall = cmd.Command("kubectl", cmdArgs[0:]...)
-	_, err = spireInstall.CombinedOutput()
+	istioInstall = cmd.Command("kubectl", cmdArgs[0:]...)
+	out, err = istioInstall.CombinedOutput()
 	if err != nil {
-		fmt.Printf("%s", err)
+		fmt.Printf("\n%s", out)
 	}
 }

@@ -54,7 +54,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: details-v1
-  namespace: v1
   labels:
     app: details
     version: v1

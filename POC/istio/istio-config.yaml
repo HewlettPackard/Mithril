@@ -9,8 +9,8 @@ spec:
   values:
     global:
       hub: localhost:5000
-      tag: sdsv2
-      imagePullPolicy: "IfNotPresent"
+      tag: my-build
+      imagePullPolicy: "Always"
       imagePullSecrets:
         - secret-registry
     # This is used to customize the sidecar template
@@ -41,6 +41,16 @@ spec:
             patches:
               - path: spec.template.metadata.labels.spireSpiffeid
                 value: istiod
+              - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
+                value:
+                  name: spire-agent-socket
+                  mountPath: "/run/spire/sockets"
+                  readOnly: true
+              - path: spec.template.spec.volumes[7]
+                value:
+                  name: spire-agent-socket
+                  csi:
+                    driver: "csi.spiffe.io"
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true

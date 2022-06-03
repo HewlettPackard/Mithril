@@ -10,12 +10,12 @@ configMapGenerator:
 resources:
 - spire-namespace.yaml
 - spiffe-csi-driver.yaml
-- crd/spire.spiffe.io-clusterfederatedtrustdomains.yaml
-- crd/spire.spiffe.io-clusterspiffeids.yaml
+- crd/spire.spiffe.io_clusterfederatedtrustdomains.yaml
+- crd/spire.spiffe.io_clusterspiffeids.yaml
 - crd-rbac/role.yaml
-- crd-rbac/role-binding.yaml
-- crd-rbac/leader-election-role.yaml
-- crd-rbac/leader-election-role-binding.yaml
+- crd-rbac/role_binding.yaml
+- crd-rbac/leader_election_role.yaml
+- crd-rbac/leader_election_role_binding.yaml
 - spire-server.yaml
 - spire-agent.yaml
 - spire-controller-manager-webhook.yaml

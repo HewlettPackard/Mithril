@@ -53,6 +53,8 @@ spec:
             kind: Deployment
             name: istiod
             patches:
+              - path: spec.template.metadata.labels.spireSpiffeid
+                value: istiod
               - path: spec.template.spec.containers.[name:discovery].volumeMounts[7]
                 value:
                   name: spire-agent-socket
@@ -68,6 +70,7 @@ spec:
         enabled: true
         label:
           istio: ingressgateway
+          spireSpiffeid: ingress
         k8s:
           overlays:
             - apiVersion: apps/v1
@@ -93,6 +96,7 @@ spec:
         enabled: true
         label:
           istio: ingressgateway-mtls
+          spireSpiffeid: ingress-mtls
         k8s:
           podAnnotations:
             spiffe.io/federatesWith: "domain.test"

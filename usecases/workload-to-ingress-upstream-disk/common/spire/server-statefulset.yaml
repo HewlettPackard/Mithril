@@ -22,9 +22,7 @@ spec:
       containers:
         - name: spire-server
           image: gcr.io/spiffe-io/spire-server:1.1.1
-          args:
-            - -config
-            - /run/spire/config/server.conf
+          args: ["-config", "/run/spire/config/server.conf"]
           livenessProbe:
             httpGet:
               path: /live
@@ -57,33 +55,31 @@ spec:
             - name: upstream-key
               mountPath: /run/spire/data/upstream-ca.key.pem
               subPath: upstream-ca.key.pem
-        - name: k8s-workload-registrar
-          image: gcr.io/spiffe-io/k8s-workload-registrar:1.1.1
-          args:
-            - -config
-            - /run/spire/config/k8s-workload-registrar.conf
+        - name: spire-controller-manager
+          image: ghcr.io/spiffe/spire-controller-manager:nightly
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9443
-              name: webhook
-              protocol: TCP
+          args:
+            - "--config=spire-controller-manager-config.yaml"
           volumeMounts:
-            - mountPath: /run/spire/config
-              name: k8s-workload-registrar-config
-              readOnly: true
             - name: spire-registration-socket
-              mountPath: /run/spire/sockets
+              mountPath: /spire-server
               readOnly: true
+            - name: spire-controller-manager-config
+              mountPath: /spire-controller-manager-config.yaml
+              subPath: spire-controller-manager-config.yaml
       volumes:
         - name: spire-config
           configMap:
             name: spire-server
-        - name: k8s-workload-registrar-config
-          configMap:
-            name: k8s-workload-registrar
         - name: spire-registration-socket
           hostPath:
             path: /run/spire/server-sockets
             type: DirectoryOrCreate
+        - name: spire-controller-manager-config
+          configMap:
+            name: spire-controller-manager-config
         - name: upstream-crt
           configMap:
             name: "upstream-ca-crt"

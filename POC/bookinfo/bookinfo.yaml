@@ -68,6 +68,9 @@ spec:
       labels:
         app: details
         version: v1
+        spireSpiffeid: workloads
+      annotations:        
+        inject.istio.io/templates: "sidecar,spire"
     spec:
       serviceAccountName: bookinfo-details
       containers:
@@ -121,6 +124,9 @@ spec:
       labels:
         app: ratings
         version: v1
+        spireSpiffeid: workloads
+      annotations:        
+        inject.istio.io/templates: "sidecar,spire"
     spec:
       serviceAccountName: bookinfo-ratings
       containers:
@@ -174,6 +180,9 @@ spec:
       labels:
         app: reviews
         version: v1
+        spireSpiffeid: workloads
+      annotations:        
+        inject.istio.io/templates: "sidecar,spire"
     spec:
       serviceAccountName: bookinfo-reviews
       containers:
@@ -216,6 +225,9 @@ spec:
       labels:
         app: reviews
         version: v2
+        spireSpiffeid: workloads
+      annotations:
+        inject.istio.io/templates: "sidecar,spire"
     spec:
       serviceAccountName: bookinfo-reviews
       containers:
@@ -258,6 +270,9 @@ spec:
       labels:
         app: reviews
         version: v3
+        spireSpiffeid: workloads
+      annotations:
+        inject.istio.io/templates: "sidecar,spire"
     spec:
       serviceAccountName: bookinfo-reviews
       containers:
@@ -324,6 +339,9 @@ spec:
       labels:
         app: productpage
         version: v1
+        spireSpiffeid: workloads
+      annotations:
+        inject.istio.io/templates: "sidecar,spire"
     spec:
       serviceAccountName: bookinfo-productpage
       containers:

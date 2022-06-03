@@ -1,0 +1,55 @@
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: istiod
+spec:
+  spiffeIDTemplate: spiffe://example.org/istiod/{{ .PodMeta.Name }}
+  dnsNameTemplates:
+    - "{{ .PodMeta.Labels.app }}.{{ .PodMeta.Namespace }}.svc"
+    - "{{ .PodMeta.Name }}"
+  workloadSelectorTemplates:
+    - k8s:ns:{{ .PodMeta.Namespace }}
+    - k8s:sa:{{ .PodSpec.ServiceAccountName }}
+    - k8s:node-name:{{ .NodeMeta.Name }}
+    - k8s:pod-image-count:1
+  podSelector:
+    matchLabels:
+      spireSpiffeid: istiod
+---
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: ingress
+spec:
+  spiffeIDTemplate: spiffe://example.org/ingress/{{ .PodMeta.Name }}
+  dnsNameTemplates:
+    - "{{ .PodMeta.Labels.app }}.{{ .PodMeta.Namespace }}.svc"
+    - "{{ .PodMeta.Name }}"
+  workloadSelectorTemplates:
+    - k8s:ns:{{ .PodMeta.Namespace }}
+    - k8s:sa:{{ .PodSpec.ServiceAccountName }}
+    - k8s:node-name:{{ .NodeMeta.Name }}
+    - k8s:pod-image-count:1
+  podSelector:
+    matchLabels:
+      spireSpiffeid: ingress
+#  federatesWith: ["domain.test"]
+---
+apiVersion: spire.spiffe.io/v1alpha1
+kind: ClusterSPIFFEID
+metadata:
+  name: workloads
+spec:
+  spiffeIDTemplate: spiffe://example.org/ns/{{ .PodMeta.Namespace }}/sa/{{ .PodSpec.ServiceAccountName }}
+  dnsNameTemplates:
+    - "{{ .PodMeta.Name }}"
+    - "{{ .PodMeta.Labels.app }}.{{ .PodMeta.Namespace }}.svc"
+  workloadSelectorTemplates:
+    - k8s:ns:{{ .PodMeta.Namespace }}
+    - k8s:sa:{{ .PodSpec.ServiceAccountName }}
+    - k8s:node-name:{{ .NodeMeta.Name }}
+    - k8s:pod-image-count:2
+  podSelector:
+    matchLabels:
+      spireSpiffeid: workloads
+#  federatesWith: ["domain.test"]

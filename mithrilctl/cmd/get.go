@@ -10,7 +10,7 @@ import (
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Gets resources definitions ",
-	Long:  ``,
+	Long:  `Command used for outputing a helm release manifest`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("get called")
 	},

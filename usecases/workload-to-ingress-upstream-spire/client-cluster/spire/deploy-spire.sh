@@ -1,36 +1,14 @@
 #!/bin/bash
 
-set -e
-
-# Create the k8s-workload-registrar crd, configmap and associated role bindings space
-kubectl apply \
-    -f ../../../../POC/spire/k8s-workload-registrar-crd-cluster-role.yaml \
-    -f ../../../../POC/spire/k8s-workload-registrar-crd-configmap.yaml \
-    -f ../../../../POC/spire/spiffeid.spiffe.io_spiffeids.yaml
-
-# Create the server’s service account, configmap and associated role bindings
-kubectl apply \
-    -f ../../../../POC/spire/server-account.yaml \
-    -f ../../../../POC/spire/spire-bundle-configmap.yaml \
-    -f ../../../../POC/spire/server-cluster-role.yaml
+kubectl apply -k ../../../../POC/spire/
 
 # Deploy the server configmap and statefulset
 kubectl apply \
     -f server-configmap.yaml \
     -f server-statefulset.yaml \
-    -f ../../../../POC/spire/server-service.yaml
 
-# Configuring and deploying the SPIRE Agent
-kubectl apply \
-    -f ../../../../POC/spire/agent-account.yaml \
-    -f ../../../../POC/spire/agent-cluster-role.yaml
-
-sleep 2
-
-kubectl apply \
-    -f ../../../../POC/spire/agent-configmap.yaml \
-    -f ../../../../POC/spire/agent-daemonset.yaml
-
+# Re-deploy spire-server to reflect configmap update
+kubectl delete pod -n spire spire-server-0
 
 # Configuring and deploying nested SPIRE Agent
 kubectl apply \
@@ -42,5 +20,5 @@ sleep 2
 kubectl apply \
     -f agent-nest-configmap.yaml
 
-# Applying SPIFFE CSI Driver configuration
-kubectl apply -f ../../../../POC/spire/spiffe-csi-driver.yaml
+# Re-deploy spire-agent to reflect configmap update
+kubectl delete pod -n spire -l app=spire-agent

@@ -3,18 +3,20 @@ kind: CSIDriver
 metadata:
   name: "csi.spiffe.io"
 spec:
-  # Only ephemeral, inline volumes are supported. There is no need for a
-  # controller to provision and attach volumes.
+  # We only support ephemeral, inline volumes. We don't need a controller to
+  # provision and attach volumes.
   attachRequired: false
 
-  # Request the pod information which the CSI driver uses to verify that an
+  # We want the pod information so that the CSI driver can verify that an
   # ephemeral mount was requested.
   podInfoOnMount: true
 
-  # Don't change ownership on the contents of the mount since the Workload API
-  # Unix Domain Socket is typically open to all (i.e. 0777).
+  # We don't want (or need) K8s to change ownership on the contents of the mount
+  # when it is moutned into the pod, since the Workload API is completely open
+  # (i.e. 0777).
+  # Note, this was added in Kubernetes 1.19, so omit
   fsGroupPolicy: None
 
-  # Declare support for ephemeral volumes only.
-  volumeLifecycleModes:
+  # We only support ephemeral volumes. Note that this requires Kubernetes 1.16
+  volumeLifecycleModes: # added in Kubernetes 1.16, this field is beta
     - Ephemeral

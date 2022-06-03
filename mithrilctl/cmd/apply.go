@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
+	"io"
 	"io/ioutil"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -161,4 +163,21 @@ func Contains(s []string, str string) bool {
 		}
 	}
 	return false
+}
+
+func UnmarshalAllYamls(in []byte, out *[]interface{}) error {
+	r := bytes.NewReader(in)
+	decoder := yaml.NewDecoder(r)
+	for {
+		data := make(map[interface{}]interface{})
+		if err := decoder.Decode(&data); err != nil {
+			// Break when there are no more documents to decode
+			if err != io.EOF {
+				return err
+			}
+			break
+		}
+		*out = append(*out, data)
+	}
+	return nil
 }

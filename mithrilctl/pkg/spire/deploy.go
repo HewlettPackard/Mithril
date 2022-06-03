@@ -9,7 +9,7 @@ import (
 
 func DeploySpire() {
 	mithrilPath := viper.GetString("mithrilPath")
-	command := fmt.Sprintf("install -f %s/mithrilctl/helm/spire-server/values.yaml spire-server %s/mithrilctl/helm/spire-server/ --wait --timeout 120s", mithrilPath, mithrilPath)
+	command := fmt.Sprintf("install -f %s/mithrilctl/helm/spire/spire-server/values.yaml spire-server %s/mithrilctl/helm/spire/spire-server/ --wait --timeout 120s", mithrilPath, mithrilPath)
 	cmdArgs := strings.Fields(command)
 	cmd := exec.New()
 	spireInstall := cmd.Command("helm", cmdArgs[0:]...)
@@ -18,7 +18,7 @@ func DeploySpire() {
 		fmt.Printf("\n%s", out)
 	}
 
-	command = fmt.Sprintf("install -f %s/mithrilctl/helm/spire-agent/values.yaml spire-agent %s/mithrilctl/helm/spire-agent/ --wait --wait-for-jobs --timeout 120s", mithrilPath, mithrilPath)
+	command = fmt.Sprintf("install -f %s/mithrilctl/helm/spire/spire-agent/values.yaml spire-agent %s/mithrilctl/helm/spire/spire-agent/ --wait --wait-for-jobs --timeout 120s", mithrilPath, mithrilPath)
 	cmdArgs = strings.Fields(command)
 	cmd = exec.New()
 	spireInstall = cmd.Command("helm", cmdArgs[0:]...)

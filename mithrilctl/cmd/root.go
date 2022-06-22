@@ -63,6 +63,7 @@ func initConfig() {
 	home := util.GetHomeDir()
 
 	_, err := os.Stat(filepath.Join(home, ".mithril", "config.yaml"))
+	// If a config file is not found, initialize the config file
 	if err != nil {
 		err = initializeConfigFile(home)
 		if err != nil {
@@ -98,6 +99,7 @@ func initConfig() {
 			fmt.Println("unable to set config file err: ", err.Error())
 			os.Exit(1)
 		}
+
 		fmt.Println("Mithril path set in config file", filepath.Join(home, ".mithril", "config.yaml"))
 		os.Exit(0)
 	}
@@ -114,5 +116,6 @@ func initializeConfigFile(home string) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

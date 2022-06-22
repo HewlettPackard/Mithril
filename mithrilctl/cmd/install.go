@@ -31,7 +31,6 @@ var installCmd = &cobra.Command{
 		spinner.SetSuffix(fmt.Sprintf(" %s ", "Deploying Istio 🛡️"))
 		istio.DeployIstio()
 		fmt.Fprint(spinner.writer, "\r")
-		successFormat = " \x1b[32m✓\x1b[0m %s\n"
 		fmt.Fprintf(spinner.writer, successFormat, "Deploying Istio 🛡️")
 
 		spinner.Stop()

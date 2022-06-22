@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"k8s.io/utils/exec"
 	"os"
 	"strings"
+
+	"github.com/spf13/cobra"
+	"k8s.io/utils/exec"
 )
 
 // manifestCmd represents the manifest command
@@ -23,9 +24,9 @@ var manifestCmd = &cobra.Command{
 			spireInstall := cmd.Command("helm", cmdArgs[0:]...)
 			out, err := spireInstall.CombinedOutput()
 			if err != nil {
-				fmt.Printf("\nerror getting SPIRE server manifest err: %s", err)
+				fmt.Fprintf(os.Stderr, "\nerror getting SPIRE server manifest err: %s", err)
 			}
-			fmt.Fprintf(os.Stderr, "%s", out)
+			fmt.Fprintf(os.Stdout, "%s", out)
 
 			command = fmt.Sprintf("get manifest spire-agent")
 			cmdArgs = strings.Fields(command)
@@ -33,10 +34,11 @@ var manifestCmd = &cobra.Command{
 			spireInstall = cmd.Command("helm", cmdArgs[0:]...)
 			out, err = spireInstall.CombinedOutput()
 			if err != nil {
-				fmt.Printf("\nerror getting SPIRE agent manifest err: %s", err)
+				fmt.Fprintf(os.Stderr, "\nerror getting SPIRE agent manifest err: %s", err)
 			}
-			fmt.Fprintf(os.Stderr, "%s", out)
+			fmt.Fprintf(os.Stdout, "%s", out)
 		}
+
 		if istiof {
 			command := fmt.Sprintf("get manifest base")
 			cmdArgs := strings.Fields(command)
@@ -44,9 +46,9 @@ var manifestCmd = &cobra.Command{
 			spireInstall := cmd.Command("helm", cmdArgs[0:]...)
 			out, err := spireInstall.CombinedOutput()
 			if err != nil {
-				fmt.Printf("\nerror getting istio base manifest err: %s", err)
+				fmt.Fprintf(os.Stderr, "\nerror getting istio base manifest err: %s", err)
 			}
-			fmt.Fprintf(os.Stderr, "%s", out)
+			fmt.Fprintf(os.Stdout, "%s", out)
 
 			command = fmt.Sprintf("get manifest istiod -n istio-system")
 			cmdArgs = strings.Fields(command)
@@ -54,9 +56,9 @@ var manifestCmd = &cobra.Command{
 			spireInstall = cmd.Command("helm", cmdArgs[0:]...)
 			out, err = spireInstall.CombinedOutput()
 			if err != nil {
-				fmt.Printf("\nerror getting istiod manifest err: %s", err)
+				fmt.Fprintf(os.Stderr, "\nerror getting istiod manifest err: %s", err)
 			}
-			fmt.Fprintf(os.Stderr, "%s", out)
+			fmt.Fprintf(os.Stdout, "%s", out)
 
 			command = fmt.Sprintf("get manifest ingressgateway -n istio-system")
 			cmdArgs = strings.Fields(command)
@@ -64,9 +66,9 @@ var manifestCmd = &cobra.Command{
 			spireInstall = cmd.Command("helm", cmdArgs[0:]...)
 			out, err = spireInstall.CombinedOutput()
 			if err != nil {
-				fmt.Printf("\nerror getting istio ingressgateway manifest err: %s", err)
+				fmt.Fprintf(os.Stderr, "\nerror getting istio ingressgateway manifest err: %s", err)
 			}
-			fmt.Fprintf(os.Stderr, "%s", out)
+			fmt.Fprintf(os.Stdout, "%s", out)
 		}
 		//istio, _ := cmd.Flags().GetString("spire")
 	},

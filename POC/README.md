@@ -2,7 +2,7 @@
 
 [![Build status badge](https://jenkins.docker.hpecorp.net/buildStatus/icon?job=sec-eng%2Fistio-spire%2Fmaster)](https://jenkins.docker.hpecorp.net/job/sec-eng/job/istio-spire/job/master/)
 
-This POC is a WIP. a
+This POC is a WIP.
 
 Currently, it deploys to local `kind` cluster the istio `bookinfo` example configured using static secrets that were 
 generated from SVIDs issued by SPIRE. The four workloads from the example (details, productpage, ratings, and reviews) 

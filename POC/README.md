@@ -1,6 +1,6 @@
 # Mithril POC
 
-[![Build status badge](https://jenkins.docker.hpecorp.net/buildStatus/icon?job=sec-eng%2Fistio-spire%2Fmaster)](https://jenkins.docker.hpecorp.net/job/sec-eng/job/istio-spire/job/master/)
+[![Scorecards supply-chain security](https://github.com/n-th/mithril/actions/workflows/scorecards.yml/badge.svg)](https://github.com/n-th/mithril/actions/workflows/scorecards.yml)
 
 This POC is a WIP. 
 

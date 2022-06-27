@@ -1,4 +1,4 @@
-FROM 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:ubuntu-20.04
+FROM 529024819027.dkr.ecr.us-east-1.amazonaws.com/mithril:ubuntu-20.04@sha256:1e48201ccc2ab83afc435394b3bf70af0fa0055215c1e26a5da9b50a1ae367c9
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG ISTIO_VERSION=release-1.10

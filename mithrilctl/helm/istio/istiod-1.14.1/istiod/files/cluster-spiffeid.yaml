@@ -1,20 +1,3 @@
-apiVersion: spire.spiffe.io/v1alpha1
-kind: ClusterSPIFFEID
-metadata:
-  name: istiod
-spec:
-  spiffeIDTemplate: spiffe://example.org/istiod/{{ .PodMeta.Name }}
-  dnsNameTemplates:
-    - "{{ .PodMeta.Labels.app }}.{{ .PodMeta.Namespace }}.svc"
-    - "{{ .PodMeta.Name }}"
-  workloadSelectorTemplates:
-    - k8s:ns:{{ .PodMeta.Namespace }}
-    - k8s:sa:{{ .PodSpec.ServiceAccountName }}
-    - k8s:node-name:{{ .NodeMeta.Name }}
-    - k8s:pod-image-count:1
-  podSelector:
-    matchLabels:
-      spireSpiffeid: istiod
 ---
 apiVersion: spire.spiffe.io/v1alpha1
 kind: ClusterSPIFFEID
@@ -33,7 +16,6 @@ spec:
   podSelector:
     matchLabels:
       spireSpiffeid: ingress
-#  federatesWith: ["domain.test"]
 ---
 apiVersion: spire.spiffe.io/v1alpha1
 kind: ClusterSPIFFEID
@@ -52,4 +34,3 @@ spec:
   podSelector:
     matchLabels:
       spireSpiffeid: workloads
-#  federatesWith: ["domain.test"]

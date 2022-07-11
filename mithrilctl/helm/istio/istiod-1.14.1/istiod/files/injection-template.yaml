@@ -407,8 +407,9 @@ spec:
       {{ end }}
       {{- end }}
   volumes:
-  - emptyDir:
-    name: workload-socket
+  - name: workload-socket
+    csi:
+      driver: csi.spiffe.io
   {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
   - name: gke-workload-certificate
     csi:

@@ -203,8 +203,9 @@ spec:
     {{ end }}
     {{- end }}
   volumes:
-  - emptyDir: {}
-    name: workload-socket
+  - name: workload-socket
+    csi:
+      driver: csi.spiffe.io
   - emptyDir: {}
     name: workload-certs
   # UDS channel between istioagent and gRPC client for XDS/SDS

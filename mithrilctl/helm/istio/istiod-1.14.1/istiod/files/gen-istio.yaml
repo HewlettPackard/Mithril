@@ -622,8 +622,9 @@ data:
               {{ end }}
               {{- end }}
           volumes:
-          - emptyDir:
-            name: workload-socket
+          - name: workload-socket
+            csi:
+              driver: csi.spiffe.io
           {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
           - name: gke-workload-certificate
             csi:
@@ -865,8 +866,9 @@ data:
             - name: istio-podinfo
               mountPath: /etc/istio/pod
           volumes:
-          - emptyDir: {}
-            name: workload-socket
+          - name: workload-socket
+            csi:
+              driver: csi.spiffe.io
           {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
           - name: gke-workload-certificate
             csi:
@@ -1196,8 +1198,9 @@ data:
             {{ end }}
             {{- end }}
           volumes:
-          - emptyDir: {}
-            name: workload-socket
+          - name: workload-socket
+            csi:
+              driver: csi.spiffe.io
           - emptyDir: {}
             name: workload-certs
           # UDS channel between istioagent and gRPC client for XDS/SDS

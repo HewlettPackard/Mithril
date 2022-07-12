@@ -8,6 +8,7 @@ import (
 	"mithril/pkg/spire"
 	"mithril/util"
 	"os"
+	"time"
 )
 
 var spinner = util.NewSpinner(os.Stderr)
@@ -23,19 +24,35 @@ var installCmd = &cobra.Command{
 		go func() {
 			spinner.Start()
 		}()
-
-		spire.DeploySpire()
+		time.Sleep(time.Millisecond * 500)
+		err := spire.DeploySpire()
 		fmt.Fprint(spinner.Writer, "\r")
 		successFormat := " \x1b[32m✓\x1b[0m %s\n"
-		fmt.Fprintf(spinner.Writer, successFormat, "Deploying SPIRE 🗝️")
+		failureFormat := " \033[31mx\x1b[0m %s\n"
 
-		spinner.SetSuffix(fmt.Sprintf(" %s ", "Deploying Istio 🛡️"))
-		istio.DeployIstio()
-		fmt.Fprint(spinner.Writer, "\r")
-		fmt.Fprintf(spinner.Writer, successFormat, "Deploying Istio 🛡️")
-
+		if err != nil {
+			fmt.Fprintf(spinner.Writer, failureFormat, "Deploying SPIRE 🗝️")
+		} else {
+			fmt.Fprintf(spinner.Writer, successFormat, "Deploying SPIRE 🗝️")
+		}
 		spinner.Stop()
-		fmt.Fprintf(spinner.Writer, "\nAutomatic injection is enabled in all namespaces!\nStart using Mithril\n$ kubectl apply -f %s/POC/bookinfo/bookinfo.yaml\n", viper.GetString("mithrilPath"))
+		spinner.SetSuffix(fmt.Sprintf(" %s ", "Deploying Istio 🛡️"))
+		go func() {
+			spinner.Start()
+		}()
+
+		time.Sleep(time.Millisecond * 500)
+		err = istio.DeployIstio()
+		fmt.Fprint(spinner.Writer, "\r")
+		if err != nil {
+			fmt.Fprintf(spinner.Writer, failureFormat, "Deploying Istio 🛡️")
+		} else {
+			fmt.Fprintf(spinner.Writer, successFormat, "Deploying Istio 🛡️")
+		}
+		spinner.Stop()
+		if err == nil {
+			fmt.Fprintf(spinner.Writer, "\nAutomatic injection is enabled in all namespaces!\nStart using Mithril\n$ kubectl apply -f %s/POC/bookinfo/bookinfo.yaml\n", viper.GetString("mithrilPath"))
+		}
 	},
 }
 

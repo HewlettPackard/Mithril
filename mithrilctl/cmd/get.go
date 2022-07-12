@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -12,7 +12,10 @@ var getCmd = &cobra.Command{
 	Short: "Gets resources definitions ",
 	Long:  `Command used for outputing a helm release manifest`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("get called")
+		if len(args) == 0 || args[0] == "" {
+			cmd.Help()
+			os.Exit(0)
+		}
 	},
 }
 

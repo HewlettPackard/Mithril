@@ -6,10 +6,11 @@ import (
 	"github.com/spf13/viper"
 	"mithril/pkg/istio"
 	"mithril/pkg/spire"
+	"mithril/util"
 	"os"
 )
 
-var spinner = NewSpinner(os.Stderr)
+var spinner = util.NewSpinner(os.Stderr)
 
 // installCmd represents the install command
 var installCmd = &cobra.Command{
@@ -24,17 +25,17 @@ var installCmd = &cobra.Command{
 		}()
 
 		spire.DeploySpire()
-		fmt.Fprint(spinner.writer, "\r")
+		fmt.Fprint(spinner.Writer, "\r")
 		successFormat := " \x1b[32m✓\x1b[0m %s\n"
-		fmt.Fprintf(spinner.writer, successFormat, "Deploying SPIRE 🗝️")
+		fmt.Fprintf(spinner.Writer, successFormat, "Deploying SPIRE 🗝️")
 
 		spinner.SetSuffix(fmt.Sprintf(" %s ", "Deploying Istio 🛡️"))
 		istio.DeployIstio()
-		fmt.Fprint(spinner.writer, "\r")
-		fmt.Fprintf(spinner.writer, successFormat, "Deploying Istio 🛡️")
+		fmt.Fprint(spinner.Writer, "\r")
+		fmt.Fprintf(spinner.Writer, successFormat, "Deploying Istio 🛡️")
 
 		spinner.Stop()
-		fmt.Fprintf(spinner.writer, "\nAutomatic injection is enabled in all namespaces!\nStart using Mithril\n$ kubectl apply -f %s/POC/bookinfo/bookinfo.yaml\n", viper.GetString("mithrilPath"))
+		fmt.Fprintf(spinner.Writer, "\nAutomatic injection is enabled in all namespaces!\nStart using Mithril\n$ kubectl apply -f %s/POC/bookinfo/bookinfo.yaml\n", viper.GetString("mithrilPath"))
 	},
 }
 

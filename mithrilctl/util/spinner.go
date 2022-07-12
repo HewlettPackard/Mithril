@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package util
 
 import (
 	"fmt"
@@ -39,12 +39,12 @@ var spinnerFrames = []string{
 // Spinner is a simple and efficient CLI loading spinner used by kind
 // It is simplistic and assumes that the line length will not change.
 type Spinner struct {
-	stop    chan struct{} // signals writer goroutine to stop from Stop()
-	stopped chan struct{} // signals Stop() that the writer goroutine stopped
+	stop    chan struct{} // signals Writer goroutine to stop from Stop()
+	stopped chan struct{} // signals Stop() that the Writer goroutine stopped
 	mu      *sync.Mutex   // protects the mutable bits
 	// below are protected by mu
 	running bool
-	writer  io.Writer
+	Writer  io.Writer
 	ticker  *time.Ticker // signals that it is time to write a frame
 	prefix  string
 	suffix  string
@@ -69,7 +69,7 @@ func NewSpinner(w io.Writer) *Spinner {
 		stop:        make(chan struct{}, 1),
 		stopped:     make(chan struct{}),
 		mu:          &sync.Mutex{},
-		writer:      w,
+		Writer:      w,
 		frameFormat: frameFormat,
 	}
 }
@@ -121,7 +121,7 @@ func (s *Spinner) Start() {
 					func() {
 						s.mu.Lock()
 						defer s.mu.Unlock()
-						fmt.Fprintf(s.writer, s.frameFormat, s.prefix, frame, s.suffix)
+						fmt.Fprintf(s.Writer, s.frameFormat, s.prefix, frame, s.suffix)
 					}()
 				}
 			}
@@ -151,11 +151,11 @@ func (s *Spinner) Write(p []byte) (n int, err error) {
 	defer s.mu.Unlock()
 	// it the spinner is not running, just write directly
 	if !s.running {
-		return s.writer.Write(p)
+		return s.Writer.Write(p)
 	}
 	// otherwise: we will rewrite the line first
-	if _, err := s.writer.Write([]byte("\r")); err != nil {
+	if _, err := s.Writer.Write([]byte("\r")); err != nil {
 		return 0, err
 	}
-	return s.writer.Write(p)
+	return s.Writer.Write(p)
 }

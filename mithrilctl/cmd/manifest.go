@@ -15,6 +15,10 @@ var manifestCmd = &cobra.Command{
 	Short: "Get manifest from a helm release",
 	Long:  `Command for getting helm manifests from releases`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 || args[0] == "" {
+			cmd.Help()
+			os.Exit(0)
+		}
 		spiref, _ := cmd.Flags().GetBool("spire")
 		istiof, _ := cmd.Flags().GetBool("istio")
 		if spiref {
@@ -70,7 +74,6 @@ var manifestCmd = &cobra.Command{
 			}
 			fmt.Fprintf(os.Stdout, "%s", out)
 		}
-		//istio, _ := cmd.Flags().GetString("spire")
 	},
 }
 

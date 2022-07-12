@@ -32,14 +32,11 @@ var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Applies Kubernetes deployments",
 	Long: `Command used for applying k8s deployment definitions and creating their
-namespaces and required Istio configmaps.`,
+namespaces and required Istio configmaps`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
+		if len(args) == 0 || args[0] == "" {
 			cmd.Help()
 			os.Exit(0)
-		} else if args[0] == "" {
-			cmd.Help()
-			os.Exit(1)
 		}
 
 		client, _, err := CreateClientGo()

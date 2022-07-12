@@ -6,9 +6,6 @@ import (
 	"os"
 )
 
-const mithrilConfigFolderPath = ".mithril"
-const mithrilConfigPath = "config"
-
 func GetHomeDir() string {
 	home, err := homedir.Dir()
 	if err != nil {

@@ -50,7 +50,7 @@ spec:
               mountPath: /run/spire/sockets
               readOnly: false
         - name: spire-controller-manager
-          image: ghcr.io/spiffe/spire-controller-manager:nightly
+          image: ghcr.io/spiffe/spire-controller-manager:0.2.1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9443

@@ -1,112 +1,24 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: spire-agent
-  namespace: spire
----
-# Required cluster role to allow spire-agent to query k8s API server
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: spire-agent-cluster-role
-rules:
-  - apiGroups: [""]
-    resources: ["pods","nodes","nodes/proxy"]
-    verbs: ["get"]
----
-# Binds above cluster role to spire-agent service account
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: spire-agent-cluster-role-binding
-subjects:
-  - kind: ServiceAccount
-    name: spire-agent
-    namespace: spire
-roleRef:
-  kind: ClusterRole
-  name: spire-agent-cluster-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: spire-agent
-  namespace: spire
-data:
-  agent.conf: |
-    agent {
-      data_dir = "/run/spire"
-      log_level = "DEBUG"
-      server_address = "spire-server"
-      server_port = "8081"
-      socket_path = "/run/spire/sockets/agent.sock"
-      trust_bundle_path = "/run/spire/bundle/root-cert.pem"
-      trust_domain = "example.org"
-    
-      sds = {
-        default_bundle_name = "null"
-        default_all_bundles_name = "ROOTCA"
-      }
-    }
-
-    plugins {
-      NodeAttestor "k8s_psat" {
-        plugin_data {
-          # NOTE: Change this to your cluster name
-          cluster = "demo-cluster"
-        }
-      }
-
-      KeyManager "memory" {
-        plugin_data {
-        }
-      }
-
-      WorkloadAttestor "k8s" {
-        plugin_data {
-          # Defaults to the secure kubelet port by default.
-          # Minikube does not have a cert in the cluster CA bundle that
-          # can authenticate the kubelet cert, so skip validation.
-          skip_kubelet_verification = true
-        }
-      }
-
-      WorkloadAttestor "unix" {
-          plugin_data {
-          }
-      }
-    }
-
-    health_checks {
-      listener_enabled = true
-      bind_address = "0.0.0.0"
-      bind_port = "8080"
-      live_path = "/live"
-      ready_path = "/ready"
-    }
----
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: spire-agent
-  namespace: spire
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
   labels:
-    app: spire-agent
+    app: {{ .Values.name }}
 spec:
   selector:
     matchLabels:
-      app: spire-agent
+      app: {{ .Values.name }}
   template:
     metadata:
-      namespace: spire
+      namespace: {{ .Values.namespace }}
       labels:
-        app: spire-agent
+        app: {{ .Values.name }}
     spec:
       hostPID: true
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
-      serviceAccountName: spire-agent
+      serviceAccountName: {{ .Values.name }}
       initContainers:
         - name: init
           # This is a small image with wait-for-it, choose whatever image
@@ -115,8 +27,8 @@ spec:
           image: gcr.io/spiffe-io/wait-for-it
           args: ["-t", "30", "spire-server:8081"]
       containers:
-        - name: spire-agent
-          image: gcr.io/spiffe-io/spire-agent:1.1.1
+        - name: {{ .Values.name }}
+          image: gcr.io/spiffe-io/{{ .Values.tag }}
           args: ["-config", "/run/spire/config/agent.conf"]
           volumeMounts:
             - name: spire-config
@@ -125,7 +37,7 @@ spec:
             - name: spire-bundle
               mountPath: /run/spire/bundle
             - name: spire-agent-socket-dir
-              mountPath: /run/spire/sockets
+              mountPath: {{ .Values.socketPath }}
             - name: spire-token
               mountPath: /var/run/secrets/tokens
           livenessProbe:
@@ -194,10 +106,10 @@ spec:
       volumes:
         - name: spire-config
           configMap:
-            name: spire-agent
+            name: {{ .Values.name }}
         - name: spire-bundle
           configMap:
-            name: trust-bundle
+            name: {{ .Values.configmaps.notifier.bundleName }}
         - name: spire-token
           projected:
             sources:
@@ -227,3 +139,26 @@ spec:
           hostPath:
             path: /var/lib/kubelet/plugins_registry
             type: Directory
+---
+apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  name: "csi.spiffe.io"
+spec:
+  # We only support ephemeral, inline volumes. We don't need a controller to
+  # provision and attach volumes.
+  attachRequired: false
+
+  # We want the pod information so that the CSI driver can verify that an
+  # ephemeral mount was requested.
+  podInfoOnMount: true
+
+  # We don't want (or need) K8s to change ownership on the contents of the mount
+  # when it is moutned into the pod, since the Workload API is completely open
+  # (i.e. 0777).
+  # Note, this was added in Kubernetes 1.19, so omit
+  fsGroupPolicy: None
+
+  # We only support ephemeral volumes. Note that this requires Kubernetes 1.16
+  volumeLifecycleModes: # added in Kubernetes 1.16, this field is beta
+    - Ephemeral

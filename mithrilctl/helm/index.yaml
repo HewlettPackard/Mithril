@@ -1,0 +1,74 @@
+apiVersion: v1
+entries:
+  base:
+  - apiVersion: v1
+    appVersion: 1.14.1
+    created: "2022-07-12T13:47:06.107235-03:00"
+    description: Helm chart for deploying Istio cluster resources and CRDs
+    digest: e495c399488844c5f34330044564b6e2f575c736afacf2959cfd913bfc00116e
+    icon: https://istio.io/latest/favicons/android-192x192.png
+    keywords:
+    - istio
+    name: base
+    sources:
+    - http://github.com/istio/istio
+    urls:
+    - https://HewlettPackard/Mithril.github.io/helm-chart/base-1.14.1.tgz
+    version: 1.14.1
+  gateway:
+  - apiVersion: v2
+    appVersion: 1.14.1
+    created: "2022-07-12T13:47:06.108244-03:00"
+    description: Helm chart for deploying Istio gateways
+    digest: 3a90133a08f7e8ed31f1f1d53a7372775a7274516f3282affc046140501dd67b
+    icon: https://istio.io/latest/favicons/android-192x192.png
+    keywords:
+    - istio
+    - gateways
+    name: gateway
+    sources:
+    - http://github.com/istio/istio
+    type: application
+    urls:
+    - https://HewlettPackard/Mithril.github.io/helm-chart/gateway-1.14.1.tgz
+    version: 1.14.1
+  istiod:
+  - apiVersion: v1
+    appVersion: 1.14.1
+    created: "2022-07-12T13:47:06.115353-03:00"
+    description: Helm chart for istio control plane
+    digest: 8fc3eb1e1e45fbc6781f5800498f78bf7b32e257f7fa187a0539c3d2126943f7
+    icon: https://istio.io/latest/favicons/android-192x192.png
+    keywords:
+    - istio
+    - istiod
+    - istio-discovery
+    name: istiod
+    sources:
+    - http://github.com/istio/istio
+    urls:
+    - https://HewlettPackard/Mithril.github.io/helm-chart/istiod-1.14.1.tgz
+    version: 1.14.1
+  spire-agent:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-07-12T13:47:06.116046-03:00"
+    description: A Helm chart for Kubernetes
+    digest: 59294e8602e9268d3ed7e7850fa3b3868c0c7888343be36d83e6d408f45ada3a
+    name: spire-agent
+    type: application
+    urls:
+    - https://HewlettPackard/Mithril.github.io/helm-chart/spire-agent-1.1.1.tgz
+    version: 1.1.1
+  spire-server:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-07-12T13:47:06.117065-03:00"
+    description: A Helm chart for Kubernetes
+    digest: da84f14d56872e1bc3435dc0e2f82c959340305d593410cb8632b2b88d4ad303
+    name: spire-server
+    type: application
+    urls:
+    - https://HewlettPackard/Mithril.github.io/helm-chart/spire-server-1.1.1.tgz
+    version: 1.1.1
+generated: "2022-07-12T13:47:06.102056-03:00"

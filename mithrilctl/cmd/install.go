@@ -23,6 +23,7 @@ var installCmd = &cobra.Command{
 		go func() {
 			spinner.Start()
 		}()
+
 		time.Sleep(time.Millisecond * 500)
 		err := spire.DeploySpire()
 		fmt.Fprint(spinner.Writer, "\r")

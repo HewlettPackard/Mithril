@@ -2,7 +2,7 @@
 
 [![Scorecards supply-chain security](https://github.com/n-th/mithril/actions/workflows/scorecards.yml/badge.svg)](https://github.com/n-th/mithril/actions/workflows/scorecards.yml)
 
-This POC is a WIP. 
+This POC is a WIP.
 
 Currently, it deploys to local `kind` cluster the istio `bookinfo` example configured using static secrets that were 
 generated from SVIDs issued by SPIRE. The four workloads from the example (details, productpage, ratings, and reviews) 

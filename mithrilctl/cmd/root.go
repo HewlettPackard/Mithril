@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"mithril/entity"
+	"mithril/pkg"
 	"mithril/util"
 	"os"
 	"path/filepath"
@@ -79,6 +80,13 @@ func initConfig() {
 		fmt.Println("error reading config file err: ", err.Error())
 	}
 
+	// updates Mithril helm charts
+	pkg.UpdateMithril()
+	if err != nil {
+		fmt.Printf(err.Error())
+		os.Exit(1)
+	}
+
 	mithrilPath := viper.GetString("mithrilPath")
 
 	if mithrilPath == "" {
@@ -110,6 +118,12 @@ func initializeConfigFile(home string) error {
 	err := os.WriteFile(filepath.Join(home, ".mithril", "config.yaml"), jb, 0777)
 	if err != nil {
 		return err
+	}
+
+	err = pkg.AddMithril()
+	if err != nil {
+		fmt.Printf(err.Error())
+		os.Exit(1)
 	}
 
 	return nil

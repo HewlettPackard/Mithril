@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"mithril/pkg/istio"
 	"mithril/pkg/spire"
 	"mithril/util"
@@ -51,7 +50,7 @@ var installCmd = &cobra.Command{
 		}
 		spinner.Stop()
 		if err == nil {
-			fmt.Fprintf(spinner.Writer, "\nAutomatic injection is enabled in all namespaces!\nStart using Mithril\n$ kubectl apply -f %s/POC/bookinfo/bookinfo.yaml\n", viper.GetString("mithrilPath"))
+			fmt.Fprintf(spinner.Writer, "\nIstio automatic injection is enabled in all namespaces!\nStart using Mithril by deploying a workload")
 		}
 	},
 }

@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/viper"
 	"k8s.io/utils/exec"
 )
 
 func DeployIstio() error {
-	mithrilPath := viper.GetString("mithrilPath")
-	command := fmt.Sprintf("install -f %s/mithrilctl/helm/istio/base-1.14.1/base/values.yaml base %s/mithrilctl/helm/istio/base-1.14.1/base/", mithrilPath, mithrilPath)
+	command := fmt.Sprintf("install base mithril/base")
 	cmdArgs := strings.Fields(command)
 	cmd := exec.New()
 	istioInstall := cmd.Command("helm", cmdArgs[0:]...)
@@ -21,7 +19,7 @@ func DeployIstio() error {
 		return err
 	}
 
-	command = fmt.Sprintf("install -f %s/mithrilctl/helm/istio/istiod-1.14.1/istiod/values.yaml istiod %s/mithrilctl/helm/istio/istiod-1.14.1/istiod/ -n istio-system --wait --timeout 120s", mithrilPath, mithrilPath)
+	command = fmt.Sprintf("install istiod mithril/istiod -n istio-system")
 	cmdArgs = strings.Fields(command)
 	cmd = exec.New()
 	istioInstall = cmd.Command("helm", cmdArgs[0:]...)
@@ -40,7 +38,7 @@ func DeployIstio() error {
 		return err
 	}
 
-	command = fmt.Sprintf("install -f %s/mithrilctl/helm/istio/gateway-1.14.1/gateway/values.yaml ingressgateway %s/mithrilctl/helm/istio/gateway-1.14.1/gateway/ -n istio-system", mithrilPath, mithrilPath)
+	command = fmt.Sprintf("install ingressgateway mithril/gateway -n istio-system")
 	cmdArgs = strings.Fields(command)
 	cmd = exec.New()
 	istioInstall = cmd.Command("helm", cmdArgs[0:]...)

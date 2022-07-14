@@ -13,25 +13,18 @@ Mithrilctl is a tool to easily deploy Mithril in a cluster.
 At first, you need to build the mithrilctl binary. You can move it to the binary directory in order to be able to use it everywhere you need.
 
 ```bash
-cd <Mithril repository path>/mithrilctl && go build -o mithrilctl && sudo mv mithrilctl /usr/local/bin/mithrilctl
-```
-
-```shell
-$ mithrilctl
-Path for Mithril repository is not set!
-
-Enter the path for your Mithril repository: <Mithril repository full path>
+cd <Mithril repository path>/mithrilctl && go build -o mithril && sudo mv mithril /usr/local/bin/mithril
 ```
 
 ## Install Mithril
 
 ```bash
-$ mithrilctl install
+$ mithril install
 ```
 
 ## Getting installed manifests
 
 ```bash
-$ mithrilctl get manifest --spire
-$ mithrilctl get manifest --istio
+$ mithril get manifest --spire
+$ mithril get manifest --istio
 ```

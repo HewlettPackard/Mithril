@@ -13,7 +13,7 @@ entries:
     sources:
     - http://github.com/istio/istio
     urls:
-    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/base-1.14.1.tgz
+    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril/base-1.14.1.tgz
     version: 1.14.1
   gateway:
   - apiVersion: v2
@@ -30,7 +30,7 @@ entries:
     - http://github.com/istio/istio
     type: application
     urls:
-    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/gateway-1.14.1.tgz
+    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril/gateway-1.14.1.tgz
     version: 1.14.1
   istiod:
   - apiVersion: v1
@@ -47,7 +47,7 @@ entries:
     sources:
     - http://github.com/istio/istio
     urls:
-    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/istiod-1.14.1.tgz
+    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril/istiod-1.14.1.tgz
     version: 1.14.1
   spire-agent:
   - apiVersion: v2
@@ -58,7 +58,7 @@ entries:
     name: spire-agent
     type: application
     urls:
-    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/spire-agent-1.1.1.tgz
+    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril/spire-agent-1.1.1.tgz
     version: 1.1.1
   spire-server:
   - apiVersion: v2
@@ -69,6 +69,6 @@ entries:
     name: spire-server
     type: application
     urls:
-    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/spire-server-1.1.1.tgz
+    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril/spire-server-1.1.1.tgz
     version: 1.1.1
 generated: "2022-07-12T14:07:41.900967-03:00"

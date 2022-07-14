@@ -9,7 +9,7 @@ import (
 )
 
 func DeployIstio() error {
-	command := fmt.Sprintf("install base mithril/base")
+	command := fmt.Sprintf("upgrade --install base mithril/base")
 	cmdArgs := strings.Fields(command)
 	cmd := exec.New()
 	istioInstall := cmd.Command("helm", cmdArgs[0:]...)
@@ -19,7 +19,7 @@ func DeployIstio() error {
 		return err
 	}
 
-	command = fmt.Sprintf("install istiod mithril/istiod -n istio-system")
+	command = fmt.Sprintf("upgrade --install istiod mithril/istiod -n istio-system")
 	cmdArgs = strings.Fields(command)
 	cmd = exec.New()
 	istioInstall = cmd.Command("helm", cmdArgs[0:]...)
@@ -38,7 +38,7 @@ func DeployIstio() error {
 		return err
 	}
 
-	command = fmt.Sprintf("install ingressgateway mithril/gateway -n istio-system")
+	command = fmt.Sprintf("upgrade --install ingressgateway mithril/gateway -n istio-system")
 	cmdArgs = strings.Fields(command)
 	cmd = exec.New()
 	istioInstall = cmd.Command("helm", cmdArgs[0:]...)

@@ -9,7 +9,7 @@ import (
 )
 
 func DeploySpire() error {
-	command := fmt.Sprintf("install server mithril/spire-server")
+	command := fmt.Sprintf("upgrade --install spire-server mithril/spire-server")
 	cmdArgs := strings.Fields(command)
 	cmd := exec.New()
 	spireInstall := cmd.Command("helm", cmdArgs[0:]...)
@@ -19,7 +19,7 @@ func DeploySpire() error {
 		return err
 	}
 
-	command = fmt.Sprintf("install agent mithril/spire-agent")
+	command = fmt.Sprintf("upgrade --install spire-agent mithril/spire-agent")
 	cmdArgs = strings.Fields(command)
 	cmd = exec.New()
 	spireInstall = cmd.Command("helm", cmdArgs[0:]...)

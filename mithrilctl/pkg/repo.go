@@ -8,7 +8,7 @@ import (
 )
 
 func AddMithril() error {
-	command := fmt.Sprintf("repo add mithril https://hewlettpackard.github.io/Mithril/mithrilctl/helm")
+	command := fmt.Sprintf("repo add mithril https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril")
 	cmdArgs := strings.Fields(command)
 	cmd := exec.New()
 	repoAdd := cmd.Command("helm", cmdArgs[0:]...)

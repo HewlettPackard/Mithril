@@ -3,14 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
-	"mithril/entity"
 	"mithril/pkg"
-	"mithril/util"
 	"os"
-	"path/filepath"
-
-	"github.com/spf13/viper"
 )
 
 var cfgFile string
@@ -53,78 +47,19 @@ func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-// initConfig reads in config file and ENV variables if set.
+// initConfig adds and updates Mithril helm charts
 func initConfig() {
-	// Find home directory.
-	home := util.GetHomeDir()
-
-	_, err := os.Stat(filepath.Join(home, ".mithril", "config.yaml"))
-	// If a config file is not found, initialize the config file
+	// adds Mithril helm charts
+	err := pkg.AddMithril()
 	if err != nil {
-		err = initializeConfigFile(home)
-		if err != nil {
-			fmt.Println(fmt.Errorf("unable to initialize config file err: %s", err.Error()))
-			os.Exit(1)
-		}
-	}
-
-	// Search config in home directory with name ".mithril" (without extension).
-	viper.AddConfigPath(filepath.Join(home, ".mithril"))
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err = viper.ReadInConfig(); err != nil {
-		fmt.Println("error reading config file err: ", err.Error())
+		fmt.Printf(err.Error())
+		os.Exit(1)
 	}
 
 	// updates Mithril helm charts
-	pkg.UpdateMithril()
+	err = pkg.UpdateMithril()
 	if err != nil {
 		fmt.Printf(err.Error())
 		os.Exit(1)
 	}
-
-	mithrilPath := viper.GetString("mithrilPath")
-
-	if mithrilPath == "" {
-		fmt.Println("\033[31mPath for Mithril repository is not set!\033[0m")
-		fmt.Print("\n\033[34mEnter the path for your Mithril repository: \033[0m")
-		fmt.Scanf("%s", &mithrilPath)
-		newCfg := entity.Config{
-			MithrilPath: mithrilPath,
-		}
-		yb, _ := yaml.Marshal(newCfg)
-		err = os.WriteFile(filepath.Join(home, ".mithril", "config.yaml"), yb, 0777)
-		if err != nil {
-			fmt.Println("unable to set config file err: ", err.Error())
-			os.Exit(1)
-		}
-
-		fmt.Println("Mithril path set in config file", filepath.Join(home, ".mithril", "config.yaml"))
-		os.Exit(0)
-	}
-}
-
-func initializeConfigFile(home string) error {
-	_ = os.Mkdir(filepath.Join(home, ".mithril"), 0777)
-
-	cfg := entity.Config{
-		MithrilPath: "",
-	}
-	jb, _ := yaml.Marshal(cfg)
-	err := os.WriteFile(filepath.Join(home, ".mithril", "config.yaml"), jb, 0777)
-	if err != nil {
-		return err
-	}
-
-	err = pkg.AddMithril()
-	if err != nil {
-		fmt.Printf(err.Error())
-		os.Exit(1)
-	}
-
-	return nil
 }

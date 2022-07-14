@@ -15,12 +15,12 @@ var manifestCmd = &cobra.Command{
 	Short: "Get manifest from a helm release",
 	Long:  `Command for getting helm manifests from releases`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 || args[0] == "" {
+		spiref, _ := cmd.Flags().GetBool("spire")
+		istiof, _ := cmd.Flags().GetBool("istio")
+		if !spiref && !istiof {
 			cmd.Help()
 			os.Exit(0)
 		}
-		spiref, _ := cmd.Flags().GetBool("spire")
-		istiof, _ := cmd.Flags().GetBool("istio")
 		if spiref {
 			command := fmt.Sprintf("get manifest spire-server")
 			cmdArgs := strings.Fields(command)
@@ -30,6 +30,7 @@ var manifestCmd = &cobra.Command{
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "\nerror getting SPIRE server manifest err: %s", err)
 			}
+			fmt.Fprintf(os.Stdout, "# SPIRE-Server manifest\n")
 			fmt.Fprintf(os.Stdout, "%s", out)
 
 			command = fmt.Sprintf("get manifest spire-agent")
@@ -40,6 +41,7 @@ var manifestCmd = &cobra.Command{
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "\nerror getting SPIRE agent manifest err: %s", err)
 			}
+			fmt.Fprintf(os.Stdout, "# SPIRE-Agent manifest\n")
 			fmt.Fprintf(os.Stdout, "%s", out)
 		}
 
@@ -52,6 +54,7 @@ var manifestCmd = &cobra.Command{
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "\nerror getting istio base manifest err: %s", err)
 			}
+			fmt.Fprintf(os.Stdout, "# Istio base manifest\n")
 			fmt.Fprintf(os.Stdout, "%s", out)
 
 			command = fmt.Sprintf("get manifest istiod -n istio-system")
@@ -62,6 +65,7 @@ var manifestCmd = &cobra.Command{
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "\nerror getting istiod manifest err: %s", err)
 			}
+			fmt.Fprintf(os.Stdout, "# Istio istiod manifest\n")
 			fmt.Fprintf(os.Stdout, "%s", out)
 
 			command = fmt.Sprintf("get manifest ingressgateway -n istio-system")
@@ -72,6 +76,7 @@ var manifestCmd = &cobra.Command{
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "\nerror getting istio ingressgateway manifest err: %s", err)
 			}
+			fmt.Fprintf(os.Stdout, "# Istio ingressgateway manifest\n")
 			fmt.Fprintf(os.Stdout, "%s", out)
 		}
 	},

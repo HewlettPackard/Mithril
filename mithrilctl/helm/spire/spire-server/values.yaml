@@ -28,6 +28,7 @@ configmaps:
     notifier:
       configMap: "trust-bundle"
       configMapKey: "root-cert.pem"
+    logLevel: "DEBUG"
 
 replicaCount: 1
 

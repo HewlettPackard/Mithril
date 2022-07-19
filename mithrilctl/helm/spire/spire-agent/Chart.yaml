@@ -1,6 +1,6 @@
 apiVersion: v2
 appVersion: 1.16.0
-description: A Helm chart for Kubernetes
+description: A Helm chart for a SPIRE Agent installation with the SPIFFE CSI Driver
 name: spire-agent
 type: application
 version: 1.1.1

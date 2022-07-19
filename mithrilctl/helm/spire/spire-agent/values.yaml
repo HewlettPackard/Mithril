@@ -18,6 +18,7 @@ configmaps:
     notifier:
       configMap: "trust-bundle"
       trustBundlePath: "/run/spire/bundle/root-cert.pem"
+    logLevel: "DEBUG"
 
 replicaCount: 1
 

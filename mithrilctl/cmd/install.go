@@ -51,7 +51,7 @@ var installCmd = &cobra.Command{
 		}
 		spinner.Stop()
 		if err == nil {
-			fmt.Fprintf(spinner.Writer, "\nIstio automatic injection is enabled in all namespaces!\nStart using Mithril by deploying a workload")
+			fmt.Fprintf(spinner.Writer, "\nIstio automatic injection is enabled in all namespaces!\nStart using Mithril by deploying a workload\n")
 		}
 	},
 }

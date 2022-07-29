@@ -53,22 +53,22 @@ entries:
   - apiVersion: v2
     appVersion: 1.16.0
     created: "2022-07-12T14:07:41.916707-03:00"
-    description: A Helm chart for Kubernetes
+    description: A Helm chart for SPIRE Agent
     digest: 59294e8602e9268d3ed7e7850fa3b3868c0c7888343be36d83e6d408f45ada3a
     name: spire-agent
     type: application
     urls:
     - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril/spire-agent-1.1.1.tgz
-    version: 1.1.1
+    version: 1.3.2
   spire-server:
   - apiVersion: v2
     appVersion: 1.16.0
     created: "2022-07-12T14:07:41.918368-03:00"
-    description: A Helm chart for Kubernetes
+    description: A Helm chart for SPIRE Server
     digest: da84f14d56872e1bc3435dc0e2f82c959340305d593410cb8632b2b88d4ad303
     name: spire-server
     type: application
     urls:
     - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril/spire-server-1.1.1.tgz
-    version: 1.1.1
+    version: 1.3.2
 generated: "2022-07-12T14:07:41.900967-03:00"

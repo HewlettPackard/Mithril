@@ -3,7 +3,7 @@ entries:
   base:
   - apiVersion: v1
     appVersion: 1.14.1
-    created: "2022-07-12T14:07:41.907775-03:00"
+    created: "2022-07-29T17:00:00.186966334-03:00"
     description: Helm chart for deploying Istio cluster resources and CRDs
     digest: e495c399488844c5f34330044564b6e2f575c736afacf2959cfd913bfc00116e
     icon: https://istio.io/latest/favicons/android-192x192.png
@@ -18,7 +18,7 @@ entries:
   gateway:
   - apiVersion: v2
     appVersion: 1.14.1
-    created: "2022-07-12T14:07:41.909303-03:00"
+    created: "2022-07-29T17:00:00.187666127-03:00"
     description: Helm chart for deploying Istio gateways
     digest: 3a90133a08f7e8ed31f1f1d53a7372775a7274516f3282affc046140501dd67b
     icon: https://istio.io/latest/favicons/android-192x192.png
@@ -35,7 +35,7 @@ entries:
   istiod:
   - apiVersion: v1
     appVersion: 1.14.1
-    created: "2022-07-12T14:07:41.915451-03:00"
+    created: "2022-07-29T17:00:00.190199858-03:00"
     description: Helm chart for istio control plane
     digest: 8fc3eb1e1e45fbc6781f5800498f78bf7b32e257f7fa187a0539c3d2126943f7
     icon: https://istio.io/latest/favicons/android-192x192.png
@@ -52,23 +52,23 @@ entries:
   spire-agent:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-07-12T14:07:41.916707-03:00"
-    description: A Helm chart for SPIRE Agent
-    digest: 59294e8602e9268d3ed7e7850fa3b3868c0c7888343be36d83e6d408f45ada3a
+    created: "2022-07-29T17:00:00.190561642-03:00"
+    description: A Helm chart for Kubernetes
+    digest: 8db024657c3a38018d3598f6c1ef8e660253abaafbec2576747975b37baa989d
     name: spire-agent
     type: application
     urls:
-    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril/spire-agent-1.1.1.tgz
+    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril/spire-agent-1.3.2.tgz
     version: 1.3.2
   spire-server:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-07-12T14:07:41.918368-03:00"
-    description: A Helm chart for SPIRE Server
-    digest: da84f14d56872e1bc3435dc0e2f82c959340305d593410cb8632b2b88d4ad303
+    created: "2022-07-29T17:00:00.191177647-03:00"
+    description: A Helm chart for Kubernetes
+    digest: ce4e07176ca0e5e24d8dc96c9f02c427cd35ebdf62bff13b729b6323c2c08cfb
     name: spire-server
     type: application
     urls:
-    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril/spire-server-1.1.1.tgz
+    - https://hewlettpackard.github.io/Mithril/mithrilctl/helm/mithril/spire-server-1.3.2.tgz
     version: 1.3.2
-generated: "2022-07-12T14:07:41.900967-03:00"
+generated: "2022-07-29T17:00:00.184576094-03:00"

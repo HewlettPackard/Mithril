@@ -6,7 +6,7 @@ metadata:
   labels:
     app: {{ .Values.name }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Values.name }}
@@ -21,7 +21,7 @@ spec:
       shareProcessNamespace: true
       containers:
         - name: {{ .Values.name }}
-          image: gcr.io/spiffe-io/{{ .Values.tag }}
+          image: gcr.io/spiffe-io/{{ .Values.image }}
           args: ["-config", "/run/spire/config/server.conf"]
           livenessProbe:
             httpGet:
@@ -50,7 +50,7 @@ spec:
               mountPath: /run/spire/sockets
               readOnly: false
         - name: spire-controller-manager
-          image: ghcr.io/spiffe/spire-controller-manager:0.2.1
+          image: ghcr.io/spiffe/{{ .Values.controllerManagerImage }}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9443
@@ -83,4 +83,4 @@ spec:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 1Gi
+            storage: {{ .Values.volumeClaimTemplates.storage }}

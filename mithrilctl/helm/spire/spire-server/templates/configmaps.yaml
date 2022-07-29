@@ -22,7 +22,7 @@ data:
       socket_path = "{{ .Values.configmaps.serverConfig.socketPath }}"
       trust_domain = "{{ .Values.configmaps.serverConfig.trustDomain }}"
       data_dir = "/run/spire/server/data"
-      log_level = "DEBUG"
+      log_level = "{{ .Values.configmaps.serverConfig.logLevel }}"
       ca_key_type = "rsa-2048"
       {{ if eq .Values.configmaps.serverConfig.federates true }}
 

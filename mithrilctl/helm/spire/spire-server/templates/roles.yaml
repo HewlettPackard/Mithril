@@ -2,43 +2,58 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ .Values.roles.clusterRole.name }}
+  name: spire-server-cluster-role
   namespace: {{ .Values.namespace }}
 rules:
-{{ .Values.roles.clusterRole.rules | toYaml | indent 4 }}
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: [ "get" ]
+  - apiGroups: [ "authentication.k8s.io" ]
+    resources: [ "tokenreviews" ]
+    verbs: [ "get", "create" ]
 ---
 # Binds above cluster role to spire-server service account
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.roles.clusterRoleBinding.name }}
+  name: spire-server-cluster-role-binding
   namespace: {{ .Values.namespace }}
 subjects:
-{{ .Values.roles.clusterRoleBinding.subjects | toYaml | indent 2 }}
+  - kind: ServiceAccount
+    name: spire-server
+    namespace: spire
 roleRef:
-  kind: {{ .Values.roles.clusterRoleBinding.roleRef.kind }}
-  name: {{ .Values.roles.clusterRoleBinding.roleRef.name }}
-  apiGroup: {{ .Values.roles.clusterRoleBinding.roleRef.apiGroup }}
+  kind: ClusterRole
+  name: spire-server-cluster-role
+  apiGroup: rbac.authorization.k8s.io
 ---
 # Role for the SPIRE server
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   namespace: {{ .Values.namespace }}
-  name: {{ .Values.roles.role.name }}
+  name: spire-server-role
 rules:
-{{ .Values.roles.role.rules | toYaml | indent 2 }}
+  - apiGroups: [ "" ]
+    resources: [ "pods" ]
+    verbs: [ "get" ]
+  - apiGroups: [ "" ]
+    resources: [ "configmaps" ]
+    resourceNames: [ "trust-bundle" ]
+    verbs: [ "get", "patch" ]
 ---
 # RoleBinding granting the spire-server-role to the SPIRE server
 # service account.
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ .Values.roles.roleBinding.name }}
+  name: spire-server-role-binding
   namespace: {{ .Values.namespace }}
 subjects:
-{{ .Values.roles.roleBinding.subjects | toYaml | indent 2 }}
+  - kind: ServiceAccount
+    name: spire-server
+    namespace: spire
 roleRef:
-  kind: {{ .Values.roles.roleBinding.roleRef.kind }}
-  name: {{ .Values.roles.roleBinding.roleRef.name }}
-  apiGroup: {{ .Values.roles.roleBinding.roleRef.apiGroup }}
+  kind: Role
+  name: spire-server-role
+  apiGroup: rbac.authorization.k8s.io

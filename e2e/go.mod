@@ -1,6 +1,6 @@
 module e2e
 
-go 1.16
+go 1.19
 
 require (
 	github.com/go-logr/logr v1.1.0 // indirect

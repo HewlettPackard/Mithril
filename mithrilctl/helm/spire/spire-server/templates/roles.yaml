@@ -1,0 +1,44 @@
+# Required cluster role to allow spire-server to query k8s API server
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.roles.clusterRole.name }}
+  namespace: {{ .Values.namespace }}
+rules:
+{{ .Values.roles.clusterRole.rules | toYaml | indent 4 }}
+---
+# Binds above cluster role to spire-server service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.roles.clusterRoleBinding.name }}
+  namespace: {{ .Values.namespace }}
+subjects:
+{{ .Values.roles.clusterRoleBinding.subjects | toYaml | indent 2 }}
+roleRef:
+  kind: {{ .Values.roles.clusterRoleBinding.roleRef.kind }}
+  name: {{ .Values.roles.clusterRoleBinding.roleRef.name }}
+  apiGroup: {{ .Values.roles.clusterRoleBinding.roleRef.apiGroup }}
+---
+# Role for the SPIRE server
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.roles.role.name }}
+rules:
+{{ .Values.roles.role.rules | toYaml | indent 2 }}
+---
+# RoleBinding granting the spire-server-role to the SPIRE server
+# service account.
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Values.roles.roleBinding.name }}
+  namespace: {{ .Values.namespace }}
+subjects:
+{{ .Values.roles.roleBinding.subjects | toYaml | indent 2 }}
+roleRef:
+  kind: {{ .Values.roles.roleBinding.roleRef.kind }}
+  name: {{ .Values.roles.roleBinding.roleRef.name }}
+  apiGroup: {{ .Values.roles.roleBinding.roleRef.apiGroup }}

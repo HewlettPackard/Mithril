@@ -13,7 +13,6 @@ rules:
   - apiGroups: [""]
     resources: ["pods","nodes","nodes/proxy"]
     verbs: ["get"]
-
 ---
 # Binds above cluster role to spire-agent service account
 kind: ClusterRoleBinding
@@ -86,7 +85,6 @@ data:
       live_path = "/live"
       ready_path = "/ready"
     }
-
 ---
 apiVersion: apps/v1
 kind: DaemonSet

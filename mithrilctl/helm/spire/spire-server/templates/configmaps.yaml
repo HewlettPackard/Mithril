@@ -1,0 +1,94 @@
+# ConfigMap containing the latest trust bundle for the trust domain. It is
+# updated by SPIRE using the k8sbundle notifier plugin. SPIRE agents mount
+# this config map and use the certificate to bootstrap trust with the SPIRE
+# server during attestation.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configmaps.notifier.bundleName }}
+  namespace: {{ .Values.namespace }}
+---
+# ConfigMap containing the SPIRE server configuration.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+data:
+  server.conf: |
+    server {
+      bind_address = "0.0.0.0"
+      bind_port = "8081"
+      socket_path = "{{ .Values.configmaps.serverConfig.socketPath }}"
+      trust_domain = "{{ .Values.configmaps.serverConfig.trustDomain }}"
+      data_dir = "/run/spire/server/data"
+      log_level = "DEBUG"
+      ca_key_type = "rsa-2048"
+      {{ if eq .Values.configmaps.serverConfig.federates true }}
+
+      federation {
+        bundle_endpoint {
+          address = "{{ .Values.configmaps.serverConfig.federation.bundleEndpoint.address }}"
+          port = {{ .Values.configmaps.serverConfig.federation.bundleEndpoint.port }}
+        }
+        {{ range $index, $member := .Values.configmaps.serverConfig.federation.federations }}
+        federates_with "{{ $member.federatesWith }}" {
+          bundle_endpoint_url = "{{ $member.bundleEndpointUrl }}"
+          bundle_endpoint_profile "{{ $member.bundleEndpointProfile.profile }}" {
+            endpoint_spiffe_id = "{{ $member.bundleEndpointProfile.endpointSpiffeId }}"
+          }
+        }
+        {{ end }}
+      }
+
+      {{ end }}
+      default_svid_ttl = "{{ .Values.configmaps.serverConfig.ttl }}"
+      ca_subject = {
+        country = ["US"],
+        organization = ["SPIFFE"],
+        common_name = "",
+      }
+    }
+
+    plugins {
+      DataStore "sql" {
+        plugin_data {
+          database_type = "sqlite3"
+          connection_string = "/run/spire/data/datastore.sqlite3"
+        }
+      }
+
+      NodeAttestor "k8s_psat" {
+        plugin_data {
+          clusters = {
+            # NOTE: Change this to your cluster name
+            "{{ .Values.clusterName }}" = {
+              use_token_review_api_validation = true
+              service_account_allow_list = ["spire:spire-agent"]
+            }
+          }
+        }
+      }
+
+      KeyManager "disk" {
+        plugin_data {
+          keys_path = "/run/spire/data/keys.json"
+        }
+      }
+
+      Notifier "k8sbundle" {
+        plugin_data {
+          namespace = "{{ .Values.namespace }}"
+          config_map = "{{ .Values.configmaps.serverConfig.notifier.configMap }}"
+          config_map_key = "{{ .Values.configmaps.serverConfig.notifier.configMapKey }}"
+        }
+      }
+    }
+
+    health_checks {
+      listener_enabled = true
+      bind_address = "0.0.0.0"
+      bind_port = "8080"
+      live_path = "/live"
+      ready_path = "/ready"
+    }

@@ -53,8 +53,8 @@ spec:
               mountPath: /run/spire/data/upstream-ca.pem
               subPath: upstream-ca.pem
             - name: upstream-key
-              mountPath: /run/spire/data/upstream-ca.key.pem
-              subPath: upstream-ca.key.pem
+              mountPath: /run/spire/data/example.key.pem
+              subPath: example.key.pem
         - name: spire-controller-manager
           image: ghcr.io/spiffe/spire-controller-manager:nightly
           imagePullPolicy: IfNotPresent

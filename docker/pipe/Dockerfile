@@ -1,4 +1,4 @@
-FROM ubuntu:latest@sha256:b6b83d3c331794420340093eb706a6f152d9c1fa51b262d9bf34594887c2c7ac
+FROM ubuntu:latest@sha256:065aa8626841f16057b78b027b464cd59c4fac36c204c72dcbf48d66f5fa8a96
 
 ENV DEBIAN_FRONTEND=noninteractive
 
